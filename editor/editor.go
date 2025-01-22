@@ -252,6 +252,10 @@ func (e *Editor) ProcessKeypress() {
 	case '\r':
 		break
 	case CtrlQ:
+		if e.dirty {
+			e.SetMsg("file has unsaved changes")
+			break
+		}
 		e.abuf.Append([]byte("\x1b[2J"))
 		e.abuf.Append([]byte("\x1b[H"))
 		e.Exit("quit")
