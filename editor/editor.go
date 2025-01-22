@@ -25,6 +25,8 @@ type Editor struct {
 	coloffset int
 
 	filename string
+	// has the file been modified since being opened
+	dirty bool
 
 	// todo: this seems like a perfect usecase for go channels
 	msg     string
@@ -60,7 +62,11 @@ func (e *Editor) status() string {
 	if e.filename == "" {
 		displayName = "[No Name]"
 	}
-	return fmt.Sprintf("ln:%d/%d - %s", e.c.Y, len(e.rows)-1, displayName)
+	var displayDirty string = ""
+	if e.dirty {
+		displayDirty = "(modified)"
+	}
+	return fmt.Sprintf("ln:%d/%d - %s %s", e.c.Y, len(e.rows)-1, displayDirty, displayName)
 }
 
 func (e *Editor) SetMsg(msg string) {
@@ -98,6 +104,7 @@ func (e *Editor) Open(filename string) error {
 		return fmt.Errorf("error reading file: %w", err)
 	}
 	e.filename = filename
+	e.dirty = false
 	return nil
 }
 
@@ -115,6 +122,7 @@ func (e *Editor) save() error {
 		return fmt.Errorf("unable to save file: %w", err)
 	}
 	e.SetMsg(fmt.Sprintf("%d bytes written", n))
+	e.dirty = false
 	return nil
 }
 
@@ -147,6 +155,7 @@ func (e *Editor) insertChar(c byte) {
 	}
 	e.rows[e.c.Y].InsertChar(e.c.X, c)
 	e.c.X++
+	e.dirty = true
 }
 
 func (e *Editor) combineRows() []byte {
