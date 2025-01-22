@@ -28,6 +28,9 @@ const (
 
 	EscapeSequence rune = '\x1b'
 
+	BACKSPACE rune = 127
+	DEL = BACKSPACE
+
 	PAGE_UP rune = iota + 1000
 	PAGE_DOWN
 	ARROW_UP

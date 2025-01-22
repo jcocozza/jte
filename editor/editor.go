@@ -126,6 +126,14 @@ func (e *Editor) ExitErr(err error) {
 	os.Exit(1)
 }
 
+func (e *Editor) insertChar(c byte) {
+	if e.c.Y == len(e.rows) {
+		e.abuf.Append([]byte(" "))
+	}
+	e.rows[e.c.Y].InsertChar(e.c.X, c)
+	e.c.X++
+}
+
 // Modified readKeypress to handle raw bytes
 func (e *Editor) readKeypress() rune {
 	var buf [1]byte
@@ -204,12 +212,12 @@ func (e *Editor) readKeypress() rune {
 func (e *Editor) ProcessKeypress() {
 	key := e.readKeypress()
 	e.logger.Info("key read", slog.String("key", string(key)))
-
 	if len(e.rows) == 0 && key != CtrlQ { // don't move when we have an empty file
 		return
 	}
-
 	switch key {
+	case '\r':
+		break
 	case CtrlQ:
 		e.Exit("quit")
 	case ARROW_UP:
@@ -241,8 +249,15 @@ func (e *Editor) ProcessKeypress() {
 		if e.c.Y > len(e.rows) {
 			e.c.Y = len(e.rows)
 		}
+	case BACKSPACE: // this includes DEL
+	case CtrlH:
+		break
+	case CtrlL:
+	case EscapeSequence:
+		break
 	default:
-		printKey(key)
+		e.insertChar(byte(key))
+		//printKey(key)
 	}
 	var newrow *erow
 	if e.c.Y >= len(e.rows) {
@@ -331,7 +346,6 @@ func (e *Editor) scroll() {
 	if e.c.X >= e.coloffset+e.screencols {
 		e.coloffset = e.c.X - e.screencols + 1
 	}
-
 }
 
 func (e *Editor) Refresh() {

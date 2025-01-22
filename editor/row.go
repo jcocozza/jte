@@ -30,3 +30,11 @@ type erow struct {
 func (r *erow) Render() {
 	r.render = expandTabs(r.chars)
 }
+
+func (r *erow) InsertChar(at int, c byte) {
+	if at < 0 || at > len(r.chars) {
+		at = len(r.chars)
+	}
+	r.chars = append(r.chars, append([]byte{c}, r.chars[at:]...)...)
+	r.Render()
+}
