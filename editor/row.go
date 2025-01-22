@@ -58,3 +58,8 @@ func (r *erow) append(bytes []byte) {
 	r.chars = append(r.chars, bytes...)
 	r.Render()
 }
+
+func (r *erow) Trim(to int) {
+	r.chars = r.chars[:to]
+	r.Render()
+}

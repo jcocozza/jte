@@ -79,6 +79,7 @@ func (e *Editor) SetMsg(msg string) {
 	}()
 }
 
+/*
 func (e *Editor) appendRow(row []byte) {
 	er := &erow{
 		chars:  row,
@@ -86,6 +87,23 @@ func (e *Editor) appendRow(row []byte) {
 	}
 	er.Render()
 	e.rows = append(e.rows, er)
+}
+*/
+
+func (e *Editor) insertRow(at int, row []byte) {
+	if at < 0 || at > len(e.rows) {
+		return
+	}
+
+	newRows := make([]*erow, len(e.rows)+1)
+	copy(newRows[:at], e.rows[:at])
+	newRows[at] = &erow{
+		chars: row,
+		render: []byte(""),
+	}
+	newRows[at].Render()
+	copy(newRows[at+1:], e.rows[at:])
+	e.rows = newRows
 }
 
 func (e *Editor) deleteRow(at int) {
@@ -105,7 +123,7 @@ func (e *Editor) Open(filename string) error {
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		line = bytes.TrimRight(line, "\r\n")
-		e.appendRow(line)
+		e.insertRow(len(e.rows), line)
 	}
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading file: %w", err)
@@ -159,10 +177,22 @@ func (e *Editor) ExitErr(err error) {
 func (e *Editor) insertChar(c byte) {
 	if e.c.Y == len(e.rows) {
 		e.abuf.Append([]byte{})
+		e.insertRow(len(e.rows), []byte{})
 	}
 	e.rows[e.c.Y].InsertChar(e.c.X, c)
 	e.c.X++
 	e.dirty = true
+}
+
+func (e *Editor) insertNewline() {
+	if e.c.X == 0 {
+		e.insertRow(e.c.Y, []byte{})
+	} else {
+		e.insertRow(e.c.Y+1, e.rows[e.c.Y].chars[e.c.X:])
+		e.rows[e.c.Y].Trim(e.c.X)
+	}
+	e.c.Y++
+	e.c.X = 0
 }
 
 func (e *Editor) deleteChar() {
@@ -183,6 +213,7 @@ func (e *Editor) deleteChar() {
 		e.c.Y--
 		e.c.X = newX
 	}
+	e.dirty = true
 }
 
 func (e *Editor) combineRows() []byte {
@@ -280,7 +311,7 @@ func (e *Editor) ProcessKeypress() {
 	}
 	switch key {
 	case '\r':
-		break
+		e.insertNewline()
 	case CtrlQ:
 		if e.dirty {
 			e.SetMsg("file has unsaved changes")
