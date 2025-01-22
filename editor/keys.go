@@ -13,7 +13,6 @@ const (
 	CtrlE          = 0x05
 	CtrlF          = 0x06
 	CtrlG          = 0x07
-	CtrlH          = 0x08
 	CtrlI          = 0x09
 	TAB            = CtrlI
 	CtrlJ          = 0x0A
@@ -29,8 +28,9 @@ const (
 
 	EscapeSequence rune = '\x1b'
 
-	BACKSPACE rune = 127
-	DEL            = BACKSPACE
+	BACKSPACE rune = '\b'
+	CtrlH     rune = BACKSPACE
+	DEL       rune = 0x7F
 
 	PAGE_UP rune = iota + 1000
 	PAGE_DOWN
@@ -41,8 +41,6 @@ const (
 
 	HOME
 	END
-
-	DELETE
 )
 
 func controlCharacterName(c rune) string {

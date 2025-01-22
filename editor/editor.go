@@ -53,7 +53,7 @@ func InitEditor() *Editor {
 		rows:       []*erow{},
 		logger:     CreateLogger(slog.LevelDebug),
 	}
-	e.logger.Info("editor initialized set up")
+	e.logger.Info("editor initialized set up", slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
 	return e
 }
 
@@ -86,6 +86,13 @@ func (e *Editor) appendRow(row []byte) {
 	}
 	er.Render()
 	e.rows = append(e.rows, er)
+}
+
+func (e *Editor) deleteRow(at int) {
+	if at < 0 || at >= len(e.rows) {
+		return
+	}
+	e.rows = append(e.rows[:at], e.rows[at+1:]...)
 }
 
 func (e *Editor) Open(filename string) error {
@@ -158,6 +165,26 @@ func (e *Editor) insertChar(c byte) {
 	e.dirty = true
 }
 
+func (e *Editor) deleteChar() {
+	e.logger.Info("deleting char", slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
+	if e.c.Y == len(e.rows) {
+		return
+	}
+	if e.c.X == 0 && e.c.Y == 0 {
+		return
+	}
+	if e.c.X > 0 {
+		e.rows[e.c.Y].DelChar(e.c.X - 1)
+		e.c.X--
+	} else {
+		newX := len(e.rows[e.c.Y-1].chars)
+		e.rows[e.c.Y-1].append(e.rows[e.c.Y].chars)
+		e.deleteRow(e.c.Y)
+		e.c.Y--
+		e.c.X = newX
+	}
+}
+
 func (e *Editor) combineRows() []byte {
 	var buf bytes.Buffer
 	for _, row := range e.rows {
@@ -178,6 +205,9 @@ func (e *Editor) readKeypress() rune {
 		if err != nil {
 			e.ExitErr(err)
 		}
+	}
+	if rune(buf[0]) == DEL {
+		return BACKSPACE
 	}
 	if rune(buf[0]) != EscapeSequence {
 		e.logger.Info("read keypress", slog.String("byte", string(buf[0])))
@@ -206,7 +236,7 @@ func (e *Editor) readKeypress() rune {
 				case '1', '7':
 					return HOME
 				case '3':
-					return DELETE
+					return DEL
 				case '4', '8':
 					return END
 				case '5':
@@ -244,7 +274,7 @@ func (e *Editor) readKeypress() rune {
 // Modified ProcessKeypress to use the result directly
 func (e *Editor) ProcessKeypress() {
 	key := e.readKeypress()
-	e.logger.Info("key read", slog.String("key", string(key)))
+	e.logger.Info("key read before", slog.String("key", string(key)), slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
 	if len(e.rows) == 0 && key != CtrlQ { // don't move when we have an empty file
 		return
 	}
@@ -297,9 +327,17 @@ func (e *Editor) ProcessKeypress() {
 		if e.c.Y > len(e.rows) {
 			e.c.Y = len(e.rows)
 		}
-	case BACKSPACE: // this includes DEL
-	case CtrlH:
-		break
+	case BACKSPACE:
+		e.logger.Info("backspace pressed", slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
+		if e.c.X > 0 || e.c.Y > 0 {
+			e.deleteChar()
+		}
+	case DEL:
+		e.logger.Info("delete pressed", slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
+		if e.c.Y < len(e.rows) && e.c.X < len(e.rows[e.c.Y].render) {
+			e.c.X++
+		}
+		e.deleteChar()
 	case CtrlL:
 	case EscapeSequence:
 		break
@@ -316,6 +354,7 @@ func (e *Editor) ProcessKeypress() {
 	if e.c.X > len(newrow.render) {
 		e.c.X = len(newrow.render)
 	}
+	e.logger.Info("key read after", slog.String("key", string(key)), slog.Int("key int", int(key)), slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
 }
 
 var welcome []byte = []byte("editor -- version: v0.0.1")

@@ -42,3 +42,19 @@ func (r *erow) InsertChar(at int, c byte) {
 	r.chars = newChars
 	r.Render()
 }
+
+func (r *erow) DelChar(at int) {
+	if at < 0 || at >= len(r.chars) {
+		return
+	}
+	newChars := make([]byte, len(r.chars)-1)
+	copy(newChars[:at], r.chars[:at])
+	copy(newChars[at:], r.chars[at+1:])
+	r.chars = newChars
+	r.Render()
+}
+
+func (r *erow) append(bytes []byte) {
+	r.chars = append(r.chars, bytes...)
+	r.Render()
+}
