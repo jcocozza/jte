@@ -1,0 +1,37 @@
+time=2025-01-21T18:53:01.297-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:47 msg="editor initialized set up"
+time=2025-01-21T18:53:02.339-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:53:02.400-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:53:02.454-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:53:02.619-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:53:02.649-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ѐ
+time=2025-01-21T18:53:02.725-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:53:02.829-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:53:02.886-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:53:02.949-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:53:03.069-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:53:03.128-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:53:03.188-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:53:03.265-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:53:03.308-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:53:03.384-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:53:03.459-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:53:03.518-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:53:03.563-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:54:06.519-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:114 msg="read keypress" byte="\r"
+time=2025-01-21T18:54:06.521-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key="\r"
+time=2025-01-21T18:54:06.960-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ѐ
+time=2025-01-21T18:54:07.136-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ѐ
+time=2025-01-21T18:54:07.327-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:54:07.435-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:54:07.510-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:54:07.629-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:54:07.685-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:54:07.761-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:54:07.881-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ђ
+time=2025-01-21T18:54:07.941-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ͽ
+time=2025-01-21T18:54:07.987-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=Ё
+time=2025-01-21T18:54:08.997-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:114 msg="read keypress" byte=q
+time=2025-01-21T18:54:08.997-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=q
+time=2025-01-21T18:54:09.865-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:114 msg="read keypress" byte="\x11"
+time=2025-01-21T18:54:09.866-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key="\x11"
+time=2025-01-21T18:54:09.866-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:85 msg=quit

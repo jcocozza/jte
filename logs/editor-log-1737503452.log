@@ -1,0 +1,4 @@
+time=2025-01-21T18:50:52.217-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:47 msg="editor initialized set up"
+time=2025-01-21T18:50:52.575-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:114 msg="read keypress" byte=a
+time=2025-01-21T18:50:52.575-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:178 msg="key read" key=a
+time=2025-01-21T18:50:52.576-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:85 msg="regular exit"
