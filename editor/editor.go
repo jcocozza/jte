@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 	"unnamed/term"
 )
+
+const msgTimeout = time.Duration(3*time.Second)
 
 type Editor struct {
 	screenrows int
@@ -23,6 +26,12 @@ type Editor struct {
 	rowoffset int
 	coloffset int
 
+	filename string
+
+	// todo: this seems like a perfect usecase for go channels
+	msg string
+	msgTime time.Time
+
 	logger *slog.Logger
 }
 
@@ -36,7 +45,7 @@ func InitEditor() *Editor {
 		panic(err)
 	}
 	e := &Editor{
-		screenrows: r,
+		screenrows: r - 2, // leave room for status bar and messages
 		screencols: c,
 		abuf:       abuf{},
 		rw:         rw,
@@ -46,6 +55,24 @@ func InitEditor() *Editor {
 	}
 	e.logger.Info("editor initialized set up")
 	return e
+}
+
+func (e *Editor) status() string {
+	var displayName string = e.filename
+	if e.filename == "" {
+		displayName = "[No Name]"
+	}
+	return fmt.Sprintf("ln:%d/%d - %s", e.c.Y, len(e.rows) - 1, displayName)
+}
+
+func (e *Editor) SetMsg(msg string) {
+	e.msgTime = time.Now()
+	e.msg = msg
+	go func() {
+		time.Sleep(msgTimeout)
+		e.msg = ""
+		e.msgTime = time.Time{}
+	}()
 }
 
 func (e *Editor) appendRow(row []byte) {
@@ -72,6 +99,7 @@ func (e *Editor) Open(filename string) error {
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading file: %w", err)
 	}
+	e.filename = filename
 	return nil
 }
 
@@ -251,6 +279,27 @@ func (e *Editor) drawFile(rowNum int) {
 	}
 }
 
+// draw status bar and any messages
+func (e *Editor) drawStatusBar() {
+	// status bar
+	e.abuf.Append([]byte("\x1b[7m"))
+	status := e.status()
+	e.abuf.Append(bytes.Repeat([]byte(" "), e.screencols - len(status)))
+	e.abuf.Append([]byte(status))
+	e.abuf.Append([]byte("\x1b[m"))
+	e.abuf.Append([]byte("\r\n"))
+
+	// messages
+	e.abuf.Append([]byte("\x1b[K"))
+	var displayMsg string = e.msg
+	if len(e.msg) > e.screencols {
+		displayMsg = e.msg[0:e.screencols]
+	}
+	if e.msg != "" && !e.msgTime.IsZero() {
+		e.abuf.Append([]byte(displayMsg))
+	}
+}
+
 func (e *Editor) draw() {
 	for i := 0; i < e.screenrows; i++ {
 		if len(e.rows) == 0 {
@@ -259,10 +308,9 @@ func (e *Editor) draw() {
 			e.drawFile(i)
 		}
 		e.abuf.Append([]byte("\x1b[K"))
-		if i < e.screenrows-1 {
-			e.abuf.Append([]byte("\r\n"))
-		}
+		e.abuf.Append([]byte("\r\n"))
 	}
+	e.drawStatusBar()
 }
 
 func (e *Editor) drawCursor() {

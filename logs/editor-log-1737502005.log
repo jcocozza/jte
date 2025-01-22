@@ -1,3 +1,0 @@
-time=2025-01-21T18:26:45.110-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:47 msg=inited
-time=2025-01-21T18:26:46.080-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:106 msg="read keypress" byte="\x11"
-time=2025-01-21T18:26:46.080-05:00 level=INFO source=/Users/josephcocozza/Repositories/text-editor/unnamed/editor/editor.go:170 msg="key read" key="\x11"
