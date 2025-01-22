@@ -10,7 +10,7 @@ import (
 	"unnamed/term"
 )
 
-const msgTimeout = time.Duration(3*time.Second)
+const msgTimeout = time.Duration(3 * time.Second)
 
 type Editor struct {
 	screenrows int
@@ -18,9 +18,7 @@ type Editor struct {
 
 	abuf abuf
 	rw   *term.RawMode
-
-	c *cursor
-
+	c    *cursor
 	rows []*erow
 
 	rowoffset int
@@ -29,7 +27,7 @@ type Editor struct {
 	filename string
 
 	// todo: this seems like a perfect usecase for go channels
-	msg string
+	msg     string
 	msgTime time.Time
 
 	logger *slog.Logger
@@ -62,7 +60,7 @@ func (e *Editor) status() string {
 	if e.filename == "" {
 		displayName = "[No Name]"
 	}
-	return fmt.Sprintf("ln:%d/%d - %s", e.c.Y, len(e.rows) - 1, displayName)
+	return fmt.Sprintf("ln:%d/%d - %s", e.c.Y, len(e.rows)-1, displayName)
 }
 
 func (e *Editor) SetMsg(msg string) {
@@ -103,6 +101,23 @@ func (e *Editor) Open(filename string) error {
 	return nil
 }
 
+func (e *Editor) save() error {
+	if e.filename == "" {
+		return ErrNoFilename
+	}
+	buf := e.combineRows()
+	file, err := os.OpenFile(e.filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("unable to save file: %w", err)
+	}
+	n, err := file.Write(buf)
+	if err != nil {
+		return fmt.Errorf("unable to save file: %w", err)
+	}
+	e.SetMsg(fmt.Sprintf("%d bytes written", n))
+	return nil
+}
+
 func (e *Editor) Exit(msg string) {
 	if e.rw != nil {
 		err := e.rw.Restore()
@@ -128,10 +143,19 @@ func (e *Editor) ExitErr(err error) {
 
 func (e *Editor) insertChar(c byte) {
 	if e.c.Y == len(e.rows) {
-		e.abuf.Append([]byte(" "))
+		e.abuf.Append([]byte{})
 	}
 	e.rows[e.c.Y].InsertChar(e.c.X, c)
 	e.c.X++
+}
+
+func (e *Editor) combineRows() []byte {
+	var buf bytes.Buffer
+	for _, row := range e.rows {
+		buf.Write(row.chars)
+		buf.WriteByte('\n')
+	}
+	return buf.Bytes()
 }
 
 // Modified readKeypress to handle raw bytes
@@ -219,7 +243,18 @@ func (e *Editor) ProcessKeypress() {
 	case '\r':
 		break
 	case CtrlQ:
+		e.abuf.Append([]byte("\x1b[2J"))
+		e.abuf.Append([]byte("\x1b[H"))
 		e.Exit("quit")
+	case CtrlS:
+		err := e.save()
+		if err == ErrNoFilename {
+			e.SetMsg("cannot save. no filename")
+		}
+		if err != nil {
+			e.ExitErr(err)
+		}
+		e.SetMsg("saved")
 	case ARROW_UP:
 		if e.c.Y > 0 {
 			e.c.Y--
@@ -299,7 +334,7 @@ func (e *Editor) drawStatusBar() {
 	// status bar
 	e.abuf.Append([]byte("\x1b[7m"))
 	status := e.status()
-	e.abuf.Append(bytes.Repeat([]byte(" "), e.screencols - len(status)))
+	e.abuf.Append(bytes.Repeat([]byte(" "), e.screencols-len(status)))
 	e.abuf.Append([]byte(status))
 	e.abuf.Append([]byte("\x1b[m"))
 	e.abuf.Append([]byte("\r\n"))

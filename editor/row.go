@@ -23,7 +23,7 @@ func expandTabs(input []byte) []byte {
 }
 
 type erow struct {
-	chars []byte
+	chars  []byte
 	render []byte
 }
 
@@ -35,6 +35,10 @@ func (r *erow) InsertChar(at int, c byte) {
 	if at < 0 || at > len(r.chars) {
 		at = len(r.chars)
 	}
-	r.chars = append(r.chars, append([]byte{c}, r.chars[at:]...)...)
+	newChars := make([]byte, len(r.chars)+1)
+	copy(newChars[:at], r.chars[:at])
+	newChars[at] = c
+	copy(newChars[at+1:], r.chars[at:])
+	r.chars = newChars
 	r.Render()
 }

@@ -25,11 +25,12 @@ const (
 	CtrlO          = 0x0F
 	CtrlP          = 0x10
 	CtrlQ          = 0x11
+	CtrlS          = 0x13
 
 	EscapeSequence rune = '\x1b'
 
 	BACKSPACE rune = 127
-	DEL = BACKSPACE
+	DEL            = BACKSPACE
 
 	PAGE_UP rune = iota + 1000
 	PAGE_DOWN
