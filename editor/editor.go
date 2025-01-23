@@ -36,6 +36,9 @@ type Editor struct {
 	// if we are on the welcome page
 	welcome bool
 
+	lastMatch int
+	direction int
+
 	logger *slog.Logger
 }
 
@@ -57,6 +60,8 @@ func InitEditor() *Editor {
 		rows:       []*erow{},
 		logger:     CreateLogger(slog.LevelDebug),
 		welcome:    true,
+		lastMatch:  -1,
+		direction:  1,
 	}
 	e.logger.Info("editor initialized set up", slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
 	return e
@@ -120,6 +125,9 @@ func (e *Editor) prompt(prompt string, callback func(input []byte, char rune)) [
 				runCallback(key)
 				return buf
 			}
+		case key == ARROW_DOWN || key == ARROW_LEFT || key == ARROW_RIGHT || key == ARROW_UP:
+			e.logger.Info("triggered callback for arrow key press")
+			runCallback(key)
 		case key != CtrlC && key < 128:
 			buf = append(buf, byte(key))
 			msg := fmt.Sprintf("%s%s", prompt, string(buf))
@@ -130,19 +138,46 @@ func (e *Editor) prompt(prompt string, callback func(input []byte, char rune)) [
 }
 
 func (e *Editor) findCallback(query []byte, key rune) {
-	if key == '\r' || key == EscapeSequence {
+	switch key {
+	case '\r', EscapeSequence:
+		e.lastMatch = -1
+		e.direction = 1
 		return
+	case ARROW_RIGHT, ARROW_DOWN:
+		e.direction = 1
+	case ARROW_LEFT, ARROW_UP:
+		e.direction = -1
+	default:
+		e.lastMatch = -1
+		e.direction = 1
 	}
-	for y, row := range e.rows {
-		if bytes.Contains(row.render, query) {
-			i := bytes.LastIndex(row.render, query)
-			if i == -1 {
-				return
+
+	if e.lastMatch == -1 {
+		e.direction = 1
+	}
+	current := e.lastMatch
+	e.logger.Info("current is", slog.Int("curr", current))
+	for range e.rows {
+		current += e.direction
+		if current == -1 {
+			current = len(e.rows) - 1
+		} else if current == len(e.rows) {
+			current = 0
+		}
+
+		row := e.rows[current]
+		contains := bytes.Contains(row.chars, query)
+		e.logger.Info("match idx", slog.Int("idx", current))
+		if contains {
+			matchIdx := bytes.Index(row.render, query)
+			if matchIdx != -1 {
+				e.lastMatch = current
+				e.c.Y = current
+				e.c.X = matchIdx
+				e.rowoffset = len(e.rows)
+				e.Refresh()
+				break
 			}
-			e.c.Y = y
-			e.c.X = i
-			e.rowoffset = len(e.rows)
-			return
 		}
 	}
 }
