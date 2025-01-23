@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"time"
+
 	"github.com/jcocozza/jte/editor"
 )
 
@@ -14,7 +16,7 @@ func main() {
 			e.ExitErr(err)
 		}
 	}
-	e.SetMsg("Momento Mori", -1)
+	e.SetMsg("Momento Mori", time.Duration(3*time.Second))
 	//e.Debug()
 	for {
 		e.Refresh()

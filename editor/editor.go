@@ -11,7 +11,6 @@ import (
 	"github.com/jcocozza/jte/fileutil"
 	"github.com/jcocozza/jte/term"
 )
-
 const msgTimeout = time.Duration(3 * time.Second)
 
 type Editor struct {
@@ -210,6 +209,7 @@ func (e *Editor) insertRow(at int, row []byte) {
 	newRows[at] = &erow{
 		chars:  row,
 		render: []byte(""),
+		//hl:     []rune{},
 	}
 	newRows[at].Render()
 	copy(newRows[at+1:], e.rows[at:])
@@ -540,7 +540,6 @@ func (e *Editor) drawWelcome(rowNum int) {
 	} else {
 		e.abuf.Append([]byte("~"))
 	}
-
 }
 
 func (e *Editor) drawFile(rowNum int) {
@@ -562,7 +561,6 @@ func (e *Editor) drawStatusBar() {
 	e.abuf.Append([]byte(status))
 	e.abuf.Append([]byte("\x1b[m"))
 	e.abuf.Append([]byte("\r\n"))
-
 	// messages
 	e.abuf.Append([]byte("\x1b[K"))
 	var displayMsg string = e.msg
