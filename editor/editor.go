@@ -119,6 +119,25 @@ func (e *Editor) prompt(prompt string) []byte {
 	}
 }
 
+func (e *Editor) find() {
+	query := e.prompt("search (esc to cancel): ")
+	if len(query) == 0 {
+		return
+	}
+	for y, row := range e.rows {
+		if bytes.Contains(row.render, query) {
+			i := bytes.LastIndex(row.render, query)
+			if i == -1 {
+				return
+			}
+			e.c.Y = y
+			e.c.X = i
+			e.rowoffset = len(e.rows)
+			return
+		}
+	}
+}
+
 func (e *Editor) insertRow(at int, row []byte) {
 	if at < 0 || at > len(e.rows) {
 		return
@@ -384,6 +403,8 @@ func (e *Editor) ProcessKeypress() {
 		if err != nil {
 			e.ExitErr(err)
 		}
+	case CtrlF:
+		e.find()
 	case CtrlP: // this is just for testing
 		msg := e.prompt("prompt: ")
 		e.SetMsg(string(msg), msgTimeout)
