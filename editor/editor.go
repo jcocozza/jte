@@ -87,9 +87,16 @@ func (e *Editor) SetMsg(msg string, timeout time.Duration) {
 	}()
 }
 
-func (e *Editor) prompt(prompt string) []byte {
+// pass in a nil callback to just receive the user input back
+// otherwise will call the callback
+func (e *Editor) prompt(prompt string, callback func(input []byte, char rune)) []byte {
 	e.SetMsg(prompt, -1)
 	var buf []byte
+	runCallback := func(key rune) {
+		if callback != nil {
+			callback(buf, key)
+		}
+	}
 	for {
 		key := e.readKeypress()
 		switch {
@@ -105,10 +112,12 @@ func (e *Editor) prompt(prompt string) []byte {
 			}
 		case key == EscapeSequence:
 			e.SetMsg("", -1)
+			runCallback(key)
 			return []byte{}
 		case key == '\r':
 			if len(buf) != 0 {
 				e.SetMsg("", -1)
+				runCallback(key)
 				return buf
 			}
 		case key != CtrlC && key < 128:
@@ -116,12 +125,12 @@ func (e *Editor) prompt(prompt string) []byte {
 			msg := fmt.Sprintf("%s%s", prompt, string(buf))
 			e.SetMsg(msg, -1)
 		}
+		runCallback(key)
 	}
 }
 
-func (e *Editor) find() {
-	query := e.prompt("search (esc to cancel): ")
-	if len(query) == 0 {
+func (e *Editor) findCallback(query []byte, key rune) {
+	if (key == '\r' || key == EscapeSequence) {
 		return
 	}
 	for y, row := range e.rows {
@@ -135,6 +144,13 @@ func (e *Editor) find() {
 			e.rowoffset = len(e.rows)
 			return
 		}
+	}
+}
+
+func (e *Editor) find() {
+	query := e.prompt("search (esc to cancel): ", e.findCallback)
+	if len(query) == 0 {
+		return
 	}
 }
 
@@ -197,7 +213,7 @@ func (e *Editor) Open(filename string) error {
 
 func (e *Editor) save() error {
 	if e.filename == "" {
-		e.filename = string(e.prompt("save as (ESC to cancel): "))
+		e.filename = string(e.prompt("save as (ESC to cancel): ", nil))
 		if e.filename == "" {
 			e.SetMsg("save aborted", msgTimeout)
 			return nil
@@ -406,7 +422,7 @@ func (e *Editor) ProcessKeypress() {
 	case CtrlF:
 		e.find()
 	case CtrlP: // this is just for testing
-		msg := e.prompt("prompt: ")
+		msg := e.prompt("prompt: ", nil)
 		e.SetMsg(string(msg), msgTimeout)
 	case ARROW_UP:
 		if e.c.Y > 0 {
