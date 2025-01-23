@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"time"
+	"unnamed/fileutil"
 	"unnamed/term"
 )
 
@@ -32,6 +33,9 @@ type Editor struct {
 	msg     string
 	msgTime time.Time
 
+	// if we are on the welcome page
+	welcome bool
+
 	logger *slog.Logger
 }
 
@@ -52,6 +56,7 @@ func InitEditor() *Editor {
 		c:          &cursor{},
 		rows:       []*erow{},
 		logger:     CreateLogger(slog.LevelDebug),
+		welcome:    true,
 	}
 	e.logger.Info("editor initialized set up", slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
 	return e
@@ -114,37 +119,42 @@ func (e *Editor) deleteRow(at int) {
 }
 
 func (e *Editor) Open(filename string) error {
+	/*
 	file, err := os.Open(filename)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
+	*/
+	file, err := fileutil.OpenOrCreateFile(filename)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
 	scanner := bufio.NewScanner(file)
+	numScans := 0
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		line = bytes.TrimRight(line, "\r\n")
 		e.insertRow(len(e.rows), line)
+		numScans += 1
+	}
+	if numScans == 0 {
+		e.insertRow(0, []byte{})
 	}
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading file: %w", err)
 	}
 	e.filename = filename
 	e.dirty = false
+	e.welcome = false
 	return nil
 }
 
 func (e *Editor) save() error {
-	if e.filename == "" {
-		return ErrNoFilename
-	}
 	buf := e.combineRows()
-	file, err := os.OpenFile(e.filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	n, err := fileutil.Save(e.filename, buf)
 	if err != nil {
-		return fmt.Errorf("unable to save file: %w", err)
-	}
-	n, err := file.Write(buf)
-	if err != nil {
-		return fmt.Errorf("unable to save file: %w", err)
+		return err
 	}
 	e.SetMsg(fmt.Sprintf("%d bytes written", n))
 	e.dirty = false
@@ -322,7 +332,7 @@ func (e *Editor) ProcessKeypress() {
 		e.Exit("quit")
 	case CtrlS:
 		err := e.save()
-		if err == ErrNoFilename {
+		if err == fileutil.ErrNoFilename {
 			e.SetMsg("cannot save. no filename")
 		}
 		if err != nil {
@@ -435,7 +445,7 @@ func (e *Editor) drawStatusBar() {
 
 func (e *Editor) draw() {
 	for i := 0; i < e.screenrows; i++ {
-		if len(e.rows) == 0 {
+		if e.welcome {
 			e.drawWelcome(i)
 		} else {
 			e.drawFile(i)
