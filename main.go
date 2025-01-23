@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"unnamed/editor"
+	"github.com/jcocozza/jte/editor"
 )
 
 func main() {
