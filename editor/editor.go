@@ -130,7 +130,7 @@ func (e *Editor) prompt(prompt string, callback func(input []byte, char rune)) [
 }
 
 func (e *Editor) findCallback(query []byte, key rune) {
-	if (key == '\r' || key == EscapeSequence) {
+	if key == '\r' || key == EscapeSequence {
 		return
 	}
 	for y, row := range e.rows {
@@ -148,9 +148,19 @@ func (e *Editor) findCallback(query []byte, key rune) {
 }
 
 func (e *Editor) find() {
+	savedCX := e.c.X
+	savedCY := e.c.Y
+	savedRowoff := e.rowoffset
+	savedColoff := e.coloffset
+
 	query := e.prompt("search (esc to cancel): ", e.findCallback)
-	if len(query) == 0 {
+	if len(query) != 0 {
 		return
+	} else {
+		e.c.X = savedCX
+		e.c.Y = savedCY
+		e.rowoffset = savedRowoff
+		e.coloffset = savedColoff
 	}
 }
 
