@@ -7,8 +7,9 @@ import (
 	"log/slog"
 	"os"
 	"time"
-	"unnamed/fileutil"
-	"unnamed/term"
+
+	"github.com/jcocozza/jte/fileutil"
+	"github.com/jcocozza/jte/term"
 )
 
 const msgTimeout = time.Duration(3 * time.Second)
