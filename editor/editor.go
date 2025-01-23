@@ -93,6 +93,16 @@ func (e *Editor) prompt(prompt string) []byte {
 	for {
 		key := e.readKeypress()
 		switch {
+		case key == DEL:
+			fallthrough
+		case key == CtrlH:
+			fallthrough
+		case key == BACKSPACE:
+			if len(buf) != 0 {
+				buf = buf[:len(buf)-1]
+				msg := fmt.Sprintf("%s%s", prompt, string(buf))
+				e.SetMsg(msg, -1)
+			}
 		case key == EscapeSequence:
 			e.SetMsg("", -1)
 			return []byte{}
@@ -133,6 +143,7 @@ func (e *Editor) deleteRow(at int) {
 }
 
 func (e *Editor) clear() {
+	e.welcome = false
 	e.rows = []*erow{}
 	e.abuf.Clear()
 	e.c.reset()
@@ -337,7 +348,9 @@ func (e *Editor) readKeypress() rune {
 func (e *Editor) ProcessKeypress() {
 	key := e.readKeypress()
 	e.logger.Info("key read before", slog.String("key", string(key)), slog.String("location", fmt.Sprintf("%d, %d", e.c.X, e.c.Y)))
-	if len(e.rows) == 0 && key != CtrlQ { // don't move when we have an empty file
+	// don't move when we have an empty file
+	// allow quitting and new file creation
+	if len(e.rows) == 0 && key != CtrlQ && key != CtrlN {
 		return
 	}
 	switch key {
