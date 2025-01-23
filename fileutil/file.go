@@ -9,6 +9,9 @@ import (
 var ErrNoFilename = errors.New("no file name")
 
 func OpenOrCreateFile(filename string) (*os.File, error) {
+	if filename  == "" {
+		return os.CreateTemp("", "editor_*")
+	}
 	return os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 }
 

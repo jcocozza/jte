@@ -9,3 +9,8 @@ type cursor struct {
 	// rendered X
 	// RX int
 }
+
+func (c *cursor) reset() {
+	c.X = 0
+	c.Y = 0
+}

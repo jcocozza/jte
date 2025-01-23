@@ -14,7 +14,7 @@ func main() {
 			e.ExitErr(err)
 		}
 	}
-	e.SetMsg("Momento Mori")
+	e.SetMsg("Momento Mori", -1)
 	//e.Debug()
 	for {
 		e.Refresh()

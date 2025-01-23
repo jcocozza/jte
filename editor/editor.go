@@ -74,26 +74,40 @@ func (e *Editor) status() string {
 	return fmt.Sprintf("ln:%d/%d - %s %s", e.c.Y, len(e.rows)-1, displayDirty, displayName)
 }
 
-func (e *Editor) SetMsg(msg string) {
+func (e *Editor) SetMsg(msg string, timeout time.Duration) {
 	e.msgTime = time.Now()
 	e.msg = msg
+	e.Refresh() // this is need to show the prompt
 	go func() {
-		time.Sleep(msgTimeout)
+		if timeout == -1 {
+			return
+		}
 		e.msg = ""
 		e.msgTime = time.Time{}
 	}()
 }
 
-/*
-func (e *Editor) appendRow(row []byte) {
-	er := &erow{
-		chars:  row,
-		render: []byte{},
+func (e *Editor) prompt(prompt string) []byte {
+	e.SetMsg(prompt, -1)
+	var buf []byte
+	for {
+		key := e.readKeypress()
+		switch {
+		case key == EscapeSequence:
+			e.SetMsg("", -1)
+			return []byte{}
+		case key == '\r':
+			if len(buf) != 0 {
+				e.SetMsg("", -1)
+				return buf
+			}
+		case key != CtrlC && key < 128:
+			buf = append(buf, byte(key))
+			msg := fmt.Sprintf("%s%s", prompt, string(buf))
+			e.SetMsg(msg, -1)
+		}
 	}
-	er.Render()
-	e.rows = append(e.rows, er)
 }
-*/
 
 func (e *Editor) insertRow(at int, row []byte) {
 	if at < 0 || at > len(e.rows) {
@@ -103,7 +117,7 @@ func (e *Editor) insertRow(at int, row []byte) {
 	newRows := make([]*erow, len(e.rows)+1)
 	copy(newRows[:at], e.rows[:at])
 	newRows[at] = &erow{
-		chars: row,
+		chars:  row,
 		render: []byte(""),
 	}
 	newRows[at].Render()
@@ -118,14 +132,15 @@ func (e *Editor) deleteRow(at int) {
 	e.rows = append(e.rows[:at], e.rows[at+1:]...)
 }
 
+func (e *Editor) clear() {
+	e.rows = []*erow{}
+	e.abuf.Clear()
+	e.c.reset()
+	e.rowoffset = 0
+	e.coloffset = 0
+}
+
 func (e *Editor) Open(filename string) error {
-	/*
-	file, err := os.Open(filename)
-	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-	*/
 	file, err := fileutil.OpenOrCreateFile(filename)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
@@ -151,12 +166,19 @@ func (e *Editor) Open(filename string) error {
 }
 
 func (e *Editor) save() error {
+	if e.filename == "" {
+		e.filename = string(e.prompt("save as (ESC to cancel): "))
+		if e.filename == "" {
+			e.SetMsg("save aborted", msgTimeout)
+			return nil
+		}
+	}
 	buf := e.combineRows()
 	n, err := fileutil.Save(e.filename, buf)
 	if err != nil {
 		return err
 	}
-	e.SetMsg(fmt.Sprintf("%d bytes written", n))
+	e.SetMsg(fmt.Sprintf("%d bytes written", n), msgTimeout)
 	e.dirty = false
 	return nil
 }
@@ -235,7 +257,6 @@ func (e *Editor) combineRows() []byte {
 	return buf.Bytes()
 }
 
-// Modified readKeypress to handle raw bytes
 func (e *Editor) readKeypress() rune {
 	var buf [1]byte
 	for {
@@ -324,7 +345,7 @@ func (e *Editor) ProcessKeypress() {
 		e.insertNewline()
 	case CtrlQ:
 		if e.dirty {
-			e.SetMsg("file has unsaved changes")
+			e.SetMsg("file has unsaved changes", msgTimeout)
 			break
 		}
 		e.abuf.Append([]byte("\x1b[2J"))
@@ -333,12 +354,26 @@ func (e *Editor) ProcessKeypress() {
 	case CtrlS:
 		err := e.save()
 		if err == fileutil.ErrNoFilename {
-			e.SetMsg("cannot save. no filename")
+			e.SetMsg("cannot save. no filename", msgTimeout)
 		}
 		if err != nil {
 			e.ExitErr(err)
 		}
-		e.SetMsg("saved")
+		e.SetMsg("saved", msgTimeout)
+	case CtrlN:
+		if e.dirty {
+			e.SetMsg("file has unsaved changes", msgTimeout)
+			break
+		}
+		e.logger.Info("should open new file")
+		e.clear()
+		err := e.Open("")
+		if err != nil {
+			e.ExitErr(err)
+		}
+	case CtrlP: // this is just for testing
+		msg := e.prompt("prompt: ")
+		e.SetMsg(string(msg), msgTimeout)
 	case ARROW_UP:
 		if e.c.Y > 0 {
 			e.c.Y--
