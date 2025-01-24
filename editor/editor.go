@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	momentoMori messages.Message = messages.Message{"Momento Mori", time.Now(), -1}
+	momentoMori messages.Message = messages.Message{"Momento Mori", time.Now(), time.Duration(3*time.Second)}
 	hello       messages.Message = messages.Message{"hello", time.Now(), -1}
 	goodbye     messages.Message = messages.Message{"good bye", time.Now(), -1}
 	goodDay     messages.Message = messages.Message{"good day", time.Now(), -1}
@@ -84,7 +84,7 @@ func (e *Editor) processKey() error {
 
 func (e *Editor) PushMessage(msg messages.Message) {
 	e.ml.Push(msg)
-	e.renderer.SetMsg(msg)
+	e.renderer.SetMsg(e.currBuf, msg)
 }
 
 func (e *Editor) openMessages() {
@@ -105,9 +105,6 @@ func (e *Editor) Run() {
 	defer e.renderer.Cleanup()
 	e.NewBuf()
 	e.PushMessage(momentoMori)
-	e.PushMessage(goodbye)
-	e.PushMessage(goodDay)
-	e.PushMessage(hello)
 	for {
 		e.renderer.Render(e.currBuf)
 		err := e.processKey()

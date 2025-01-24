@@ -16,7 +16,7 @@ func (m *Message) Expired() bool {
 	if m.Dur == -1 {
 		return false
 	}
-	return m.Time.Add(m.Dur).After(time.Now())
+	return time.Now().After(m.Time.Add(m.Dur))
 }
 
 type MessageList []Message

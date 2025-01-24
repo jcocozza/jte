@@ -17,7 +17,7 @@ type Renderer interface {
 	Cleanup()
 	Exit(msg string)
 	ExitErr(err error)
-	SetMsg(msg messages.Message)
+	SetMsg(buf *buffer.Buffer, msg messages.Message)
 }
 
 type erow struct {
@@ -52,8 +52,8 @@ func (r *TextRenderer) Init(l *slog.Logger) error {
 		return err
 	}
 	r.abuf = abuf{}
-	r.screenrows = rows
-	r.screencols = cols - 2
+	r.screenrows = rows - 2 // leave room for status bar and messages
+	r.screencols = cols
 	r.logger = l
 	return nil
 }
@@ -84,14 +84,15 @@ func (r *TextRenderer) drawCursor(buf *buffer.Buffer) {
 	r.abuf.Append([]byte(s))
 }
 
-func (r *TextRenderer) SetMsg(msg messages.Message) {
+func (r *TextRenderer) SetMsg(buf *buffer.Buffer, msg messages.Message) {
 	r.currMsg = msg
+	r.Render(buf)
 }
 
 var welcome []byte = []byte("jte -- version: v0.0.1")
 
 func (r *TextRenderer) drawWelcome() {
-	for i := range r.screenrows {
+	for i := 0; i < r.screenrows; i++ {
 		if i == r.screenrows/3 {
 			r.abuf.Append([]byte("~"))
 			padding := (r.screencols - len(welcome)) / 2
@@ -114,7 +115,7 @@ func (r *TextRenderer) status(buf *buffer.Buffer) string {
 	if buf.Dirty {
 		displayDirty = "(modified)"
 	}
-	return fmt.Sprintf("ln:%d/%d - %s %s", buf.C.Y, len(buf.Rows)-1, displayDirty, displayName)
+	return fmt.Sprintf("ln:%d/%d - %s %s", buf.C.Y, len(buf.Rows), displayDirty, displayName)
 }
 
 func (r *TextRenderer) drawStatusBar(buf *buffer.Buffer) {
@@ -140,9 +141,10 @@ func (r *TextRenderer) drawStatusBar(buf *buffer.Buffer) {
 func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
 	for i := range r.screenrows {
 		filerow := i + r.rowoffset
-		if filerow >= len(buf.Rows) {
+		if filerow < 0 || filerow >= len(buf.Rows) {
 			r.abuf.Append([]byte("~"))
 		} else {
+			r.logger.Debug("rendering", slog.String("row",string(*buf.Rows[filerow])))
 			r.abuf.Append(*buf.Rows[filerow])
 		}
 		r.abuf.Append([]byte("\x1b[K"))
