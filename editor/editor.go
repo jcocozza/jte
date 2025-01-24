@@ -8,9 +8,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/jcocozza/jte/color"
 	"github.com/jcocozza/jte/fileutil"
 	"github.com/jcocozza/jte/term"
 )
+
 const msgTimeout = time.Duration(3 * time.Second)
 
 type Editor struct {
@@ -548,7 +550,31 @@ func (e *Editor) drawFile(rowNum int) {
 	if filerow >= len(e.rows) {
 		e.abuf.Append([]byte("~"))
 	} else {
-		e.abuf.Append(e.rows[filerow].render)
+		row := e.rows[filerow]
+		var currHL color.Highlight = -1
+		for i, b := range row.render {
+			//cb := color.ColorByte(b)
+			cb := row.hl[i]
+			switch cb {
+			case color.HL_NORMAL:
+				if currHL != -1 {
+					e.abuf.Append([]byte(color.MakeColor(color.RESET)))
+					currHL = -1
+				}
+				e.abuf.Append([]byte{b})
+			default:
+				colr := color.SyntaxToColor(cb)
+				if cb != currHL {
+					currHL = cb
+					e.abuf.Append([]byte(colr))
+				}
+				e.abuf.Append([]byte{b})
+			}
+		}
+		if currHL != -1 {
+			e.abuf.Append([]byte(color.MakeColor(color.RESET)))
+		}
+		//e.abuf.Append(e.rows[filerow].render)
 	}
 }
 

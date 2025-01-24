@@ -23,6 +23,7 @@ type Highlight int
 const (
 	HL_NORMAL Highlight = iota
 	HL_NUMBER
+	HL_MATCH
 )
 
 func ColorByte(b byte) Highlight {
@@ -42,6 +43,8 @@ func SyntaxToColor(hl Highlight) string {
 	switch hl {
 	case HL_NUMBER:
 		return MakeColor(RED)
+	case HL_MATCH:
+		return MakeColor(BLUE)
 	case HL_NORMAL:
 		fallthrough
 	default:
