@@ -1,4 +1,4 @@
-package editor
+package logger
 
 import (
 	"log/slog"

@@ -1,25 +1,25 @@
 package main
 
 import (
-	"os"
-	"time"
+	"log/slog"
 
-	"github.com/jcocozza/jte/editor"
+	"github.com/jcocozza/jte/api/keypress"
+	"github.com/jcocozza/jte/logger"
+	"github.com/jcocozza/jte/term"
 )
 
 func main() {
-	e := editor.InitEditor()
-	defer e.Exit("regular exit")
-	if len(os.Args) >= 2 {
-		err := e.Open(os.Args[1])
-		if err != nil {
-			e.ExitErr(err)
-		}
+	rw, err := term.EnableRawMode()
+	if err != nil {
+		panic(err)
 	}
-	e.SetMsg("Momento Mori", time.Duration(3*time.Second))
-	//e.Debug()
+	defer rw.Restore()
+	l := logger.CreateLogger(slog.LevelDebug)
+	keyboard := keypress.NewKeyboard(l)
 	for {
-		e.Refresh()
-		e.ProcessKeypress()
+		_, err := keyboard.GetKeypress()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
