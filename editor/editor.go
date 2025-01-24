@@ -38,8 +38,11 @@ type Editor struct {
 	// if we are on the welcome page
 	welcome bool
 
-	lastMatch int
-	direction int
+	// related to searching
+	lastMatch     int
+	direction     int
+	savedHLRowNum int
+	savedHLLine   []color.Highlight
 
 	logger *slog.Logger
 }
@@ -140,6 +143,11 @@ func (e *Editor) prompt(prompt string, callback func(input []byte, char rune)) [
 }
 
 func (e *Editor) findCallback(query []byte, key rune) {
+	if len(e.savedHLLine) != 0 {
+		e.rows[e.savedHLRowNum].hl = e.savedHLLine
+		e.savedHLLine = nil
+	}
+
 	switch key {
 	case '\r', EscapeSequence:
 		e.lastMatch = -1
@@ -159,24 +167,38 @@ func (e *Editor) findCallback(query []byte, key rune) {
 	}
 	current := e.lastMatch
 	e.logger.Info("current is", slog.Int("curr", current))
-	for range e.rows {
+	for i := range e.rows {
 		current += e.direction
 		if current == -1 {
 			current = len(e.rows) - 1
 		} else if current == len(e.rows) {
 			current = 0
 		}
-
 		row := e.rows[current]
 		contains := bytes.Contains(row.chars, query)
 		e.logger.Info("match idx", slog.Int("idx", current))
 		if contains {
 			matchIdx := bytes.Index(row.render, query)
 			if matchIdx != -1 {
+				// move to result
 				e.lastMatch = current
 				e.c.Y = current
 				e.c.X = matchIdx
 				e.rowoffset = len(e.rows)
+
+				// save existing coloring
+				e.savedHLRowNum = i
+				e.savedHLLine = row.hl
+				e.logger.Info("row num HL set", slog.Int("num", i))
+				e.logger.Info("saved hl line", slog.Int("len", len(e.savedHLLine)))
+				// handle coloring of results
+				start := matchIdx
+				end := start + len(query)
+				if start >= 0 && end <= len(row.hl) {
+					for i := start; i < end; i++ {
+						row.hl[i] = color.HL_MATCH
+					}
+				}
 				e.Refresh()
 				break
 			}
@@ -553,7 +575,6 @@ func (e *Editor) drawFile(rowNum int) {
 		row := e.rows[filerow]
 		var currHL color.Highlight = -1
 		for i, b := range row.render {
-			//cb := color.ColorByte(b)
 			cb := row.hl[i]
 			switch cb {
 			case color.HL_NORMAL:
