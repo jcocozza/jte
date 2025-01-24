@@ -1,4 +1,4 @@
-package keypress
+package keyboard
 
 type SpecialKey uint16
 

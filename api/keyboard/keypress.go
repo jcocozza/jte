@@ -1,4 +1,4 @@
-package keypress
+package keyboard
 
 import (
 	"errors"
@@ -13,6 +13,10 @@ import (
 type Keypress struct {
 	Key     SpecialKey
 	Unicode rune
+}
+
+func (kp *Keypress) IsUnicode() bool {
+	return kp.Unicode != 0
 }
 
 // TODO: I'm not convinced that this method will work perfectly
