@@ -115,7 +115,11 @@ func (r *TextRenderer) status(buf *buffer.Buffer) string {
 	if buf.Dirty {
 		displayDirty = "(modified)"
 	}
-	return fmt.Sprintf("ln:%d/%d - %s %s", buf.C.Y, len(buf.Rows), displayDirty, displayName)
+	var displayRowNum int = 0
+	if len(buf.Rows) != 0 {
+		displayRowNum = len(buf.Rows) - 1 // -1 because i want a 0 indexed system
+	}
+	return fmt.Sprintf("ln:%d/%d - %s %s", buf.C.Y, displayRowNum, displayDirty, displayName)
 }
 
 func (r *TextRenderer) drawStatusBar(buf *buffer.Buffer) {

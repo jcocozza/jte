@@ -12,6 +12,7 @@ func CLI() {
 	l := logger.CreateLogger(slog.LevelDebug)
 	e := editor.NewTextEditor(l)
 	if len(os.Args) < 2 {
+		e.NewBuf()
 		e.Run()
 	} else {
 		fname := os.Args[1]
