@@ -127,6 +127,7 @@ func (b *MemBuffer) InsertNewLine() {
 	}
 	b.C.Y++
 	b.C.X = 0
+	b.dirty = true
 }
 
 // when moving up or down and at the end of a line, we want to snap to end of next line if that line is shorter
@@ -159,6 +160,14 @@ func (b *MemBuffer) Left() {
 func (b *MemBuffer) Right() {
 	if b.C.Y < len(b.Rows) && b.C.X < len(b.Rows[b.C.Y]) {
 		b.C.right()
+	}
+}
+func (b *MemBuffer) StartLine() {
+	b.C.X = 0
+}
+func (b *MemBuffer) EndLine() {
+	if b.C.Y < len(b.Rows) {
+		b.C.X = len(b.Rows[b.C.Y])
 	}
 }
 func (b *MemBuffer) X() int {

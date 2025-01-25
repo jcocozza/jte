@@ -83,6 +83,10 @@ func (e *Editor) processKey() error {
 		e.bm.CurrBufNode.Buf.DeleteChar()
 	case keyboard.ENTER:
 		e.bm.CurrBufNode.Buf.InsertNewLine()
+	case keyboard.HOME:
+		e.bm.CurrBufNode.Buf.StartLine()
+	case keyboard.END:
+		e.bm.CurrBufNode.Buf.EndLine()
 	default: // if we do not handle the special key explicity, do nothing
 		return nil
 	}
