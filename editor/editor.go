@@ -3,19 +3,11 @@ package editor
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/jcocozza/jte/api/buffer"
 	"github.com/jcocozza/jte/api/keyboard"
 	"github.com/jcocozza/jte/api/messages"
 	"github.com/jcocozza/jte/api/renderer"
-)
-
-var (
-	momentoMori messages.Message = messages.Message{"Momento Mori", time.Now(), time.Duration(3*time.Second)}
-	hello       messages.Message = messages.Message{"hello", time.Now(), -1}
-	goodbye     messages.Message = messages.Message{"good bye", time.Now(), -1}
-	goodDay     messages.Message = messages.Message{"good day", time.Now(), -1}
 )
 
 type Editor struct {
@@ -107,7 +99,6 @@ func (e *Editor) Run() {
 		panic(err)
 	}
 	defer e.renderer.Cleanup()
-	//e.NewBuf()
 	e.PushMessage(momentoMori)
 	for {
 		e.renderer.Render(e.currBuf)

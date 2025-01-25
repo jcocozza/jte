@@ -2,6 +2,14 @@ package messages
 
 import "time"
 
+
+var (
+	MomentoMori Message = Message{"Momento Mori", time.Now(), time.Duration(3*time.Second)}
+	Hello       Message = Message{"hello", time.Now(), -1}
+	Goodbye     Message = Message{"good bye", time.Now(), -1}
+	GoodDay     Message = Message{"good day", time.Now(), -1}
+)
+
 type Message struct {
 	Text string
 	Time time.Time
