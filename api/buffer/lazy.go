@@ -27,7 +27,7 @@ type LazyBuffer struct {
 	File        *os.File
 	dirty       bool
 	LoadedLines int
-	BufSize     int
+	BufChunkSize     int
 	totalLines  int
 
 	logger *slog.Logger
@@ -51,7 +51,7 @@ func NewLazyBuffer(filename string, bufSize int, l *slog.Logger) (*LazyBuffer, e
 		C:          &Cursor{},
 		name:       filename,
 		File:       file,
-		BufSize:    bufSize,
+		BufChunkSize:    bufSize,
 		totalLines: totalLines,
 		logger: l,
 	}, nil
@@ -62,7 +62,7 @@ func (b *LazyBuffer) LoadNextChunk() error {
 		return nil
 	}
 	startLine := b.LoadedLines
-	endLine := startLine + b.BufSize
+	endLine := startLine + b.BufChunkSize
 	if endLine > b.totalLines {
 		endLine = b.totalLines
 	}
@@ -99,14 +99,8 @@ func (b *LazyBuffer) LoadNextChunk() error {
 	return nil
 }
 
-// appending is faster then inserting
-func (b *LazyBuffer) appendRow(row []byte) {
-	b.logger.Debug("append row", slog.String("row", string(row)), slog.Int("row", len(b.Rows)))
-	newBufRow := make(bufrow, len(row))
-	copy(newBufRow, row) // Ensure a copy of the row to avoid unintended aliasing
-	b.Rows = append(b.Rows, &newBufRow)
-}
-
+// only bothering with insert right now because of the lazy loading
+// i need to figure out a more efficient way to do this
 func (b *LazyBuffer) insertRow(at int, row []byte) {
 	if at < 0 || at > len(b.Rows) {
 		return

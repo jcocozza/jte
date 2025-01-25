@@ -42,7 +42,7 @@ func (e *Editor) NewBuf() buffer.Buffer {
 func (e *Editor) Open(fname string) error {
 	//b := e.NewBuf()
 	//newBuf := buffer.NewEmptyBuffer(fname, e.logger)
-	newBuf, err := buffer.NewLazyBuffer(fname, 1000, e.logger)
+	newBuf, err := buffer.NewLazyBuffer(fname, buffer.BufChunkSize, e.logger)
 	if err != nil {
 		panic(err)
 	}
