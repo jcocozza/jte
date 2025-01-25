@@ -98,7 +98,7 @@ func (kb *Keyboard) GetKeypress() (Keypress, error) {
 	switch {
 	case buf[0] == '\033':
 		kp = parseEscape(buf, nread)
-	case SpecialKey(buf[0]) <= SPACE || SpecialKey(buf[0]) == BACKSPACE_2:
+	case SpecialKey(buf[0]) <= Ctrl_UNDERSCORE || SpecialKey(buf[0]) == BACKSPACE_2:
 		kp = Keypress{Key: SpecialKey(buf[0])}
 	default:
 		r, _ := utf8.DecodeRune(buf[:nread])

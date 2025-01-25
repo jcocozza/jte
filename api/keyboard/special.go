@@ -72,7 +72,7 @@ const (
 	Ctrl7           SpecialKey = 0x1F
 	Ctrl_SLASH      SpecialKey = 0x1F
 	Ctrl_UNDERSCORE SpecialKey = 0x1F
-	SPACE           SpecialKey = 0x20
+	//SPACE           SpecialKey = 0x20
 
 	BACKSPACE_2 SpecialKey = 0x7F
 	Ctrl8       SpecialKey = 0x7F
@@ -144,7 +144,7 @@ var specialKeys map[SpecialKey]string = map[SpecialKey]string{
 	Ctrl7: "Ctrl+7",
 	//Ctrl_SLASH:      "Ctrl+/",
 	//Ctrl_UNDERSCORE: "Ctrl+_",
-	SPACE:       "SPACE",
+	//SPACE:       "SPACE",
 	BACKSPACE_2: "BACKSPACE_2",
 	//Ctrl8:           "Ctrl+8",
 }
