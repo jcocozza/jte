@@ -168,7 +168,7 @@ func (r *TextRenderer) drawBuffer(buf buffer.Buffer) {
 		if filerow >= buf.NumRows() {
 			r.abuf.Append([]byte("~"))
 		} else {
-			r.logger.Debug("rendering", slog.String("row", string(buf.Row(filerow))), slog.Int("num", filerow))
+			//r.logger.Debug("rendering", slog.String("row", string(buf.Row(filerow))), slog.Int("num", filerow))
 			//r.abuf.Append(buf.Row(filerow))
 			r.renderRow(buf.Row(filerow))
 		}

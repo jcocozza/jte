@@ -108,7 +108,7 @@ func (b *LazyBuffer) insertRow(at int, row []byte) {
 	if at < 0 || at > len(b.Rows) {
 		return
 	}
-	b.logger.Debug("insert row", slog.String("row", string(row)), slog.Int("at", at))
+	//b.logger.Debug("insert row", slog.String("row", string(row)), slog.Int("at", at))
 	newRows := make([]*bufrow, len(b.Rows)+1)
 	copy(newRows[:at], b.Rows[:at])
 	newBufRow := make(bufrow, len(row))

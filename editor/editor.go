@@ -11,7 +11,7 @@ import (
 )
 
 type Editor struct {
-	bm *buffer.BufferManager
+	bm       *buffer.BufferManager
 	renderer renderer.Renderer
 	keyboard *keyboard.Keyboard
 	ml       messages.MessageList
@@ -24,7 +24,7 @@ func NewTextEditor(l *slog.Logger) *Editor {
 	r := &renderer.TextRenderer{}
 	bm := buffer.NewBufferManager()
 	return &Editor{
-		bm: bm,
+		bm:       bm,
 		renderer: r,
 		keyboard: kb,
 		logger:   l,
@@ -41,11 +41,11 @@ func (e *Editor) NewBuf() buffer.Buffer {
 
 func (e *Editor) Open(fname string) error {
 	//b := e.NewBuf()
-	//newBuf := buffer.NewEmptyBuffer(fname, e.logger)
-	newBuf, err := buffer.NewLazyBuffer(fname, buffer.BufChunkSize, e.logger)
-	if err != nil {
-		panic(err)
-	}
+	newBuf := buffer.NewEmptyBuffer(fname, e.logger)
+	//newBuf, err := buffer.NewLazyBuffer(fname, buffer.BufChunkSize, e.logger)
+	//if err != nil {
+	//	panic(err)
+	//}
 	id := e.bm.Add(newBuf)
 	e.bm.SetCurrent(id)
 	return newBuf.Load()
@@ -57,6 +57,7 @@ func (e *Editor) processKey() error {
 		return err
 	}
 	if kp.IsUnicode() {
+		e.bm.CurrBufNode.Buf.InsertChar(byte(kp.Unicode))
 		return nil
 	}
 	switch kp.Key {
@@ -72,7 +73,17 @@ func (e *Editor) processKey() error {
 		e.bm.CurrBufNode.Buf.Left()
 	case keyboard.ARROW_RIGHT:
 		e.bm.CurrBufNode.Buf.Right()
-	default:
+	case keyboard.BACKSPACE, keyboard.BACKSPACE_2:
+		e.bm.CurrBufNode.Buf.DeleteChar()
+	case keyboard.DELETE:
+		// TODO: this logic needs to be better encapsulated in the buffer
+		if e.bm.CurrBufNode.Buf.Y() < e.bm.CurrBufNode.Buf.NumRows() && e.bm.CurrBufNode.Buf.X() < len(e.bm.CurrBufNode.Buf.Row(e.bm.CurrBufNode.Buf.Y())) {
+			e.bm.CurrBufNode.Buf.Right()
+		}
+		e.bm.CurrBufNode.Buf.DeleteChar()
+	case keyboard.ENTER:
+		e.bm.CurrBufNode.Buf.InsertNewLine()
+	default: // if we do not handle the special key explicity, do nothing
 		return nil
 	}
 	return nil
