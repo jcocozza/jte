@@ -72,14 +72,26 @@ func (b *Buffer) Load(filename string) error {
 	return nil
 }
 
+// when moving up or down and at the end of a line, we want to snap to end of next line if that line is shorter
+func (b *Buffer) adjustCursor() {
+	if b.C.Y >= len(b.Rows) {
+		return
+	}
+	newRowLen := len(*b.Rows[b.C.Y])
+	if b.C.X > newRowLen {
+		b.C.X = newRowLen
+	}
+}
 func (b *Buffer) Up() {
 	if b.C.Y > 0 {
 		b.C.up()
+		b.adjustCursor()
 	}
 }
 func (b *Buffer) Down() {
 	if b.C.Y < len(b.Rows) -1 {
 		b.C.down()
+		b.adjustCursor()
 	}
 }
 func (b *Buffer) Left() {

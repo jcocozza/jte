@@ -80,7 +80,9 @@ func (r *TextRenderer) Exit(msg string) {
 }
 
 func (r *TextRenderer) drawCursor(buf *buffer.Buffer) {
-	s := fmt.Sprintf("\x1b[%d;%dH", (buf.C.Y-r.rowoffset)+1, (buf.C.X-r.coloffset)+1)
+	y := (buf.C.Y - r.rowoffset) + 1
+	x := (buf.C.X - r.coloffset) + 1
+	s := fmt.Sprintf("\x1b[%d;%dH", y, x)
 	r.abuf.Append([]byte(s))
 }
 
@@ -156,12 +158,14 @@ func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
 	}
 }
 
+/*
 func (r *TextRenderer) Clear() {
 	r.abuf.Clear()
 	r.abuf.Flush()
 	r.rowoffset = 0
 	r.coloffset = 0
 }
+*/
 
 func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 	if buf.C.Y < r.rowoffset {
