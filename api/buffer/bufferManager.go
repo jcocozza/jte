@@ -2,7 +2,7 @@ package buffer
 
 type BufNode struct {
 	id   int
-	Buf  *Buffer
+	Buf  Buffer
 	next *BufNode
 	prev *BufNode
 }
@@ -12,7 +12,7 @@ type BufList struct {
 	node *BufNode
 }
 
-func (bl *BufList) Insert(buf *Buffer, id int) *BufNode {
+func (bl *BufList) Insert(buf Buffer, id int) *BufNode {
 	newBufNode := &BufNode{
 		id:   id,
 		Buf:  buf,
@@ -86,7 +86,7 @@ func NewBufferManager() *BufferManager {
 	}
 }
 
-func (bm *BufferManager) Add(buf *Buffer) int {
+func (bm *BufferManager) Add(buf Buffer) int {
 	bm.idCounter++
 	newBufNode := bm.bufferList.Insert(buf, bm.idCounter)
 	bm.bufMap[newBufNode.id] = newBufNode

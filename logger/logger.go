@@ -7,7 +7,7 @@ import (
 
 func logFile() (*os.File, error) {
 	path := "../logs/editor-log.log"
-	return os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	return os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 }
 
 // create a logger

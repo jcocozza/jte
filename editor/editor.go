@@ -32,16 +32,23 @@ func NewTextEditor(l *slog.Logger) *Editor {
 }
 
 // create a new buffer and set it to the current
-func (e *Editor) NewBuf() *buffer.Buffer {
-	newBuf := buffer.NewEmptyBuffer()
+func (e *Editor) NewBuf() buffer.Buffer {
+	newBuf := buffer.NewEmptyBuffer("", e.logger)
 	id := e.bm.Add(newBuf)
 	e.bm.SetCurrent(id)
 	return newBuf
 }
 
 func (e *Editor) Open(fname string) error {
-	b := e.NewBuf()
-	return b.Load(fname)
+	//b := e.NewBuf()
+	//newBuf := buffer.NewEmptyBuffer(fname, e.logger)
+	newBuf, err := buffer.NewLazyBuffer(fname, 1000, e.logger)
+	if err != nil {
+		panic(err)
+	}
+	id := e.bm.Add(newBuf)
+	e.bm.SetCurrent(id)
+	return newBuf.Load()
 }
 
 func (e *Editor) processKey() error {
@@ -82,8 +89,9 @@ func (e *Editor) openMessages() {
 	for i, m := range e.ml {
 		rows[i+1] = []byte(fmt.Sprintf("%s - %s", m.Time.String(), m.Text))
 	}
-	msgBuf := e.NewBuf()
-	msgBuf.LoadFromBytes(rows)
+	// TODO: re-implement
+	//msgBuf := e.NewBuf()
+	//msgBuf.LoadFromBytes(rows)
 }
 
 func (e *Editor) Run() {

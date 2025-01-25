@@ -11,13 +11,15 @@ import (
 	"github.com/jcocozza/jte/term"
 )
 
+const TAB_STOP = 8
+
 type Renderer interface {
 	Init(l *slog.Logger) error
-	Render(buf *buffer.Buffer)
+	Render(buf buffer.Buffer)
 	Cleanup()
 	Exit(msg string)
 	ExitErr(err error)
-	SetMsg(buf *buffer.Buffer, msg messages.Message)
+	SetMsg(buf buffer.Buffer, msg messages.Message)
 }
 
 type erow struct {
@@ -79,14 +81,14 @@ func (r *TextRenderer) Exit(msg string) {
 	os.Exit(0)
 }
 
-func (r *TextRenderer) drawCursor(buf *buffer.Buffer) {
-	y := (buf.C.Y - r.rowoffset) + 1
-	x := (buf.C.X - r.coloffset) + 1
+func (r *TextRenderer) drawCursor(buf buffer.Buffer) {
+	y := (buf.Y() - r.rowoffset) + 1
+	x := (buf.X() - r.coloffset) + 1
 	s := fmt.Sprintf("\x1b[%d;%dH", y, x)
 	r.abuf.Append([]byte(s))
 }
 
-func (r *TextRenderer) SetMsg(buf *buffer.Buffer, msg messages.Message) {
+func (r *TextRenderer) SetMsg(buf buffer.Buffer, msg messages.Message) {
 	r.currMsg = msg
 	r.Render(buf)
 }
@@ -108,23 +110,23 @@ func (r *TextRenderer) drawWelcome() {
 	}
 }
 
-func (r *TextRenderer) status(buf *buffer.Buffer) string {
-	displayName := buf.Name
+func (r *TextRenderer) status(buf buffer.Buffer) string {
+	displayName := buf.Name()
 	if displayName == "" {
 		displayName = "[No Name]"
 	}
 	var displayDirty string = ""
-	if buf.Dirty {
+	if buf.Dirty() {
 		displayDirty = "(modified)"
 	}
 	var displayRowNum int = 0
-	if len(buf.Rows) != 0 {
-		displayRowNum = len(buf.Rows) - 1 // -1 because i want a 0 indexed system
+	if buf.TotalRows() != 0 {
+		displayRowNum = buf.TotalRows() - 1 // -1 because i want a 0 indexed system
 	}
-	return fmt.Sprintf("ln:%d/%d - %s %s", buf.C.Y, displayRowNum, displayDirty, displayName)
+	return fmt.Sprintf("ln:%d/%d - %s %s", buf.Y(), displayRowNum, displayDirty, displayName)
 }
 
-func (r *TextRenderer) drawStatusBar(buf *buffer.Buffer) {
+func (r *TextRenderer) drawStatusBar(buf buffer.Buffer) {
 	// status bar
 	r.abuf.Append([]byte("\x1b[7m"))
 	status := r.status(buf)
@@ -144,14 +146,31 @@ func (r *TextRenderer) drawStatusBar(buf *buffer.Buffer) {
 	}
 }
 
-func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
-	for i := range r.screenrows {
+func (r *TextRenderer) renderRow(row []byte) {
+	var expanded []byte
+	col := 0
+	for _, b := range row {
+		if b == '\t' {
+			spaces := TAB_STOP - (col % TAB_STOP)
+			expanded = append(expanded, bytes.Repeat([]byte(" "), spaces)...)
+			col += spaces
+		} else {
+			expanded = append(expanded, b)
+			col++
+		}
+	}
+	r.abuf.Append(expanded)
+}
+
+func (r *TextRenderer) drawBuffer(buf buffer.Buffer) {
+	for i := 0; i < r.screenrows; i++ {
 		filerow := i + r.rowoffset
-		if filerow < 0 || filerow >= len(buf.Rows) {
+		if filerow >= buf.NumRows() {
 			r.abuf.Append([]byte("~"))
 		} else {
-			r.logger.Debug("rendering", slog.String("row",string(*buf.Rows[filerow])))
-			r.abuf.Append(*buf.Rows[filerow])
+			r.logger.Debug("rendering", slog.String("row", string(buf.Row(filerow))), slog.Int("num", filerow))
+			//r.abuf.Append(buf.Row(filerow))
+			r.renderRow(buf.Row(filerow))
 		}
 		r.abuf.Append([]byte("\x1b[K"))
 		r.abuf.Append([]byte("\r\n"))
@@ -167,28 +186,28 @@ func (r *TextRenderer) Clear() {
 }
 */
 
-func (r *TextRenderer) scroll(buf *buffer.Buffer) {
-	if buf.C.Y < r.rowoffset {
-		r.rowoffset = buf.C.Y
+func (r *TextRenderer) scroll(buf buffer.Buffer) {
+	if buf.Y() < r.rowoffset {
+		r.rowoffset = buf.Y()
 	}
-	if buf.C.Y >= r.rowoffset+r.screenrows {
-		r.rowoffset = buf.C.Y - r.screenrows + 1
+	if buf.Y() >= r.rowoffset+r.screenrows {
+		r.rowoffset = buf.Y() - r.screenrows + 1
 	}
-	if buf.C.X < r.coloffset {
-		r.coloffset = buf.C.X
+	if buf.X() < r.coloffset {
+		r.coloffset = buf.X()
 	}
-	if buf.C.X >= r.coloffset+r.screencols {
-		r.coloffset = buf.C.X - r.screencols + 1
+	if buf.X() >= r.coloffset+r.screencols {
+		r.coloffset = buf.X() - r.screencols + 1
 	}
-
 }
 
-func (r *TextRenderer) Render(buf *buffer.Buffer) {
+func (r *TextRenderer) Render(buf buffer.Buffer) {
+	r.abuf.Clear()
 	r.scroll(buf)
 	r.abuf.Append([]byte("\x1b[?25l"))
 	r.abuf.Append([]byte("\x1b[H"))
 
-	if buf.IsEmpty() {
+	if buf.NumRows() == 0 {
 		r.drawWelcome()
 	} else {
 		r.drawBuffer(buf)

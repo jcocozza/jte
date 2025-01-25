@@ -1,3 +1,2 @@
 logs
-foo.txt
-test.txt
+*.txt
