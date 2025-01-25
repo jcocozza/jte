@@ -7,6 +7,9 @@ import (
 	"os"
 )
 
+// number of lines to read in per chunk
+const BufChunkSize int = 1000
+
 func countLines(file *os.File) (int, error) {
 	scanner := bufio.NewScanner(file)
 	num := 0
