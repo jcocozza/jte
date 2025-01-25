@@ -71,3 +71,24 @@ func (b *Buffer) Load(filename string) error {
 	b.Name = filename
 	return nil
 }
+
+func (b *Buffer) Up() {
+	if b.C.Y > 0 {
+		b.C.up()
+	}
+}
+func (b *Buffer) Down() {
+	if b.C.Y < len(b.Rows) -1 {
+		b.C.down()
+	}
+}
+func (b *Buffer) Left() {
+	if b.C.X > 0 {
+		b.C.left()
+	}
+}
+func (b *Buffer) Right() {
+	if b.C.Y < len(b.Rows) && b.C.X < len(*b.Rows[b.C.Y]) {
+		b.C.right()
+	}
+}

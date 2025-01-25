@@ -11,8 +11,7 @@ import (
 )
 
 type Editor struct {
-	bl       []*buffer.Buffer
-	currBuf  *buffer.Buffer
+	bm *buffer.BufferManager
 	renderer renderer.Renderer
 	keyboard *keyboard.Keyboard
 	ml       messages.MessageList
@@ -23,18 +22,20 @@ type Editor struct {
 func NewTextEditor(l *slog.Logger) *Editor {
 	kb := keyboard.NewKeyboard(l)
 	r := &renderer.TextRenderer{}
+	bm := buffer.NewBufferManager()
 	return &Editor{
+		bm: bm,
 		renderer: r,
 		keyboard: kb,
 		logger:   l,
 	}
 }
 
+// create a new buffer and set it to the current
 func (e *Editor) NewBuf() *buffer.Buffer {
-	e.currBuf = nil
 	newBuf := buffer.NewEmptyBuffer()
-	e.bl = append(e.bl, newBuf)
-	e.currBuf = newBuf
+	id := e.bm.Add(newBuf)
+	e.bm.SetCurrent(id)
 	return newBuf
 }
 
@@ -57,21 +58,13 @@ func (e *Editor) processKey() error {
 	case keyboard.CtrlL:
 		e.openMessages()
 	case keyboard.ARROW_UP:
-		if e.currBuf.C.Y > 0 {
-			e.currBuf.C.Y--
-		}
+		e.bm.CurrBufNode.Buf.Up()
 	case keyboard.ARROW_DOWN:
-		if e.currBuf.C.Y < len(e.currBuf.Rows)-1 {
-			e.currBuf.C.Y++
-		}
+		e.bm.CurrBufNode.Buf.Down()
 	case keyboard.ARROW_LEFT:
-		if e.currBuf.C.X > 0 {
-			e.currBuf.C.X--
-		}
+		e.bm.CurrBufNode.Buf.Left()
 	case keyboard.ARROW_RIGHT:
-		if e.currBuf.C.Y < len(e.currBuf.Rows) && e.currBuf.C.X < len(*e.currBuf.Rows[e.currBuf.C.Y]) {
-			e.currBuf.C.X++
-		}
+		e.bm.CurrBufNode.Buf.Right()
 	default:
 		return nil
 	}
@@ -80,7 +73,7 @@ func (e *Editor) processKey() error {
 
 func (e *Editor) PushMessage(msg messages.Message) {
 	e.ml.Push(msg)
-	e.renderer.SetMsg(e.currBuf, msg)
+	e.renderer.SetMsg(e.bm.CurrBufNode.Buf, msg)
 }
 
 func (e *Editor) openMessages() {
@@ -99,9 +92,9 @@ func (e *Editor) Run() {
 		panic(err)
 	}
 	defer e.renderer.Cleanup()
-	e.PushMessage(momentoMori)
+	e.PushMessage(messages.MomentoMori)
 	for {
-		e.renderer.Render(e.currBuf)
+		e.renderer.Render(e.bm.CurrBufNode.Buf)
 		err := e.processKey()
 		if err != nil {
 			break
