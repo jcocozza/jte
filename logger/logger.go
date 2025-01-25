@@ -6,7 +6,7 @@ import (
 )
 
 func logFile() (*os.File, error) {
-	path := "logs/editor-log.log"
+	path := "../logs/editor-log.log"
 	return os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 }
 

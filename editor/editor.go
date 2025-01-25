@@ -46,6 +46,11 @@ func (e *Editor) NewBuf() *buffer.Buffer {
 	return newBuf
 }
 
+func (e *Editor) Open(fname string) error {
+	b := e.NewBuf()
+	return b.Load(fname)
+}
+
 func (e *Editor) processKey() error {
 	kp, err := e.keyboard.GetKeypress()
 	if err != nil {
@@ -75,7 +80,6 @@ func (e *Editor) processKey() error {
 		if e.currBuf.C.Y < len(e.currBuf.Rows) && e.currBuf.C.X < len(*e.currBuf.Rows[e.currBuf.C.Y]) {
 			e.currBuf.C.X++
 		}
-
 	default:
 		return nil
 	}
@@ -103,7 +107,7 @@ func (e *Editor) Run() {
 		panic(err)
 	}
 	defer e.renderer.Cleanup()
-	e.NewBuf()
+	//e.NewBuf()
 	e.PushMessage(momentoMori)
 	for {
 		e.renderer.Render(e.currBuf)
