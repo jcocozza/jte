@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/jcocozza/jte/api/fileutil"
 )
@@ -13,8 +14,11 @@ type MemBuffer struct {
 	Rows []bufrow
 	C    *Cursor
 
+	f *os.File
+
 	name  string
 	dirty bool
+	writeable bool
 
 	logger *slog.Logger
 }
@@ -71,6 +75,7 @@ func (b *MemBuffer) Load() error {
 	if err != nil {
 		return err
 	}
+	b.f = file
 	scanner := bufio.NewScanner(file)
 	numScans := 0
 	for scanner.Scan() {
@@ -86,10 +91,21 @@ func (b *MemBuffer) Load() error {
 		return fmt.Errorf("error reading file: %w", err)
 	}
 	//b.Name = filename
+	isWriteable, err := b.isWriteable()
+	if err != nil {
+		return err
+	}
+	b.writeable = isWriteable
 	return nil
 }
 
+func (b *MemBuffer) Close() error {
+	b.logger.Info("closing buffer", slog.String("name", b.name))
+	return b.f.Close()
+}
+
 func (b *MemBuffer) InsertChar(c byte) {
+	if !b.writeable {return}
 	if b.C.X == b.NumRows() {
 		b.appendRow([]byte{})
 	}
@@ -99,6 +115,7 @@ func (b *MemBuffer) InsertChar(c byte) {
 }
 
 func (b *MemBuffer) DeleteChar() {
+	if !b.writeable {return}
 	if b.C.Y == len(b.Rows) {
 		return
 	}
@@ -119,6 +136,7 @@ func (b *MemBuffer) DeleteChar() {
 }
 
 func (b *MemBuffer) InsertNewLine() {
+	if !b.writeable {return}
 	if b.C.X == 0 {
 		b.insertRow(b.C.Y, []byte{})
 	} else {
@@ -128,6 +146,16 @@ func (b *MemBuffer) InsertNewLine() {
 	b.C.Y++
 	b.C.X = 0
 	b.dirty = true
+}
+
+func (b *MemBuffer) isWriteable() (bool, error) {
+	info, err := b.f.Stat()
+	if err != nil {
+		return false, err
+	}
+	mode := info.Mode()
+	writable := mode&os.ModePerm != os.ModePerm
+	return writable, nil
 }
 
 // when moving up or down and at the end of a line, we want to snap to end of next line if that line is shorter
