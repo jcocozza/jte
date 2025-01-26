@@ -3,6 +3,7 @@ package editor
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/jcocozza/jte/api/buffer"
 	"github.com/jcocozza/jte/api/keyboard"
@@ -99,14 +100,19 @@ func (e *Editor) PushMessage(msg messages.Message) {
 }
 
 func (e *Editor) openMessages() {
-	rows := make([][]byte, len(e.ml)+1)
+	rows := make([][]byte, len(e.ml)+2)
 	rows[0] = []byte("jte messages")
+	rows[1] = []byte("------------")
 	for i, m := range e.ml {
-		rows[i+1] = []byte(fmt.Sprintf("%s - %s", m.Time.String(), m.Text))
+		rows[i+2] = []byte(fmt.Sprintf("%s - %s", m.Time.String(), m.Text))
 	}
-	// TODO: re-implement
-	//msgBuf := e.NewBuf()
-	//msgBuf.LoadFromBytes(rows)
+	now := time.Now()
+	nowStr := now.Format("2006-01-02")
+	s := fmt.Sprintf("messages-%s", nowStr)
+	newBuf := buffer.NewEmptyBuffer(s, e.logger)
+	newBuf.LoadFromBytes(rows)
+	id := e.bm.Add(newBuf)
+	e.bm.SetCurrent(id)
 }
 
 func (e *Editor) Run() {
