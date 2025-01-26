@@ -58,10 +58,10 @@ func (e *Editor) processKey() error {
 		return err
 	}
 	if kp.IsUnicode() {
-		e.bm.CurrBufNode.Buf.InsertChar(byte(kp.Unicode))
+		e.bm.CurrBufNode.Buf.InsertChar(byte(kp))
 		return nil
 	}
-	switch kp.Key {
+	switch kp {
 	case keyboard.CtrlQ:
 		e.renderer.Exit("regular quit")
 	case keyboard.CtrlL:
