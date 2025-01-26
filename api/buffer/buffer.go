@@ -4,6 +4,7 @@ package buffer
 type Buffer interface {
 	// load the file into the buffer
 	Load() error
+	Close() error
 	// insert a character at the current cursor position
 	InsertChar(c byte)
 	// delete a character at the cursor

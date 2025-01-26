@@ -64,6 +64,7 @@ func (bl *BufList) Delete(id int) {
 	if nodeToDelete == bl.node { // If node to delete is the first node
 		bl.node = next
 	}
+	nodeToDelete.Buf.Close()
 	nodeToDelete = nil
 }
 
