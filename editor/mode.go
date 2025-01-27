@@ -1,0 +1,95 @@
+package editor
+
+import (
+	"log/slog"
+
+	"github.com/jcocozza/jte/api/keyboard"
+	"github.com/jcocozza/jte/api/mode"
+)
+
+/*
+for now this is in the editor package
+
+i may mode it elsewhere if that makes sense, but currently not sure how i want to handle modality correctly
+*/
+
+type KeypressBuf []keyboard.Key
+
+func (k *KeypressBuf) Append(key keyboard.Key) {
+	*k = append(*k, key)
+}
+
+func (k *KeypressBuf) Clear() {
+	*k = []keyboard.Key{}
+}
+
+// this is the naive approach to a modal editor
+// in the future, i plan to improve this
+type KeypressManager struct {
+	kb KeypressBuf
+
+	logger *slog.Logger
+}
+
+func NewKeypressManager(l *slog.Logger) *KeypressManager {
+	return &KeypressManager{
+		kb: []keyboard.Key{},
+		logger: l,
+	}
+}
+
+func (k *KeypressManager) ProcessKeyModeNavigation(e *Editor, key keyboard.Key) {
+	switch key {
+	case keyboard.CtrlQ:
+		e.renderer.Exit("regular quit")
+	case keyboard.CtrlL:
+		e.openMessages()
+	case keyboard.ARROW_UP, 'k':
+		e.bm.CurrBufNode.Buf.Up()
+	case keyboard.ARROW_DOWN, 'j':
+		e.bm.CurrBufNode.Buf.Down()
+	case keyboard.ARROW_LEFT, 'h':
+		e.bm.CurrBufNode.Buf.Left()
+	case keyboard.ARROW_RIGHT, 'l':
+		e.bm.CurrBufNode.Buf.Right()
+	case 'i':
+		e.mm.SetMode(mode.ModeInsert)
+	default:
+		k.kb.Append(key)
+	}
+}
+
+func (k *KeypressManager) ProcessKeyModeInsert(e *Editor, key keyboard.Key) {
+	if key.IsUnicode() {
+		e.bm.CurrBufNode.Buf.InsertChar(byte(key))
+		return
+	}
+	switch key {
+	case keyboard.CtrlQ:
+		e.renderer.Exit("regular quit")
+	case keyboard.ARROW_UP:
+		e.bm.CurrBufNode.Buf.Up()
+	case keyboard.ARROW_DOWN:
+		e.bm.CurrBufNode.Buf.Down()
+	case keyboard.ARROW_LEFT:
+		e.bm.CurrBufNode.Buf.Left()
+	case keyboard.ARROW_RIGHT:
+		e.bm.CurrBufNode.Buf.Right()
+	case keyboard.BACKSPACE, keyboard.BACKSPACE_2:
+		e.bm.CurrBufNode.Buf.DeleteChar()
+	case keyboard.DELETE:
+		// TODO: this logic needs to be better encapsulated in the buffer
+		if e.bm.CurrBufNode.Buf.Y() < e.bm.CurrBufNode.Buf.NumRows() && e.bm.CurrBufNode.Buf.X() < len(e.bm.CurrBufNode.Buf.Row(e.bm.CurrBufNode.Buf.Y())) {
+			e.bm.CurrBufNode.Buf.Right()
+		}
+		e.bm.CurrBufNode.Buf.DeleteChar()
+	case keyboard.ENTER:
+		e.bm.CurrBufNode.Buf.InsertNewLine()
+	case keyboard.HOME:
+		e.bm.CurrBufNode.Buf.StartLine()
+	case keyboard.END:
+		e.bm.CurrBufNode.Buf.EndLine()
+	case keyboard.ESC:
+		e.mm.SetMode(mode.ModeNavigation)
+	}
+}

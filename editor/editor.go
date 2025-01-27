@@ -8,6 +8,7 @@ import (
 	"github.com/jcocozza/jte/api/buffer"
 	"github.com/jcocozza/jte/api/keyboard"
 	"github.com/jcocozza/jte/api/messages"
+	"github.com/jcocozza/jte/api/mode"
 	"github.com/jcocozza/jte/api/renderer"
 )
 
@@ -16,6 +17,8 @@ type Editor struct {
 	renderer renderer.Renderer
 	keyboard *keyboard.Keyboard
 	ml       messages.MessageList
+	mm       *mode.ModeManager
+	km       *KeypressManager
 
 	logger *slog.Logger
 }
@@ -24,11 +27,15 @@ func NewTextEditor(l *slog.Logger) *Editor {
 	kb := keyboard.NewKeyboard(l)
 	r := &renderer.TextRenderer{}
 	bm := buffer.NewBufferManager()
+	mm := mode.NewModeManager(l)
+	km := NewKeypressManager(l)
 	return &Editor{
 		bm:       bm,
 		renderer: r,
 		keyboard: kb,
 		logger:   l,
+		mm:       mm,
+		km:       km,
 	}
 }
 
@@ -57,38 +64,12 @@ func (e *Editor) processKey() error {
 	if err != nil {
 		return err
 	}
-	if kp.IsUnicode() {
-		e.bm.CurrBufNode.Buf.InsertChar(byte(kp))
+	switch e.mm.Mode() {
+	case mode.ModeNavigation:
+		e.km.ProcessKeyModeNavigation(e, kp)
 		return nil
-	}
-	switch kp {
-	case keyboard.CtrlQ:
-		e.renderer.Exit("regular quit")
-	case keyboard.CtrlL:
-		e.openMessages()
-	case keyboard.ARROW_UP:
-		e.bm.CurrBufNode.Buf.Up()
-	case keyboard.ARROW_DOWN:
-		e.bm.CurrBufNode.Buf.Down()
-	case keyboard.ARROW_LEFT:
-		e.bm.CurrBufNode.Buf.Left()
-	case keyboard.ARROW_RIGHT:
-		e.bm.CurrBufNode.Buf.Right()
-	case keyboard.BACKSPACE, keyboard.BACKSPACE_2:
-		e.bm.CurrBufNode.Buf.DeleteChar()
-	case keyboard.DELETE:
-		// TODO: this logic needs to be better encapsulated in the buffer
-		if e.bm.CurrBufNode.Buf.Y() < e.bm.CurrBufNode.Buf.NumRows() && e.bm.CurrBufNode.Buf.X() < len(e.bm.CurrBufNode.Buf.Row(e.bm.CurrBufNode.Buf.Y())) {
-			e.bm.CurrBufNode.Buf.Right()
-		}
-		e.bm.CurrBufNode.Buf.DeleteChar()
-	case keyboard.ENTER:
-		e.bm.CurrBufNode.Buf.InsertNewLine()
-	case keyboard.HOME:
-		e.bm.CurrBufNode.Buf.StartLine()
-	case keyboard.END:
-		e.bm.CurrBufNode.Buf.EndLine()
-	default: // if we do not handle the special key explicity, do nothing
+	case mode.ModeInsert:
+		e.km.ProcessKeyModeInsert(e, kp)
 		return nil
 	}
 	return nil
@@ -96,7 +77,7 @@ func (e *Editor) processKey() error {
 
 func (e *Editor) PushMessage(msg messages.Message) {
 	e.ml.Push(msg)
-	e.renderer.SetMsg(e.bm.CurrBufNode.Buf, msg)
+	e.renderer.SetMsg(e.statusInfo(), e.bm.CurrBufNode.Buf, msg)
 }
 
 func (e *Editor) openMessages() {
@@ -115,6 +96,16 @@ func (e *Editor) openMessages() {
 	e.bm.SetCurrent(id)
 }
 
+func (e *Editor) statusInfo() renderer.StatusInfo {
+	return renderer.StatusInfo{
+		Name:      e.bm.CurrBufNode.Buf.Name(),
+		Dirty:     e.bm.CurrBufNode.Buf.Dirty(),
+		CurrRow:   e.bm.CurrBufNode.Buf.Y(),
+		TotalRows: e.bm.CurrBufNode.Buf.TotalRows(),
+		Mode:      string(e.mm.Mode()),
+	}
+}
+
 func (e *Editor) Run() {
 	err := e.renderer.Init(e.logger)
 	if err != nil {
@@ -123,7 +114,7 @@ func (e *Editor) Run() {
 	defer e.renderer.Cleanup()
 	e.PushMessage(messages.MomentoMori)
 	for {
-		e.renderer.Render(e.bm.CurrBufNode.Buf)
+		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo())
 		err := e.processKey()
 		if err != nil {
 			break

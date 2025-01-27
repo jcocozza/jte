@@ -15,11 +15,11 @@ const TAB_STOP = 8
 
 type Renderer interface {
 	Init(l *slog.Logger) error
-	Render(buf buffer.Buffer)
+	Render(buf buffer.Buffer, s StatusInfo)
 	Cleanup()
 	Exit(msg string)
 	ExitErr(err error)
-	SetMsg(buf buffer.Buffer, msg messages.Message)
+	SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message)
 }
 
 type erow struct {
@@ -88,9 +88,9 @@ func (r *TextRenderer) drawCursor(buf buffer.Buffer) {
 	r.abuf.Append([]byte(s))
 }
 
-func (r *TextRenderer) SetMsg(buf buffer.Buffer, msg messages.Message) {
+func (r *TextRenderer) SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message) {
 	r.currMsg = msg
-	r.Render(buf)
+	r.Render(buf, s)
 }
 
 var welcome []byte = []byte("jte -- version: v0.0.1")
@@ -110,6 +110,30 @@ func (r *TextRenderer) drawWelcome() {
 	}
 }
 
+type StatusInfo struct {
+	Name      string
+	Dirty     bool
+	CurrRow   int
+	TotalRows int
+	Mode      string
+}
+
+func (s *StatusInfo) String() string {
+	var displayName string = ""
+	if displayName == "" {
+		displayName = "[No Name]"
+	}
+	var displayDirty string = ""
+	if s.Dirty {
+		displayDirty = "(modified)"
+	}
+	var displayRowNum int = 0
+	if s.TotalRows != 0 {
+		displayRowNum = s.TotalRows - 1 // -1 because i want a 0 indexed system
+	}
+	return fmt.Sprintf("ln:%d/%d - %s %s", s.CurrRow, displayRowNum, displayDirty, displayName)
+}
+
 func (r *TextRenderer) status(buf buffer.Buffer) string {
 	displayName := buf.Name()
 	if displayName == "" {
@@ -126,12 +150,14 @@ func (r *TextRenderer) status(buf buffer.Buffer) string {
 	return fmt.Sprintf("ln:%d/%d - %s %s", buf.Y(), displayRowNum, displayDirty, displayName)
 }
 
-func (r *TextRenderer) drawStatusBar(buf buffer.Buffer) {
+func (r *TextRenderer) drawStatusBar(s StatusInfo) {
 	// status bar
 	r.abuf.Append([]byte("\x1b[7m"))
-	status := r.status(buf)
+	mode := s.Mode
+	status := s.String()
 
-	r.abuf.Append(bytes.Repeat([]byte(" "), r.screencols-len(status)))
+	r.abuf.Append([]byte(mode))
+	r.abuf.Append(bytes.Repeat([]byte(" "), r.screencols-len(status)-len(mode)))
 	r.abuf.Append([]byte(status))
 	r.abuf.Append([]byte("\x1b[m"))
 	r.abuf.Append([]byte("\r\n"))
@@ -201,7 +227,7 @@ func (r *TextRenderer) scroll(buf buffer.Buffer) {
 	}
 }
 
-func (r *TextRenderer) Render(buf buffer.Buffer) {
+func (r *TextRenderer) Render(buf buffer.Buffer, s StatusInfo) {
 	r.abuf.Clear()
 	r.scroll(buf)
 	r.abuf.Append([]byte("\x1b[?25l"))
@@ -212,7 +238,7 @@ func (r *TextRenderer) Render(buf buffer.Buffer) {
 	} else {
 		r.drawBuffer(buf)
 	}
-	r.drawStatusBar(buf)
+	r.drawStatusBar(s)
 
 	r.drawCursor(buf)
 	r.abuf.Append([]byte("\x1b[?25h"))

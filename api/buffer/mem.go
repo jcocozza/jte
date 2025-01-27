@@ -96,6 +96,7 @@ func (b *MemBuffer) Load() error {
 		return err
 	}
 	b.writeable = isWriteable
+	b.logger.Info("successfully load buffer", slog.String("name", b.name), slog.Bool("writeable", b.writeable))
 	return nil
 }
 
@@ -151,10 +152,10 @@ func (b *MemBuffer) InsertNewLine() {
 func (b *MemBuffer) isWriteable() (bool, error) {
 	info, err := b.f.Stat()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("unable to get file stat: %w", err)
 	}
 	mode := info.Mode()
-	writable := mode&os.ModePerm != os.ModePerm
+	writable := mode&0200 != 0
 	return writable, nil
 }
 
