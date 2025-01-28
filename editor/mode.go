@@ -115,6 +115,8 @@ func (k *KeypressManager) ProcessKeyModeCommand(e *Editor, key keyboard.Key) {
 		case key.IsUnicode():
 			e.cw.AddInput(key)
 			return
+		case key == keyboard.BACKSPACE_2:
+			e.cw.ShrinkInput()
 		case key == keyboard.ESC:
 			e.cw.Clear()
 			e.mm.SetMode(mode.ModeNavigation)
@@ -132,13 +134,18 @@ func (k *KeypressManager) ProcessKeyModeCommand(e *Editor, key keyboard.Key) {
 		}
 	case command.CommandSearch:
 		switch {
+		case key == keyboard.ARROW_RIGHT:
+			loc := e.cw.SearchResults.Next()
+			e.bm.CurrBufNode.Buf.GoTo(loc.X, loc.Y)
+		case key == keyboard.ARROW_LEFT:
+			loc := e.cw.SearchResults.Previous()
+			e.bm.CurrBufNode.Buf.GoTo(loc.X, loc.Y)
+		case key == keyboard.BACKSPACE_2:
+			e.cw.ShrinkInput()
 		case key.IsUnicode():
 			e.cw.AddInput(key)
-			locs := e.cw.HandleSearch(e.bm.CurrBufNode.Buf)
-			if len(locs) ==  0 {
-				return
-			}
-			closest := locs[0]
+			e.cw.HandleSearch(e.bm.CurrBufNode.Buf)
+			closest := e.cw.SearchResults.Current()
 			e.bm.CurrBufNode.Buf.GoTo(closest.X, closest.Y)
 			return
 		case key == keyboard.ENTER:

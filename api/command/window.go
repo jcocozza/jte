@@ -35,6 +35,8 @@ type CommandWindow struct {
 
 	Mode CommandMode
 
+	SearchResults *search.SearchResults
+
 	logger   *slog.Logger
 }
 
@@ -58,6 +60,13 @@ func (c *CommandWindow) Prompt() []byte {
 		t = append(t, byte(c))
 	}
 	return t
+}
+
+func (c *CommandWindow) ShrinkInput() {
+	if len(c.inputBuf) == 0 {
+		return
+	}
+	c.inputBuf = c.inputBuf[0:len(c.inputBuf)-1]
 }
 
 func (c *CommandWindow) Activate() {
@@ -113,10 +122,10 @@ func (c *CommandWindow) SearchPattern() string {
 	return string(c.inputBuf)
 }
 
-func (c *CommandWindow) HandleSearch(buf buffer.Buffer) []search.Location {
+func (c *CommandWindow) HandleSearch(buf buffer.Buffer) {
 	pattern := string(c.inputBuf)
 	c.logger.Debug("searching", slog.String("pattern", pattern), slog.Int("in buf len", len(c.inputBuf)))
-	return search.Search(pattern, buf)
+	c.SearchResults = search.SearchItr(pattern, buf)
 }
 
 func (c *CommandWindow) Clear() {
