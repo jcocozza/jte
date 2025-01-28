@@ -72,7 +72,7 @@ func highlightLine(line string, searchPattern string) []Token {
 	var matches []Match
 
 	// Define regex patterns
-	keywordRegex := regexp.MustCompile(`\b(if|else|for|return|func|package)\b`)
+	keywordRegex := regexp.MustCompile(`\b(if|else|for|return|func|package|import|const)\b`)
 	stringRegex := regexp.MustCompile(`"(.*?)"`)
 	commentRegex := regexp.MustCompile(`//.*`)
 	searchRegex := regexp.MustCompile(searchPattern) //TODO: this can panic, so we have to handle the error properly
