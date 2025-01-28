@@ -69,6 +69,12 @@ func (k *KeypressManager) ProcessKeyModeNavigation(e *Editor, key keyboard.Key) 
 		e.bm.CurrBufNode.Buf.Left()
 	case keyboard.ARROW_RIGHT, 'l':
 		e.bm.CurrBufNode.Buf.Right()
+	case keyboard.CtrlE: // TODO THIS DOES NOT WORK
+		e.NewEmptyBuf()
+	case keyboard.CtrlN:
+		e.bm.Next()
+	case keyboard.CtrlP:
+		e.bm.Prev()
 	case 'i':
 		e.mm.SetMode(mode.ModeInsert)
 	case ':':

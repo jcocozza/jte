@@ -28,7 +28,7 @@ type Editor struct {
 func NewTextEditor(l *slog.Logger) *Editor {
 	kb := keyboard.NewKeyboard(l)
 	r := &renderer.TextRenderer{}
-	bm := buffer.NewBufferManager()
+	bm := buffer.NewBufferManager(l)
 	mm := mode.NewModeManager(l)
 	km := NewKeypressManager(l)
 	cw := command.NewCommandWindow(l)
@@ -46,6 +46,13 @@ func NewTextEditor(l *slog.Logger) *Editor {
 // create a new buffer and set it to the current
 func (e *Editor) NewBuf() buffer.Buffer {
 	newBuf := buffer.NewEmptyBuffer("", e.logger)
+	id := e.bm.Add(newBuf)
+	e.bm.SetCurrent(id)
+	return newBuf
+}
+
+func (e *Editor) NewEmptyBuf() buffer.Buffer {
+	newBuf := buffer.NewWriteableEmptyBuffer(e.logger)
 	id := e.bm.Add(newBuf)
 	e.bm.SetCurrent(id)
 	return newBuf
@@ -122,6 +129,7 @@ func (e *Editor) Run() {
 	defer e.renderer.Cleanup()
 	e.PushMessage(messages.MomentoMori)
 	for {
+		e.logger.Info("curr buf", slog.String("name", e.bm.CurrBufNode.Buf.Name()))
 		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
 		err := e.processKey()
 		if err != nil {

@@ -86,12 +86,11 @@ func (r *TextRenderer) drawCursor(buf buffer.Buffer) {
 	actualCol := 0
 	for i := 0; i < buf.X(); i++ {
 		if buf.Row(buf.Y())[i] == '\t' {
-			actualCol += TAB_STOP - (actualCol % TAB_STOP)	
+			actualCol += TAB_STOP - (actualCol % TAB_STOP)
 		} else {
 			actualCol++
 		}
 	}
-
 	//s := fmt.Sprintf("\x1b[%d;%dH", y, x)
 	s := fmt.Sprintf("\x1b[%d;%dH", y, actualCol+1)
 	r.abuf.Append([]byte(s))

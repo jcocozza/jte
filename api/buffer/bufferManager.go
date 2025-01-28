@@ -1,5 +1,7 @@
 package buffer
 
+import "log/slog"
+
 type BufNode struct {
 	id   int
 	Buf  Buffer
@@ -23,6 +25,7 @@ func (bl *BufList) Insert(buf Buffer, id int) *BufNode {
 		newBufNode.next = newBufNode
 		newBufNode.prev = newBufNode
 		bl.node = newBufNode
+		return newBufNode
 	}
 	last := bl.node.prev      // save the last node
 	newBufNode.next = bl.node // point back to beginning
@@ -76,14 +79,16 @@ type BufferManager struct {
 	// incremented every time a buffer is added
 	// not decremented for any reason as to keep id's unique
 	idCounter int
+	logger *slog.Logger
 }
 
-func NewBufferManager() *BufferManager {
+func NewBufferManager(l *slog.Logger) *BufferManager {
 	bufList := BufList{node: nil}
 	bufMap := make(map[int]*BufNode)
 	return &BufferManager{
 		bufferList: bufList,
 		bufMap:     bufMap,
+		logger: l.WithGroup("buffer manager"),
 	}
 }
 
@@ -108,11 +113,13 @@ func (bm *BufferManager) Delete(id int) {
 }
 
 func (bm *BufferManager) Next() {
-	bm.CurrBufNode = bm.bufferList.node.next
+	bm.logger.Debug("going to next", slog.String("current", bm.CurrBufNode.Buf.Name()), slog.String("next", bm.CurrBufNode.next.Buf.Name()))
+	bm.CurrBufNode = bm.CurrBufNode.next
 }
 
 func (bm *BufferManager) Prev() {
-	bm.CurrBufNode = bm.bufferList.node.prev
+	bm.logger.Debug("going to prev", slog.String("current", bm.CurrBufNode.Buf.Name()), slog.String("previous", bm.CurrBufNode.prev.Buf.Name()))
+	bm.CurrBufNode = bm.CurrBufNode.prev
 }
 
 type BufInfo struct {

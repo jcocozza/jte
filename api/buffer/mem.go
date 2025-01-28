@@ -24,12 +24,23 @@ type MemBuffer struct {
 }
 
 func NewEmptyBuffer(name string, l *slog.Logger) *MemBuffer {
-	return &MemBuffer{
+	b := &MemBuffer{
 		Rows:   []bufrow{},
 		C:      &Cursor{},
 		name:   name,
-		logger: l,
+		logger: l.WithGroup(fmt.Sprintf("buffer %s", name)),
 	}
+	return b
+}
+
+func NewWriteableEmptyBuffer(l *slog.Logger) *MemBuffer {
+	b := &MemBuffer{
+		Rows:   []bufrow{[]byte{}},
+		C:      &Cursor{},
+		logger: l.WithGroup("new empty buffer"),
+		writeable: true,
+	}
+	return b
 }
 
 // appending is faster then inserting
@@ -107,7 +118,7 @@ func (b *MemBuffer) Close() error {
 
 func (b *MemBuffer) InsertChar(c byte) {
 	if !b.writeable {return}
-	if b.C.X == b.NumRows() {
+	if b.C.Y == b.NumRows() {
 		b.appendRow([]byte{})
 	}
 	b.Rows[b.C.Y].InsertChar(b.C.X, c)
@@ -138,8 +149,9 @@ func (b *MemBuffer) DeleteChar() {
 
 func (b *MemBuffer) InsertNewLine() {
 	if !b.writeable {return}
+	b.logger.Debug("inserting new line")
 	if b.C.X == 0 {
-		b.insertRow(b.C.Y, []byte{})
+		b.insertRow(b.C.Y, []byte(" "))
 	} else {
 		b.insertRow(b.C.Y+1, (b.Rows[b.C.Y])[b.C.X:])
 		b.Rows[b.C.Y].Trim(b.C.X)
