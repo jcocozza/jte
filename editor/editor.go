@@ -83,6 +83,7 @@ func (e *Editor) processKey() error {
 
 func (e *Editor) PushMessage(msg messages.Message) {
 	e.ml.Push(msg)
+	e.cw.SetMessage(msg)
 	//e.cw.SetRows([]byte(msg.Text))
 	//e.renderer.SetMsg(e.statusInfo(), e.bm.CurrBufNode.Buf, msg)
 }

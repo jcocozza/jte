@@ -3,9 +3,11 @@ package command
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/jcocozza/jte/api/buffer"
 	"github.com/jcocozza/jte/api/keyboard"
+	"github.com/jcocozza/jte/api/messages"
 )
 
 const (
@@ -52,6 +54,17 @@ func (c *CommandWindow) Activate() {
 
 func (c *CommandWindow) AddInput(key keyboard.Key) {
 	c.inputBuf = append(c.inputBuf, key)
+}
+
+func (c *CommandWindow) SetMessage(msg messages.Message) {
+	c.inputBuf = []keyboard.Key{}
+	c.prompt = []byte(msg.Text)
+	if msg.Dur != -1 {
+		go func() { // I don't think this is a good way to do this, but for now, it will work
+			time.Sleep(msg.Dur)
+			c.SetMessage(messages.Message{})
+		}()
+	}
 }
 
 func (c *CommandWindow) Handle(bm *buffer.BufferManager) {
