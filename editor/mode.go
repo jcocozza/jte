@@ -6,6 +6,7 @@ import (
 	"github.com/jcocozza/jte/api/command"
 	"github.com/jcocozza/jte/api/keyboard"
 	"github.com/jcocozza/jte/api/mode"
+	"github.com/jcocozza/jte/api/renderer"
 )
 
 /*
@@ -96,6 +97,10 @@ func (k *KeypressManager) ProcessKeyModeInsert(e *Editor, key keyboard.Key) {
 		e.bm.CurrBufNode.Buf.StartLine()
 	case keyboard.END:
 		e.bm.CurrBufNode.Buf.EndLine()
+	case keyboard.TAB:
+		for i := 0; i < renderer.TAB_STOP; i++ {
+			e.bm.CurrBufNode.Buf.InsertChar(' ')
+		}
 	case keyboard.ESC:
 		e.mm.SetMode(mode.ModeNavigation)
 	}

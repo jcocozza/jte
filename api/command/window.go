@@ -106,6 +106,13 @@ func (c *CommandWindow) Handle(bm *buffer.BufferManager) {
 	c.Mode = CommandInactive
 }
 
+func (c *CommandWindow) SearchPattern() string {
+	if c.Mode != CommandSearch {
+		return ""
+	}
+	return string(c.inputBuf)
+}
+
 func (c *CommandWindow) HandleSearch(buf buffer.Buffer) []search.Location {
 	pattern := string(c.inputBuf)
 	c.logger.Debug("searching", slog.String("pattern", pattern), slog.Int("in buf len", len(c.inputBuf)))

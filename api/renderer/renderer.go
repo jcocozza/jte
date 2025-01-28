@@ -164,7 +164,7 @@ func (r *TextRenderer) drawStatusBar(s StatusInfo, cw *command.CommandWindow) {
 	//}
 }
 
-func (r *TextRenderer) renderRow(row []byte) {
+func (r *TextRenderer) renderRow(row []byte, searchPattern string) {
 	var expanded []byte
 	col := 0
 	for _, b := range row {
@@ -177,10 +177,17 @@ func (r *TextRenderer) renderRow(row []byte) {
 			col++
 		}
 	}
-	r.abuf.Append(expanded)
+	line := string(expanded)
+	tokens := highlightLine(line, searchPattern)
+	for _, tkn := range tokens {
+		r.abuf.Append([]byte(syntaxToColor(tkn.SG)))
+		r.abuf.Append([]byte(tkn.Text))
+		r.abuf.Append([]byte(Reset))
+	}
+	//r.abuf.Append(expanded)
 }
 
-func (r *TextRenderer) drawBuffer(buf buffer.Buffer) {
+func (r *TextRenderer) drawBuffer(buf buffer.Buffer, searchPattern string) {
 	for i := 0; i < r.screenrows; i++ {
 		filerow := i + r.rowoffset
 		if filerow >= buf.NumRows() {
@@ -188,7 +195,7 @@ func (r *TextRenderer) drawBuffer(buf buffer.Buffer) {
 		} else {
 			//r.logger.Debug("rendering", slog.String("row", string(buf.Row(filerow))), slog.Int("num", filerow))
 			//r.abuf.Append(buf.Row(filerow))
-			r.renderRow(buf.Row(filerow))
+			r.renderRow(buf.Row(filerow), searchPattern)
 		}
 		r.abuf.Append([]byte("\x1b[K"))
 		r.abuf.Append([]byte("\r\n"))
@@ -229,7 +236,7 @@ func (r *TextRenderer) Render(buf buffer.Buffer, s StatusInfo, cw *command.Comma
 	if buf.NumRows() == 0 {
 		r.drawWelcome()
 	} else {
-		r.drawBuffer(buf)
+		r.drawBuffer(buf, cw.SearchPattern())
 	}
 	r.drawStatusBar(s, cw)
 
