@@ -22,6 +22,7 @@ type Buffer interface {
 	EndLine() // move to end of line cursor is currently on
 	X() int // x position of cursor
 	Y() int // y position of cursor
+	GoTo(x int, y int)
 
 	// number of rows read into buffer
 	NumRows() int

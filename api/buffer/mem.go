@@ -205,6 +205,10 @@ func (b *MemBuffer) X() int {
 func (b *MemBuffer) Y() int {
 	return b.C.Y
 }
+func (b *MemBuffer) GoTo(x int, y int) {
+	b.C.X = x
+	b.C.Y = y
+}
 func (b *MemBuffer) NumRows() int {
 	return len(b.Rows)
 }

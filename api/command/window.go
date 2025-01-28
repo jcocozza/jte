@@ -8,13 +8,22 @@ import (
 	"github.com/jcocozza/jte/api/buffer"
 	"github.com/jcocozza/jte/api/keyboard"
 	"github.com/jcocozza/jte/api/messages"
+	"github.com/jcocozza/jte/api/search"
 )
 
 const (
 	Command_LS = "ls"
 )
 
+type CommandMode int
+const (
+	CommandInactive CommandMode = iota
+	CommandBasic
+	CommandSearch
+)
+
 var prompt = []byte("> ")
+var searchPrompt = []byte("/")
 
 type CommandWindow struct {
 	output [][]byte
@@ -23,6 +32,9 @@ type CommandWindow struct {
 	inputBuf []keyboard.Key
 
 	previous []string
+
+	Mode CommandMode
+
 	logger   *slog.Logger
 }
 
@@ -50,6 +62,12 @@ func (c *CommandWindow) Prompt() []byte {
 
 func (c *CommandWindow) Activate() {
 	c.prompt = prompt
+	c.Mode = CommandBasic
+}
+
+func (c *CommandWindow) ActivateSearch() {
+	c.prompt = searchPrompt
+	c.Mode = CommandSearch
 }
 
 func (c *CommandWindow) AddInput(key keyboard.Key) {
@@ -57,6 +75,9 @@ func (c *CommandWindow) AddInput(key keyboard.Key) {
 }
 
 func (c *CommandWindow) SetMessage(msg messages.Message) {
+	if c.Mode != CommandInactive {
+		return
+	}
 	c.inputBuf = []keyboard.Key{}
 	c.prompt = []byte(msg.Text)
 	if msg.Dur != -1 {
@@ -82,6 +103,13 @@ func (c *CommandWindow) Handle(bm *buffer.BufferManager) {
 	default:
 		c.prompt = []byte("invalid command (any key to continue)")
 	}
+	c.Mode = CommandInactive
+}
+
+func (c *CommandWindow) HandleSearch(buf buffer.Buffer) []search.Location {
+	pattern := string(c.inputBuf)
+	c.logger.Debug("searching", slog.String("pattern", pattern), slog.Int("in buf len", len(c.inputBuf)))
+	return search.Search(pattern, buf)
 }
 
 func (c *CommandWindow) Clear() {

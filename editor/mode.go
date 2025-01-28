@@ -3,6 +3,7 @@ package editor
 import (
 	"log/slog"
 
+	"github.com/jcocozza/jte/api/command"
 	"github.com/jcocozza/jte/api/keyboard"
 	"github.com/jcocozza/jte/api/mode"
 )
@@ -57,6 +58,9 @@ func (k *KeypressManager) ProcessKeyModeNavigation(e *Editor, key keyboard.Key) 
 	case ':':
 		e.mm.SetMode(mode.ModeCommand)
 		e.cw.Activate()
+	case '/', keyboard.CtrlF:
+		e.mm.SetMode(mode.ModeCommand)
+		e.cw.ActivateSearch()
 	default:
 		k.kb.Append(key)
 	}
@@ -98,21 +102,50 @@ func (k *KeypressManager) ProcessKeyModeInsert(e *Editor, key keyboard.Key) {
 }
 
 func (k *KeypressManager) ProcessKeyModeCommand(e *Editor, key keyboard.Key) {
-	switch {
-	case key.IsUnicode():
-		e.cw.AddInput(key)
-		return
-	case key == keyboard.ESC:
-		e.cw.Clear()
-		e.mm.SetMode(mode.ModeNavigation)
-		return
-	case key == keyboard.ENTER:
-		e.cw.Handle(e.bm)
-		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
-		_, _ = e.keyboard.GetKeypress()
-		e.cw.Clear()
-		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
-		e.mm.SetMode(mode.ModeNavigation)
-		return
+	switch e.cw.Mode {
+	case command.CommandInactive:
+		return // this shouldn't happen
+	case command.CommandBasic:
+		switch {
+		case key.IsUnicode():
+			e.cw.AddInput(key)
+			return
+		case key == keyboard.ESC:
+			e.cw.Clear()
+			e.mm.SetMode(mode.ModeNavigation)
+			e.cw.Mode = command.CommandInactive
+			return
+		case key == keyboard.ENTER:
+			e.cw.Handle(e.bm)
+			e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
+			_, _ = e.keyboard.GetKeypress()
+			e.cw.Clear()
+			e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
+			e.mm.SetMode(mode.ModeNavigation)
+			e.cw.Mode = command.CommandInactive
+			return
+		}
+	case command.CommandSearch:
+		switch {
+		case key.IsUnicode():
+			e.cw.AddInput(key)
+			locs := e.cw.HandleSearch(e.bm.CurrBufNode.Buf)
+			if len(locs) ==  0 {
+				return
+			}
+			closest := locs[0]
+			e.bm.CurrBufNode.Buf.GoTo(closest.X, closest.Y)
+			return
+		case key == keyboard.ENTER:
+			e.cw.Mode = command.CommandInactive
+			e.cw.Clear()
+			e.mm.SetMode(mode.ModeNavigation)
+			return
+		case key == keyboard.ESC:
+			e.cw.Mode = command.CommandInactive
+			e.cw.Clear()
+			e.mm.SetMode(mode.ModeNavigation)
+			return
+		}
 	}
 }
