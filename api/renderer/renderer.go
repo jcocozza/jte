@@ -80,15 +80,22 @@ func (r *TextRenderer) Exit(msg string) {
 
 func (r *TextRenderer) drawCursor(buf buffer.Buffer) {
 	y := (buf.Y() - r.rowoffset) + 1
-	x := (buf.X() - r.coloffset) + 1
-	s := fmt.Sprintf("\x1b[%d;%dH", y, x)
+	//x := (buf.X() - r.coloffset) + 1
+
+	// address tabs
+	actualCol := 0
+	for i := 0; i < buf.X(); i++ {
+		if buf.Row(buf.Y())[i] == '\t' {
+			actualCol += TAB_STOP - (actualCol % TAB_STOP)	
+		} else {
+			actualCol++
+		}
+	}
+
+	//s := fmt.Sprintf("\x1b[%d;%dH", y, x)
+	s := fmt.Sprintf("\x1b[%d;%dH", y, actualCol+1)
 	r.abuf.Append([]byte(s))
 }
-
-//func (r *TextRenderer) SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message, cw command.CommandWindow) {
-//	r.currMsg = msg
-//	r.Render(buf, s, cw)
-//}
 
 var welcome []byte = []byte("jte -- version: v0.0.1")
 
@@ -154,20 +161,22 @@ func (r *TextRenderer) drawStatusBar(s StatusInfo, cw *command.CommandWindow) {
 		}
 	}
 	r.abuf.Append(cw.Prompt())
-	// messages
-	//var displayMsg string = r.currMsg.Text
-	//if len(r.currMsg.Text) > r.screencols {
-	//	displayMsg = r.currMsg.Text[0:r.screencols]
-	//}
-	//if r.currMsg.NonEmpty() && !r.currMsg.Expired() {
-	//	r.abuf.Append([]byte(displayMsg))
-	//}
 }
 
 func (r *TextRenderer) renderRow(row []byte, searchPattern string) {
+	/*
+	line := string(row)
+	tokens := highlightLine(line, searchPattern)
+	coloredRow := []byte{}
+	for _, tkn := range tokens {
+		coloredRow = append(coloredRow, syntaxToColor(tkn.SG)...)
+		coloredRow = append(coloredRow, tkn.Text...)
+		coloredRow = append(coloredRow, Reset...)
+	}
+	*/
 	var expanded []byte
 	col := 0
-	for _, b := range row {
+	for _, b := range row {//row {
 		if b == '\t' {
 			spaces := TAB_STOP - (col % TAB_STOP)
 			expanded = append(expanded, bytes.Repeat([]byte(" "), spaces)...)
