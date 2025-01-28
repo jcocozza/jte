@@ -4,7 +4,9 @@ import (
 	"log/slog"
 
 	"github.com/jcocozza/jte/api/command"
+	"github.com/jcocozza/jte/api/fileutil"
 	"github.com/jcocozza/jte/api/keyboard"
+	"github.com/jcocozza/jte/api/messages"
 	"github.com/jcocozza/jte/api/mode"
 	//"github.com/jcocozza/jte/api/renderer"
 )
@@ -40,6 +42,19 @@ func NewKeypressManager(l *slog.Logger) *KeypressManager {
 	}
 }
 
+func saveBuffer(e *Editor, name string) {
+	_, err := fileutil.Save(name, e.bm.CurrBufNode.Buf.CombineRows())
+	if err != nil {
+		e.cw.SetMessage(messages.Message{Text: err.Error(), Dur: -1})
+		e.cw.Mode = command.CommandInactive
+		e.mm.SetMode(mode.ModeNavigation)
+		return
+	}
+	e.bm.CurrBufNode.Buf.Saved()
+	e.cw.Mode = command.CommandInactive
+	e.mm.SetMode(mode.ModeNavigation)
+}
+
 func (k *KeypressManager) ProcessKeyModeNavigation(e *Editor, key keyboard.Key) {
 	switch key {
 	case keyboard.CtrlQ:
@@ -62,6 +77,14 @@ func (k *KeypressManager) ProcessKeyModeNavigation(e *Editor, key keyboard.Key) 
 	case '/', keyboard.CtrlF:
 		e.mm.SetMode(mode.ModeCommand)
 		e.cw.ActivateSearch()
+	case keyboard.CtrlS:
+		n := e.bm.CurrBufNode.Buf.Name()
+		if n != "" {
+			saveBuffer(e, n)
+			return
+		}
+		e.mm.SetMode(mode.ModeCommand)
+		e.cw.ActivateSave()
 	default:
 		k.kb.Append(key)
 	}
@@ -158,6 +181,20 @@ func (k *KeypressManager) ProcessKeyModeCommand(e *Editor, key keyboard.Key) {
 			e.cw.Mode = command.CommandInactive
 			e.cw.Clear()
 			e.mm.SetMode(mode.ModeNavigation)
+			return
+		}
+	case command.CommandSave:
+		switch {
+		case key.IsUnicode():
+			e.cw.AddInput(key)
+			return
+		case key == keyboard.BACKSPACE_2:
+			e.cw.ShrinkInput()
+			return
+		case key == keyboard.ENTER:
+			newName := e.cw.HandleSave()
+			saveBuffer(e, newName)
+			e.cw.Clear()
 			return
 		}
 	}

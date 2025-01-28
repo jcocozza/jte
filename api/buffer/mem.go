@@ -224,3 +224,14 @@ func (b *MemBuffer) Dirty() bool {
 func (b *MemBuffer) Name() string {
 	return b.name
 }
+func (b *MemBuffer) CombineRows() []byte {
+	var buf bytes.Buffer
+	for _, row := range b.Rows {
+		buf.Write(row)
+		buf.WriteByte('\n')
+	}
+	return buf.Bytes()
+}
+func (b *MemBuffer) Saved() {
+	b.dirty = false
+}

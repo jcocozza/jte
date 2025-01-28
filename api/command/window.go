@@ -16,10 +16,12 @@ const (
 )
 
 type CommandMode int
+
 const (
 	CommandInactive CommandMode = iota
 	CommandBasic
 	CommandSearch
+	CommandSave
 )
 
 var prompt = []byte("> ")
@@ -37,7 +39,7 @@ type CommandWindow struct {
 
 	SearchResults *search.SearchResults
 
-	logger   *slog.Logger
+	logger *slog.Logger
 }
 
 func NewCommandWindow(l *slog.Logger) *CommandWindow {
@@ -66,7 +68,7 @@ func (c *CommandWindow) ShrinkInput() {
 	if len(c.inputBuf) == 0 {
 		return
 	}
-	c.inputBuf = c.inputBuf[0:len(c.inputBuf)-1]
+	c.inputBuf = c.inputBuf[0 : len(c.inputBuf)-1]
 }
 
 func (c *CommandWindow) Activate() {
@@ -77,6 +79,11 @@ func (c *CommandWindow) Activate() {
 func (c *CommandWindow) ActivateSearch() {
 	c.prompt = searchPrompt
 	c.Mode = CommandSearch
+}
+
+func (c *CommandWindow) ActivateSave() {
+	c.prompt = prompt
+	c.Mode = CommandSave
 }
 
 func (c *CommandWindow) AddInput(key keyboard.Key) {
@@ -126,6 +133,10 @@ func (c *CommandWindow) HandleSearch(buf buffer.Buffer) {
 	pattern := string(c.inputBuf)
 	c.logger.Debug("searching", slog.String("pattern", pattern), slog.Int("in buf len", len(c.inputBuf)))
 	c.SearchResults = search.SearchItr(pattern, buf)
+}
+
+func (c *CommandWindow) HandleSave() string {
+	return string(c.inputBuf)
 }
 
 func (c *CommandWindow) Clear() {

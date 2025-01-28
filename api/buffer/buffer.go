@@ -33,6 +33,10 @@ type Buffer interface {
 	Dirty() bool
 	// return the name of the buffer
 	Name() string
+	// convert the buffer to a single list of bytes (for saving)
+	CombineRows() []byte
+	// tell the buffer it has been written and dirty can be set to false
+	Saved()
 }
 
 // represents a row of a file
