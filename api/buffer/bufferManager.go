@@ -69,9 +69,9 @@ func (bl *BufList) Delete(id int) {
 }
 
 type BufferManager struct {
-	bufferList BufList
-	bufMap     map[int]*BufNode
-	CurrBufNode    *BufNode
+	bufferList  BufList
+	bufMap      map[int]*BufNode
+	CurrBufNode *BufNode
 	// 'global' id counter.
 	// incremented every time a buffer is added
 	// not decremented for any reason as to keep id's unique
@@ -113,4 +113,17 @@ func (bm *BufferManager) Next() {
 
 func (bm *BufferManager) Prev() {
 	bm.CurrBufNode = bm.bufferList.node.prev
+}
+
+type BufInfo struct {
+	ID   int
+	Name string
+}
+
+func (bm *BufferManager) List() []BufInfo {
+	l := []BufInfo{}
+	for id, bufn := range bm.bufMap {
+		l = append(l, BufInfo{ID: id, Name: bufn.Buf.Name()})
+	}
+	return l
 }

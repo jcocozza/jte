@@ -33,7 +33,7 @@ type KeypressManager struct {
 
 func NewKeypressManager(l *slog.Logger) *KeypressManager {
 	return &KeypressManager{
-		kb: []keyboard.Key{},
+		kb:     []keyboard.Key{},
 		logger: l,
 	}
 }
@@ -54,6 +54,9 @@ func (k *KeypressManager) ProcessKeyModeNavigation(e *Editor, key keyboard.Key) 
 		e.bm.CurrBufNode.Buf.Right()
 	case 'i':
 		e.mm.SetMode(mode.ModeInsert)
+	case ':':
+		e.mm.SetMode(mode.ModeCommand)
+		e.cw.Activate()
 	default:
 		k.kb.Append(key)
 	}
@@ -91,5 +94,25 @@ func (k *KeypressManager) ProcessKeyModeInsert(e *Editor, key keyboard.Key) {
 		e.bm.CurrBufNode.Buf.EndLine()
 	case keyboard.ESC:
 		e.mm.SetMode(mode.ModeNavigation)
+	}
+}
+
+func (k *KeypressManager) ProcessKeyModeCommand(e *Editor, key keyboard.Key) {
+	switch {
+	case key.IsUnicode():
+		e.cw.AddInput(key)
+		return
+	case key == keyboard.ESC:
+		e.cw.Clear()
+		e.mm.SetMode(mode.ModeNavigation)
+		return
+	case key == keyboard.ENTER:
+		e.cw.Handle(e.bm)
+		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
+		_, _ = e.keyboard.GetKeypress()
+		e.cw.Clear()
+		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
+		e.mm.SetMode(mode.ModeNavigation)
+		return
 	}
 }

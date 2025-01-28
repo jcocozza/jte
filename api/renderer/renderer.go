@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/jcocozza/jte/api/buffer"
-	"github.com/jcocozza/jte/api/messages"
+	"github.com/jcocozza/jte/api/command"
 	"github.com/jcocozza/jte/term"
 )
 
@@ -15,20 +15,16 @@ const TAB_STOP = 8
 
 type Renderer interface {
 	Init(l *slog.Logger) error
-	Render(buf buffer.Buffer, s StatusInfo)
+	Render(buf buffer.Buffer, s StatusInfo, cw *command.CommandWindow)
 	Cleanup()
 	Exit(msg string)
 	ExitErr(err error)
-	SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message)
-}
-
-type erow struct {
-	render []byte
-	hl     []int
+	//SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message)
 }
 
 type TextRenderer struct {
 	screenrows int
+	initscreenrows int
 	screencols int
 
 	rowoffset int
@@ -38,7 +34,7 @@ type TextRenderer struct {
 
 	abuf abuf
 
-	currMsg messages.Message
+	//currMsg messages.Message
 
 	logger *slog.Logger
 }
@@ -54,7 +50,8 @@ func (r *TextRenderer) Init(l *slog.Logger) error {
 		return err
 	}
 	r.abuf = abuf{}
-	r.screenrows = rows - 2 // leave room for status bar and messages
+	r.screenrows = rows - 1 // leave room for status bar
+	r.initscreenrows = rows - 1 // leave room for status bar
 	r.screencols = cols
 	r.logger = l
 	return nil
@@ -88,10 +85,10 @@ func (r *TextRenderer) drawCursor(buf buffer.Buffer) {
 	r.abuf.Append([]byte(s))
 }
 
-func (r *TextRenderer) SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message) {
-	r.currMsg = msg
-	r.Render(buf, s)
-}
+//func (r *TextRenderer) SetMsg(s StatusInfo, buf buffer.Buffer, msg messages.Message, cw command.CommandWindow) {
+//	r.currMsg = msg
+//	r.Render(buf, s, cw)
+//}
 
 var welcome []byte = []byte("jte -- version: v0.0.1")
 
@@ -119,7 +116,7 @@ type StatusInfo struct {
 }
 
 func (s *StatusInfo) String() string {
-	var displayName string = ""
+	var displayName string = s.Name
 	if displayName == "" {
 		displayName = "[No Name]"
 	}
@@ -134,23 +131,7 @@ func (s *StatusInfo) String() string {
 	return fmt.Sprintf("ln:%d/%d - %s %s", s.CurrRow, displayRowNum, displayDirty, displayName)
 }
 
-func (r *TextRenderer) status(buf buffer.Buffer) string {
-	displayName := buf.Name()
-	if displayName == "" {
-		displayName = "[No Name]"
-	}
-	var displayDirty string = ""
-	if buf.Dirty() {
-		displayDirty = "(modified)"
-	}
-	var displayRowNum int = 0
-	if buf.TotalRows() != 0 {
-		displayRowNum = buf.TotalRows() - 1 // -1 because i want a 0 indexed system
-	}
-	return fmt.Sprintf("ln:%d/%d - %s %s", buf.Y(), displayRowNum, displayDirty, displayName)
-}
-
-func (r *TextRenderer) drawStatusBar(s StatusInfo) {
+func (r *TextRenderer) drawStatusBar(s StatusInfo, cw *command.CommandWindow) {
 	// status bar
 	r.abuf.Append([]byte("\x1b[7m"))
 	mode := s.Mode
@@ -161,15 +142,26 @@ func (r *TextRenderer) drawStatusBar(s StatusInfo) {
 	r.abuf.Append([]byte(status))
 	r.abuf.Append([]byte("\x1b[m"))
 	r.abuf.Append([]byte("\r\n"))
-	// messages
+
 	r.abuf.Append([]byte("\x1b[K"))
-	var displayMsg string = r.currMsg.Text
-	if len(r.currMsg.Text) > r.screencols {
-		displayMsg = r.currMsg.Text[0:r.screencols]
+	o := cw.Output()
+	if len(o) > 0 {
+		for i, row := range o {
+			r.abuf.Append(row)
+			if i < len(o) {
+				r.abuf.Append([]byte("\r\n"))
+			}
+		}
 	}
-	if r.currMsg.NonEmpty() && !r.currMsg.Expired() {
-		r.abuf.Append([]byte(displayMsg))
-	}
+	r.abuf.Append(cw.Prompt())
+	// messages
+	//var displayMsg string = r.currMsg.Text
+	//if len(r.currMsg.Text) > r.screencols {
+	//	displayMsg = r.currMsg.Text[0:r.screencols]
+	//}
+	//if r.currMsg.NonEmpty() && !r.currMsg.Expired() {
+	//	r.abuf.Append([]byte(displayMsg))
+	//}
 }
 
 func (r *TextRenderer) renderRow(row []byte) {
@@ -227,18 +219,19 @@ func (r *TextRenderer) scroll(buf buffer.Buffer) {
 	}
 }
 
-func (r *TextRenderer) Render(buf buffer.Buffer, s StatusInfo) {
-	r.abuf.Clear()
+func (r *TextRenderer) Render(buf buffer.Buffer, s StatusInfo, cw *command.CommandWindow) {
+	r.screenrows = r.initscreenrows - cw.NumRows()
 	r.scroll(buf)
-	r.abuf.Append([]byte("\x1b[?25l"))
-	r.abuf.Append([]byte("\x1b[H"))
+	r.abuf.Append([]byte("\x1b[?25l")) // hide cursor
+	r.abuf.Append([]byte("\x1b[2J")) // clear entire screen
+	r.abuf.Append([]byte("\x1b[H")) // cursor to home
 
 	if buf.NumRows() == 0 {
 		r.drawWelcome()
 	} else {
 		r.drawBuffer(buf)
 	}
-	r.drawStatusBar(s)
+	r.drawStatusBar(s, cw)
 
 	r.drawCursor(buf)
 	r.abuf.Append([]byte("\x1b[?25h"))

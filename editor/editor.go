@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jcocozza/jte/api/buffer"
+	"github.com/jcocozza/jte/api/command"
 	"github.com/jcocozza/jte/api/keyboard"
 	"github.com/jcocozza/jte/api/messages"
 	"github.com/jcocozza/jte/api/mode"
@@ -19,6 +20,7 @@ type Editor struct {
 	ml       messages.MessageList
 	mm       *mode.ModeManager
 	km       *KeypressManager
+	cw       *command.CommandWindow
 
 	logger *slog.Logger
 }
@@ -29,6 +31,7 @@ func NewTextEditor(l *slog.Logger) *Editor {
 	bm := buffer.NewBufferManager()
 	mm := mode.NewModeManager(l)
 	km := NewKeypressManager(l)
+	cw := command.NewCommandWindow(l)
 	return &Editor{
 		bm:       bm,
 		renderer: r,
@@ -36,6 +39,7 @@ func NewTextEditor(l *slog.Logger) *Editor {
 		logger:   l,
 		mm:       mm,
 		km:       km,
+		cw:       cw,
 	}
 }
 
@@ -71,13 +75,16 @@ func (e *Editor) processKey() error {
 	case mode.ModeInsert:
 		e.km.ProcessKeyModeInsert(e, kp)
 		return nil
+	case mode.ModeCommand:
+		e.km.ProcessKeyModeCommand(e, kp)
 	}
 	return nil
 }
 
 func (e *Editor) PushMessage(msg messages.Message) {
 	e.ml.Push(msg)
-	e.renderer.SetMsg(e.statusInfo(), e.bm.CurrBufNode.Buf, msg)
+	//e.cw.SetRows([]byte(msg.Text))
+	//e.renderer.SetMsg(e.statusInfo(), e.bm.CurrBufNode.Buf, msg)
 }
 
 func (e *Editor) openMessages() {
@@ -114,7 +121,7 @@ func (e *Editor) Run() {
 	defer e.renderer.Cleanup()
 	e.PushMessage(messages.MomentoMori)
 	for {
-		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo())
+		e.renderer.Render(e.bm.CurrBufNode.Buf, e.statusInfo(), e.cw)
 		err := e.processKey()
 		if err != nil {
 			break

@@ -14,4 +14,5 @@ func (b *abuf) Clear() {
 
 func (b *abuf) Flush() {
 	os.Stdout.Write(*b)
+	b.Clear()
 }
