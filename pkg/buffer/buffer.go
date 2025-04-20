@@ -107,7 +107,7 @@ func (b *Buffer) Left() {
 	}
 }
 func (b *Buffer) Right() {
-	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y]) {
+	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y]) - 1 {
 		b.cursor.right()
 	}
 }
