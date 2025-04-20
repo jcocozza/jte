@@ -1,14 +1,23 @@
 package main
 
 import (
-	//"log/slog"
-
-	//"github.com/jcocozza/jte/editor"
-	//"github.com/jcocozza/jte/logger"
+	"github.com/jcocozza/jte/pkg/editor"
+	"github.com/jcocozza/jte/pkg/logger"
+	"github.com/jcocozza/jte/pkg/term"
 )
 
 func main() {
-	//l := logger.CreateLogger(slog.LevelDebug)
-	//e := editor.NewTextEditor(l)
-	//e.Run()
+	rw, err := term.EnableRawMode()
+	if err != nil {
+		panic(err)
+	}
+	defer rw.Restore()
+	l, f, err := logger.NewLogger()
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	e := editor.NewEditor(l)
+	e.Run()
 }

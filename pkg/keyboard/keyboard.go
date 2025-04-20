@@ -6,7 +6,7 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/jcocozza/jte/api/keyboard/internal"
+	"github.com/jcocozza/jte/pkg/keyboard/internal"
 )
 
 var ErrInvalidKey error = errors.New("invalid key")
@@ -24,6 +24,7 @@ func NewKeyboard(l *slog.Logger) *Keyboard {
 	}
 }
 
+// this is the 'main' method used to extract user input
 func (k *Keyboard) GetKeypress() (Key, error) {
 	key, err := k.handleRawInput()
 	if err != nil {
