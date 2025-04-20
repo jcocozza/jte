@@ -1,19 +1,13 @@
 package main
 
 import (
-	"os"
-
+	"github.com/jcocozza/jte/pkg/buffer"
 	"github.com/jcocozza/jte/pkg/editor"
 	"github.com/jcocozza/jte/pkg/logger"
-	"github.com/jcocozza/jte/pkg/term"
+	"github.com/jcocozza/jte/pkg/renderer"
 )
 
 func main() {
-	rw, err := term.EnableRawMode()
-	if err != nil {
-		panic(err)
-	}
-	defer rw.Restore()
 	l, f, err := logger.NewLogger()
 	if err != nil {
 		panic(err)
@@ -21,11 +15,22 @@ func main() {
 	defer f.Close()
 
 	e := editor.NewEditor(l)
+	r := renderer.NewTextRenderer(l)
+	err = r.Setup()
+	if err != nil {
+		panic("unable to setup")
+	}
+
+	id := e.BM.Add(*buffer.NewBuffer("[No Name]", buffer.SampleRows))
+	e.BM.SetCurrent(id)
 	for {
-		err := e.EventLoopStep()
+		exit, err := e.EventLoopStep()
 		if err != nil {
-			rw.Restore()
-			os.Exit(0)
+			r.ExitErr(err)
 		}
+		if exit {
+			r.Exit("")
+		}
+		r.Render(e)
 	}
 }

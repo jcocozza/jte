@@ -258,6 +258,6 @@ func (kb *Keyboard) GetKeypress() (Keypress, error) {
 		}
 		kp = Keypress{Unicode: r}
 	}
-	kb.logger.Info("keypress", slog.String("raw input", string(buf)), slog.String("key", kp.String()))
+	kb.logger.Debug("keypress", slog.String("raw input", string(buf)), slog.String("key", kp.String()))
 	return kp, nil
 }

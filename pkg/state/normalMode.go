@@ -2,28 +2,23 @@ package state
 
 import (
 	"github.com/jcocozza/jte/pkg/actions"
+	"github.com/jcocozza/jte/pkg/bindings"
 	"github.com/jcocozza/jte/pkg/keyboard"
 )
 
 type NormalMode struct {
-	bindings *KeyNode
+	bindings *bindings.BindingNode
+}
+
+func NewNormalMode() *NormalMode {
+	b := bindings.RootBindingNode()
+	return &NormalMode{
+		bindings: b,
+	}
 }
 
 func (m *NormalMode) Name() string {
 	return "normal"
-}
-
-// todo, finish this out
-var defaultNormalBindings = &KeyNode{
-	children: map[keyboard.Key]*KeyNode{
-		'w': {children: nil, action: nil},
-		'h': {children: nil, action: actions.CursorLeft},
-		'j': {children: nil, action: actions.CursorDown},
-		'k': {children: nil, action: actions.CursorUp},
-		'l': {children: nil, action: actions.CursorRight},
-		//keyboard.CtrlC: nil,
-	},
-	action: nil,
 }
 
 func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {
@@ -35,11 +30,11 @@ func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {
 		newkq := &duplicate
 		// use custom bindings first
 		action := m.bindings.Traverse(kq)
-		if action != nil {
+		if action != actions.None {
 			return action
 		}
 		// try to use default bindings
-		return defaultNormalBindings.Traverse(newkq)
+		return bindings.Normal.Traverse(newkq)
 	}
-	return defaultNormalBindings.Traverse(kq)
+	return bindings.Normal.Traverse(kq)
 }

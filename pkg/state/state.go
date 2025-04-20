@@ -12,67 +12,6 @@ type Mode interface {
 	HandleInput(kq *keyboard.KeyQueue) actions.Action
 }
 
-// this is a way to map consecutive key presses to different actions
-//
-// the 'root' will always have a nil action
-type KeyNode struct {
-	children map[keyboard.Key]*KeyNode
-	action actions.Action
-}
-
-func RootKeyNode() *KeyNode {
-	return &KeyNode{
-		children: make(map[keyboard.Key]*KeyNode),
-		action: nil,
-	}
-}
-
-// traverse the key node inorder of the queue
-//
-// will return nil if there is no action at the end
-func (kn *KeyNode) Traverse(kq *keyboard.KeyQueue) actions.Action {
-	curr := kn
-	for {
-		key, err := kq.Dequeue()
-		if err != nil {
-			// we are out of keys, time to break
-			break
-		}
-		next, ok := curr.children[key]
-		// break when the next key isn't in the bindings
-		if !ok {
-			break
-		}
-		// this is necessary because we might write an 
-		// incomplete set of bindings
-		if next == nil {
-			panic("a keynode cannot have a child be nil when the key exists in the set of bindings")
-		}
-		curr = next
-	}
-	return curr.action
-}
-
-// traverse the key node inorder of the queue
-//
-// will return nil if there is no action at the end
-//func TraverseKeyNodes(kq *keyboard.KeyQueue, kn *KeyNode) actions.Action {
-//	curr := kn
-//	for {
-//		key, err := kq.Dequeue()
-//		if err != nil {
-//			// we are out of keys, time to break
-//			break
-//		}
-//		next, ok := curr.children[key]
-//		if !ok {
-//			break
-//		}
-//		curr = next
-//	}
-//	return curr.action
-//}
-
 type StateMachine struct {
 	current Mode
 	modes   map[string]Mode

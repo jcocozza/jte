@@ -1,9 +1,11 @@
 package editor
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/jcocozza/jte/pkg/actions"
+	"github.com/jcocozza/jte/pkg/buffer"
 	"github.com/jcocozza/jte/pkg/keyboard"
 	"github.com/jcocozza/jte/pkg/state"
 )
@@ -13,6 +15,7 @@ type Editor struct {
 	kq *keyboard.KeyQueue
 	sm *state.StateMachine
 	aq *actions.ActionQueue
+	BM *buffer.BufferManager
 }
 
 func NewEditor(l *slog.Logger) *Editor {
@@ -20,27 +23,41 @@ func NewEditor(l *slog.Logger) *Editor {
 	kq := keyboard.NewKeyQueue(l)
 	sm := state.NewStateMachine()
 	aq := actions.NewActionQueue(l)
+	BM := buffer.NewBufferManager(l)
 	return &Editor{
 		kb: kb,
 		kq: kq,
 		sm: sm,
 		aq: aq,
+		BM: BM,
 	}
 }
 
 // called in the main event loop
-func (e *Editor) EventLoopStep() error {
+//
+// return true if it is time to exit
+func (e *Editor) EventLoopStep() (bool, error) {
 	kp, err := e.kb.GetKeypress()
 	if err != nil {
-		return err
+		return false, err
 	}
 	e.kq.Enqueue(kp)
 	action := e.sm.HandleKeyQueue(e.kq)
-	if action != nil {
-		e.aq.Enqueue(action)
+	e.aq.Enqueue(action)
+	for {
+		action, err := e.aq.Dequeue()
+		if err != nil { // end of queue
+			break
+		}
+		if action == actions.Exit {
+			return true, nil
+		}
+		fn, ok := Registry[action]
+		if !ok { // a non existent action
+			panic(fmt.Sprintf("action: %d does not exist in registry", action))
+		}
+		fn(e) //actually exectute the action
 	}
-	// in the future, we may want to append other actions
-	// for now the 'action queue' really only ever gets 1 action at a time to process
-	e.aq.Process()
-	return nil
+	return false, nil
 }
+

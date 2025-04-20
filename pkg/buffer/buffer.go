@@ -32,9 +32,14 @@ func (c *Cursor) right() {
 	c.X++
 }
 
-
 // represents a single row
 type row []byte
+
+var SampleRows = []row{
+	[]byte("asdfasdfasdf"),
+	[]byte("asdfasdfasdf"),
+	[]byte("asdfasdfasdf"),
+}
 
 // an in memory representation of a file
 type Buffer struct {
@@ -47,8 +52,8 @@ type Buffer struct {
 	Name string
 
 	// the rows in the underlying file
-	rows   []row
-	cursor Cursor
+	Rows   []row
+	cursor *Cursor
 
 	// state stuff
 	Modified bool
@@ -58,4 +63,65 @@ type Buffer struct {
 	// file stuff
 	FileName string
 	FilePath string
+}
+
+func NewBuffer(name string, rows []row) *Buffer {
+	return &Buffer{
+		Name:   name,
+		Rows:   rows,
+		cursor: &Cursor{},
+	}
+}
+
+func (b *Buffer) X() int {
+	return b.cursor.X
+}
+func (b *Buffer) Y() int {
+	return b.cursor.Y
+}
+
+// when moving up or down and at the end of a line, we want to snap to end of next line if that line is shorter
+func (b *Buffer) adjustCursor() {
+	if b.cursor.Y >= len(b.Rows) {
+		return
+	}
+	newRowLen := len(b.Rows[b.cursor.Y])
+	if b.cursor.X > newRowLen {
+		b.cursor.X = newRowLen
+	}
+}
+
+func (b *Buffer) Up() {
+	if b.cursor.Y > 0 {
+		b.cursor.up()
+		b.adjustCursor()
+	}
+}
+func (b *Buffer) Down() {
+	if b.cursor.Y < len(b.Rows)-1 {
+		b.cursor.down()
+		b.adjustCursor()
+	}
+}
+func (b *Buffer) Left() {
+	if b.cursor.X > 0 {
+		b.cursor.left()
+	}
+}
+func (b *Buffer) Right() {
+	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y]) {
+		b.cursor.right()
+	}
+}
+
+// go to start of current line
+func (b *Buffer) StartLine() {
+	b.cursor.X = 0
+}
+
+// go to end of current line
+func (b *Buffer) EndLine() {
+	if b.cursor.Y < len(b.Rows) {
+		b.cursor.X = len(b.Rows[b.cursor.Y])
+	}
 }

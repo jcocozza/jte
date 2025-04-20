@@ -8,7 +8,7 @@ import (
 // A circular, doubly linked list
 type BufferNode struct {
 	id   int
-	buf  Buffer
+	Buf  Buffer
 	next *BufferNode
 	prev *BufferNode
 }
@@ -16,7 +16,7 @@ type BufferNode struct {
 func (n *BufferNode) Insert(buf Buffer) *BufferNode {
 	newBufNode := &BufferNode{
 		id:   buf.id,
-		buf:  buf,
+		Buf:  buf,
 		next: nil,
 		prev: nil,
 	}
@@ -81,7 +81,7 @@ func (n *BufferNode) TraverseTo(id int) *BufferNode {
 //
 // every operation should be safe for both
 type BufferManager struct {
-	currentBufferNode *BufferNode
+	Current *BufferNode
 	bufList *BufferNode
 	bufMap  map[int]*BufferNode
 	// 'global' id counter
@@ -93,7 +93,7 @@ type BufferManager struct {
 
 func NewBufferManager(l *slog.Logger) *BufferManager {
 	return &BufferManager{
-		currentBufferNode: nil,
+		Current: nil,
 		bufList: nil,
 		bufMap: make(map[int]*BufferNode),
 		logger: l.WithGroup("buffer-manager"),
@@ -118,7 +118,7 @@ func (m *BufferManager) Delete(id int) {
 func (m *BufferManager) SetCurrent(id int) {
 	m.logger.Debug("set current buffer", slog.Int("id", id))
 	if curr, ok := m.bufMap[id]; ok {
-		m.currentBufferNode = curr
+		m.Current = curr
 		return
 	}
 	msg := fmt.Sprintf("invalid buffer id: %d", id)
@@ -126,13 +126,13 @@ func (m *BufferManager) SetCurrent(id int) {
 }
 
 func (m *BufferManager) Next() {
-	msg := fmt.Sprintf("to next: %d -> %d", m.currentBufferNode.id, m.currentBufferNode.next.id)
+	msg := fmt.Sprintf("to next: %d -> %d", m.Current.id, m.Current.next.id)
 	m.logger.Debug(msg)
-	m.currentBufferNode = m.currentBufferNode.next
+	m.Current = m.Current.next
 }
 
 func (m *BufferManager) Previous() {
-	msg := fmt.Sprintf("to prev: %d -> %d", m.currentBufferNode.id, m.currentBufferNode.prev.id)
+	msg := fmt.Sprintf("to prev: %d -> %d", m.Current.id, m.Current.prev.id)
 	m.logger.Debug(msg)
-	m.currentBufferNode = m.currentBufferNode.prev
+	m.Current= m.Current.prev
 }

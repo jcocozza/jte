@@ -20,7 +20,7 @@ func NewActionQueue(l *slog.Logger) *ActionQueue {
 
 // add action to the queue
 func (q *ActionQueue) Enqueue(action Action) {
-	q.logger.Debug("enqueue", slog.String("action", action.Name()))
+	q.logger.Debug("enqueue", slog.Any("action", action))
 	q.actions = append(q.actions, action)
 }
 
@@ -28,19 +28,19 @@ func (q *ActionQueue) Enqueue(action Action) {
 func (q *ActionQueue) Dequeue() (Action, error){
 	if len(q.actions) > 0 {
 		action := q.actions[0]
-		q.logger.Debug("dequeue", slog.String("action", action.Name()))
+		q.logger.Debug("dequeue", slog.Any("action", action))
 		q.actions = q.actions[1:]
 		return action, nil
 	}
-	return nil, fmt.Errorf("nothing to dequeue")
+	return None, fmt.Errorf("nothing to dequeue")
 }
 
 // process all actions in the queue
-func (q *ActionQueue) Process() {
-	for _, action := range q.actions {
-		q.logger.Debug("applying action", slog.String("action", action.Name()))
-		action.Apply()
-	}
-	// clear actions
-	q.actions = nil
-}
+//func (q *ActionQueue) Process() {
+//	for _, action := range q.actions {
+//		q.logger.Debug("applying action", slog.String("action", action.Name()))
+//		action.Apply()
+//	}
+//	// clear actions
+//	q.actions = nil
+//}

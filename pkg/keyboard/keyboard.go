@@ -30,7 +30,7 @@ func (k *Keyboard) GetKeypress() (Key, error) {
 	if err != nil {
 		return -1, err
 	}
-	k.logger.Info("keypress", slog.String("key", key.String()))
+	k.logger.Debug("keypress", slog.String("key", key.String()))
 	return key, nil
 }
 
