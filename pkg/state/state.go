@@ -30,21 +30,48 @@ func RootKeyNode() *KeyNode {
 // traverse the key node inorder of the queue
 //
 // will return nil if there is no action at the end
-func TraverseKeyNodes(kq *keyboard.KeyQueue, kn *KeyNode) actions.Action {
+func (kn *KeyNode) Traverse(kq *keyboard.KeyQueue) actions.Action {
 	curr := kn
 	for {
 		key, err := kq.Dequeue()
 		if err != nil {
-			panic(err)
+			// we are out of keys, time to break
+			break
 		}
 		next, ok := curr.children[key]
+		// break when the next key isn't in the bindings
 		if !ok {
 			break
+		}
+		// this is necessary because we might write an 
+		// incomplete set of bindings
+		if next == nil {
+			panic("a keynode cannot have a child be nil when the key exists in the set of bindings")
 		}
 		curr = next
 	}
 	return curr.action
 }
+
+// traverse the key node inorder of the queue
+//
+// will return nil if there is no action at the end
+//func TraverseKeyNodes(kq *keyboard.KeyQueue, kn *KeyNode) actions.Action {
+//	curr := kn
+//	for {
+//		key, err := kq.Dequeue()
+//		if err != nil {
+//			// we are out of keys, time to break
+//			break
+//		}
+//		next, ok := curr.children[key]
+//		if !ok {
+//			break
+//		}
+//		curr = next
+//	}
+//	return curr.action
+//}
 
 type StateMachine struct {
 	current Mode

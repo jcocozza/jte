@@ -12,12 +12,13 @@ type KeyQueue struct {
 
 func NewKeyQueue(l *slog.Logger) *KeyQueue {
 	return &KeyQueue{
-		logger: l,
-		keys: nil,
+		logger: l.WithGroup("key-queue"),
+		keys: []Key{},
 	}
 }
 
 func (q *KeyQueue) Enqueue(key Key) {
+	q.logger.Debug("enqueue", slog.String("key", key.String()))
 	q.keys = append(q.keys, key)
 }
 
@@ -25,6 +26,7 @@ func (q *KeyQueue) Enqueue(key Key) {
 func (q *KeyQueue) Dequeue() (Key, error) {
 	if len(q.keys) > 0 {
 		k := q.keys[0]
+		q.logger.Debug("dequeue", slog.String("key", k.String()))
 		q.keys = q.keys[1:]
 		return k, nil
 	}

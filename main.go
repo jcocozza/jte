@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/jcocozza/jte/pkg/editor"
 	"github.com/jcocozza/jte/pkg/logger"
 	"github.com/jcocozza/jte/pkg/term"
@@ -19,5 +21,11 @@ func main() {
 	defer f.Close()
 
 	e := editor.NewEditor(l)
-	e.Run()
+	for {
+		err := e.EventLoopStep()
+		if err != nil {
+			rw.Restore()
+			os.Exit(0)
+		}
+	}
 }

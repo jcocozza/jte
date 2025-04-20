@@ -16,12 +16,12 @@ func (m *NormalMode) Name() string {
 // todo, finish this out
 var defaultNormalBindings = &KeyNode{
 	children: map[keyboard.Key]*KeyNode{
-		'w': nil,
-		'h': nil,
-		'j': nil,
-		'k': nil,
-		'l': nil,
-		keyboard.CtrlC: nil,
+		'w': {children: nil, action: nil},
+		'h': {children: nil, action: actions.CursorLeft},
+		'j': {children: nil, action: actions.CursorDown},
+		'k': {children: nil, action: actions.CursorUp},
+		'l': {children: nil, action: actions.CursorRight},
+		//keyboard.CtrlC: nil,
 	},
 	action: nil,
 }
@@ -34,12 +34,12 @@ func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {
 		duplicate := *kq
 		newkq := &duplicate
 		// use custom bindings first
-		action := TraverseKeyNodes(kq, m.bindings)
+		action := m.bindings.Traverse(kq)
 		if action != nil {
 			return action
 		}
 		// try to use default bindings
-		return TraverseKeyNodes(newkq, defaultNormalBindings)
+		return defaultNormalBindings.Traverse(newkq)
 	}
-	return TraverseKeyNodes(kq, defaultNormalBindings)
+	return defaultNormalBindings.Traverse(kq)
 }

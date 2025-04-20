@@ -28,19 +28,19 @@ func NewEditor(l *slog.Logger) *Editor {
 	}
 }
 
-func (e *Editor) Run() {
-	for {
-		kp, err := e.kb.GetKeypress()
-		if err != nil {
-			panic(err)
-		}
-		e.kq.Enqueue(kp)
-		action := e.sm.HandleKeyQueue(e.kq)
-		if action != nil {
-			e.aq.Enqueue(action)
-		}
-		// in the future, we may want to append other actions
-		// for now the 'action queue' really on ever gets 1 action
-		e.aq.Process()
+// called in the main event loop
+func (e *Editor) EventLoopStep() error {
+	kp, err := e.kb.GetKeypress()
+	if err != nil {
+		return err
 	}
+	e.kq.Enqueue(kp)
+	action := e.sm.HandleKeyQueue(e.kq)
+	if action != nil {
+		e.aq.Enqueue(action)
+	}
+	// in the future, we may want to append other actions
+	// for now the 'action queue' really only ever gets 1 action at a time to process
+	e.aq.Process()
+	return nil
 }

@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"log/slog"
 )
 
@@ -12,22 +13,26 @@ type ActionQueue struct {
 
 func NewActionQueue(l *slog.Logger) *ActionQueue {
 	return &ActionQueue{
-		logger: l,
+		logger: l.WithGroup("action-queue"),
 		actions: []Action{},
 	}
 }
 
 // add action to the queue
 func (q *ActionQueue) Enqueue(action Action) {
+	q.logger.Debug("enqueue", slog.String("action", action.Name()))
 	q.actions = append(q.actions, action)
 }
 
-// apply the latest next action
-func (q *ActionQueue) Dequeue() {
+// pop the next action
+func (q *ActionQueue) Dequeue() (Action, error){
 	if len(q.actions) > 0 {
-		q.actions[0].Apply()
+		action := q.actions[0]
+		q.logger.Debug("dequeue", slog.String("action", action.Name()))
+		q.actions = q.actions[1:]
+		return action, nil
 	}
-	q.actions = q.actions[1:]
+	return nil, fmt.Errorf("nothing to dequeue")
 }
 
 // process all actions in the queue

@@ -10,7 +10,7 @@ func NewLogger() (*slog.Logger, *os.File, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	handler := slog.NewTextHandler(f, nil)
+	handler := slog.NewTextHandler(f, &slog.HandlerOptions{Level: slog.LevelDebug})
 	logger := slog.New(handler)
 	return logger, f, nil
 }
