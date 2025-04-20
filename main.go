@@ -43,6 +43,8 @@ func main() {
 
 	id := e.BM.Add(buf)
 	e.BM.SetCurrent(id)
+	r.Render(e) // need to do an inital render
+	// enter into the main event loop
 	for {
 		exit, err := e.EventLoopStep()
 		if err != nil {
