@@ -60,6 +60,8 @@ func (r *TextRenderer) Setup() error {
 }
 
 func (r *TextRenderer) cleanup() {
+	r.abuf.Append([]byte("\x1b[2J"))   // clear entire screen
+	r.abuf.Flush()
 	if r.rw == nil {
 		return
 	}
@@ -84,7 +86,7 @@ func (r *TextRenderer) Exit(msg string) {
 	os.Exit(0)
 }
 
-func (r *TextRenderer) drawCursor(buf buffer.Buffer) {
+func (r *TextRenderer) drawCursor(buf *buffer.Buffer) {
 	y := (buf.Y() - r.rowoffset) + 1
 	actualCol := 0
 	for i := 0; i < buf.X(); i++ {
@@ -115,7 +117,7 @@ func (r *TextRenderer) drawRow(row []byte) {
 	r.abuf.Append(expanded)
 }
 
-func (r *TextRenderer) drawBuffer(buf buffer.Buffer) {
+func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
 	for i := 0; i < r.screenrows; i++ {
 		filerow := i + r.rowoffset
 		if filerow >= len(buf.Rows) {
@@ -128,7 +130,7 @@ func (r *TextRenderer) drawBuffer(buf buffer.Buffer) {
 	}
 }
 
-func (r *TextRenderer) scroll(buf buffer.Buffer) {
+func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 	if buf.Y() < r.rowoffset {
 		r.rowoffset = buf.Y()
 	}

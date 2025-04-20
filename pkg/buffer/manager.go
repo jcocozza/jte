@@ -8,12 +8,12 @@ import (
 // A circular, doubly linked list
 type BufferNode struct {
 	id   int
-	Buf  Buffer
+	Buf  *Buffer
 	next *BufferNode
 	prev *BufferNode
 }
 
-func (n *BufferNode) Insert(buf Buffer) *BufferNode {
+func (n *BufferNode) Insert(buf *Buffer) *BufferNode {
 	newBufNode := &BufferNode{
 		id:   buf.id,
 		Buf:  buf,
@@ -100,7 +100,7 @@ func NewBufferManager(l *slog.Logger) *BufferManager {
 	}
 }
 
-func (m *BufferManager) Add(buf Buffer) int {
+func (m *BufferManager) Add(buf *Buffer) int {
 	m.idCounter++
 	buf.id = m.idCounter
 	newBufNode := m.bufList.Insert(buf)

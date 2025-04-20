@@ -32,10 +32,7 @@ func (c *Cursor) right() {
 	c.X++
 }
 
-// represents a single row
-type row []byte
-
-var SampleRows = []row{
+var SampleRows = []BufRow{
 	[]byte("asdfasdfasdf"),
 	[]byte("asdfasdfasdf"),
 	[]byte("asdfasdfasdf"),
@@ -52,7 +49,7 @@ type Buffer struct {
 	Name string
 
 	// the rows in the underlying file
-	Rows   []row
+	Rows   []BufRow
 	cursor *Cursor
 
 	// state stuff
@@ -65,10 +62,11 @@ type Buffer struct {
 	FilePath string
 }
 
-func NewBuffer(name string, rows []row) *Buffer {
+func NewBuffer(name string, readOnly bool, rows []BufRow) *Buffer {
 	return &Buffer{
 		Name:   name,
 		Rows:   rows,
+		ReadOnly: readOnly,
 		cursor: &Cursor{},
 	}
 }
