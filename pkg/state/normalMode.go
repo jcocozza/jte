@@ -21,7 +21,7 @@ func (m *NormalMode) Name() ModeName {
 	return Normal
 }
 
-func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {
+func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) []actions.Action {
 	// we need to duplicate the key queue incase we need to retry with default bindings
 	// TODO: there has to be a better way to do this
 	// we probably should just not dequeue things
@@ -29,9 +29,9 @@ func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {
 		duplicate := *kq
 		newkq := &duplicate
 		// use custom bindings first
-		action := m.bindings.Traverse(kq)
-		if action != actions.None {
-			return action
+		actionList := m.bindings.Traverse(kq)
+		if len(actionList) > 0 {
+			return actionList
 		}
 		// try to use default bindings
 		return bindings.Normal.Traverse(newkq)

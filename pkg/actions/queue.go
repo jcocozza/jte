@@ -24,6 +24,11 @@ func (q *ActionQueue) Enqueue(action Action) {
 	q.actions = append(q.actions, action)
 }
 
+func (q *ActionQueue) EnqueueList(actionList []Action) {
+	q.logger.Debug("enqueue", slog.Any("actions", actionList))
+	q.actions = append(q.actions, actionList...)
+}
+
 // pop the next action
 func (q *ActionQueue) Dequeue() (Action, error){
 	if len(q.actions) > 0 {

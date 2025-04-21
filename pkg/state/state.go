@@ -10,7 +10,7 @@ import (
 
 type Mode interface {
 	Name() ModeName
-	HandleInput(kq *keyboard.KeyQueue) actions.Action
+	HandleInput(kq *keyboard.KeyQueue) []actions.Action
 }
 
 type StateMachine struct {
@@ -58,6 +58,6 @@ func (sm *StateMachine) SetMode(name ModeName) {
 	panic("unexpected mode")
 }
 
-func (sm *StateMachine) HandleKeyQueue(kq *keyboard.KeyQueue) actions.Action {
+func (sm *StateMachine) HandleKeyQueue(kq *keyboard.KeyQueue) []actions.Action {
 	return sm.current.HandleInput(kq)
 }

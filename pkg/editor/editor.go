@@ -45,9 +45,9 @@ func (e *Editor) EventLoopStep() (bool, error) {
 		return false, err
 	}
 	e.kq.Enqueue(kp)
-	action := e.SM.HandleKeyQueue(e.kq)
-	e.aq.Enqueue(action)
-	for {
+	actionList := e.SM.HandleKeyQueue(e.kq)
+	e.aq.EnqueueList(actionList)
+	for { // for each action in the queue, do the action
 		action, err := e.aq.Dequeue()
 		if err != nil { // end of queue
 			break

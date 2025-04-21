@@ -25,21 +25,21 @@ func (m *InsertMode) Name() ModeName {
 	return Insert
 }
 
-func (m *InsertMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {
+func (m *InsertMode) HandleInput(kq *keyboard.KeyQueue) []actions.Action {
 	duplicate := *kq
 	newkq := &duplicate
 	key, err := kq.Dequeue()
 	if err != nil {
-		return actions.None
+		return []actions.Action{}
 	}
 	if key.IsUnicode() {
-		return actions.InsertChar
+		return []actions.Action{actions.InsertChar}
 	}
 	if m.bindings != nil {
 		// use custom bindings first
-		action := m.bindings.Traverse(kq)
-		if action != actions.None {
-			return action
+		actionsList := m.bindings.Traverse(kq)
+		if len(actionsList) > 0 {
+			return actionsList
 		}
 		// try to use default bindings
 		return bindings.Insert.Traverse(newkq)

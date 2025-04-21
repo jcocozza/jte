@@ -6,36 +6,36 @@ import (
 )
 
 var Normal = &BindingNode{
-	action: actions.None,
+	actions: []actions.Action{},
 	children: map[keyboard.Key]*BindingNode{
-		keyboard.CtrlC: {children: nil, action: actions.Exit},
-		'i':            {children: nil, action: actions.Mode_Insert},
+		keyboard.CtrlC: {children: nil, actions: []actions.Action{actions.Exit}},
+		'i':            {children: nil, actions: []actions.Action{actions.Mode_Insert}},
 
-		'h': {children: nil, action: actions.CursorLeft},
-		'j': {children: nil, action: actions.CursorDown},
-		'k': {children: nil, action: actions.CursorUp},
-		'l': {children: nil, action: actions.CursorRight},
+		'h': {children: nil, actions: []actions.Action{actions.CursorLeft}},
+		'j': {children: nil, actions: []actions.Action{actions.CursorDown}},
+		'k': {children: nil, actions: []actions.Action{actions.CursorUp}},
+		'l': {children: nil, actions: []actions.Action{actions.CursorRight}},
 
-		'o': {children: nil, action: actions.InsertNewLineBelow},
-		'O': {children: nil, action: actions.InsertNewLineAbove},
+		'o': {children: nil, actions: []actions.Action{actions.InsertNewLineBelow, actions.Mode_Insert}},
+		'O': {children: nil, actions: []actions.Action{actions.InsertNewLineAbove, actions.Mode_Insert}},
 	},
 }
 
 var Insert = &BindingNode{
-	action: actions.None,
+	actions: []actions.Action{actions.None},
 	children: map[keyboard.Key]*BindingNode{
-		keyboard.CtrlC: {children: nil, action: actions.Exit},
-		keyboard.ESC:   {children: nil, action: actions.Mode_Normal},
-		keyboard.ENTER: {children: nil, action: actions.InsertNewLine},
+		keyboard.CtrlC: {children: nil, actions: []actions.Action{actions.Exit}},
+		keyboard.ESC:   {children: nil, actions: []actions.Action{actions.Mode_Normal}},
+		keyboard.ENTER: {children: nil, actions: []actions.Action{actions.InsertNewLine}},
 
-		keyboard.ARROW_UP:    {children: nil, action: actions.CursorUp},
-		keyboard.ARROW_DOWN:  {children: nil, action: actions.CursorDown},
-		keyboard.ARROW_LEFT:  {children: nil, action: actions.CursorLeft},
-		keyboard.ARROW_RIGHT: {children: nil, action: actions.CursorRight},
+		keyboard.ARROW_UP:    {children: nil, actions: []actions.Action{actions.CursorUp}},
+		keyboard.ARROW_DOWN:  {children: nil, actions: []actions.Action{actions.CursorDown}},
+		keyboard.ARROW_LEFT:  {children: nil, actions: []actions.Action{actions.CursorLeft}},
+		keyboard.ARROW_RIGHT: {children: nil, actions: []actions.Action{actions.CursorRight}},
 
-		keyboard.BACKSPACE:   {children: nil, action: actions.DeleteChar},
-		keyboard.BACKSPACE_2: {children: nil, action: actions.DeleteChar},
-		keyboard.DELETE:      {children: nil, action: actions.RemoveChar},
-		keyboard.TAB:         {children: nil, action: actions.InsertChar},
+		keyboard.BACKSPACE:   {children: nil, actions: []actions.Action{actions.DeleteChar}},
+		keyboard.BACKSPACE_2: {children: nil, actions: []actions.Action{actions.DeleteChar}},
+		keyboard.DELETE:      {children: nil, actions: []actions.Action{actions.RemoveChar}},
+		keyboard.TAB:         {children: nil, actions: []actions.Action{actions.InsertChar}},
 	},
 }

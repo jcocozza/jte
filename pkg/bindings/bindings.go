@@ -10,20 +10,20 @@ import (
 // the 'root' will always have a None action
 type BindingNode struct {
 	children map[keyboard.Key]*BindingNode
-	action   actions.Action
+	actions   []actions.Action
 }
 
 func RootBindingNode() *BindingNode {
 	return &BindingNode{
 		children: make(map[keyboard.Key]*BindingNode),
-		action:   actions.None,
+		actions:   []actions.Action{},
 	}
 }
 
 // traverse the nodes in order of the queue
 //
 // will return the None action if no action is found
-func (bn *BindingNode) Traverse(kq *keyboard.KeyQueue) actions.Action {
+func (bn *BindingNode) Traverse(kq *keyboard.KeyQueue) []actions.Action {
 	curr := bn
 	for {
 		key, err := kq.Dequeue()
@@ -43,5 +43,5 @@ func (bn *BindingNode) Traverse(kq *keyboard.KeyQueue) actions.Action {
 		}
 		curr = next
 	}
-	return curr.action
+	return curr.actions
 }
