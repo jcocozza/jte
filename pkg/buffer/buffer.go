@@ -122,6 +122,13 @@ func (b *Buffer) EndLine() {
 	}
 }
 
+func (b *Buffer) insertRow(at int, row []byte) {
+	if at < 0 || at > len(b.Rows) {
+		return
+	}
+	b.Rows = append(b.Rows[:at], append([]BufRow{row}, b.Rows[at:]...)...)
+}
+
 func (b *Buffer) appendRow(row []byte) {
 	newBufRow := make(BufRow, len(row))
 	copy(newBufRow, row) // Ensure a copy of the row to avoid unintended aliasing
@@ -164,5 +171,50 @@ func (b *Buffer) DeleteChar() {
 		b.cursor.Y--
 		b.cursor.X = newX
 	}
+	b.Modified = true
+}
+
+// this the expected behavior when you press <enter>
+func (b *Buffer) InsertNewLine() {
+	if b.ReadOnly {return}
+	if b.cursor.X == 0 {
+		b.insertRow(b.cursor.Y, []byte(" "))
+	} else {
+		b.insertRow(b.cursor.Y+1, b.Rows[b.cursor.Y][b.cursor.X:])
+		b.Rows[b.cursor.Y].Trim(b.cursor.X)
+	}
+	b.cursor.Y++
+	b.cursor.X = 0
+	b.Modified = true
+}
+
+// similar to pressing "o" in vim normal mode
+func (b *Buffer) InsertNewLineBelow() {
+	if b.ReadOnly {return}
+	if b.cursor.X == 0 {
+		b.insertRow(b.cursor.Y+1, []byte(" "))
+	} else {
+		//b.insertRow(b.cursor.Y+1, b.Rows[b.cursor.Y][b.cursor.X:])
+		b.insertRow(b.cursor.Y+1, []byte(" "))
+		b.Rows[b.cursor.Y].Trim(b.cursor.X)
+	}
+	b.cursor.Y++
+	b.cursor.X = 0
+	b.Modified = true
+}
+
+// similar to pressing "O" in vim normal mode
+func (b *Buffer) InsertNewLineAbove() {
+	if b.ReadOnly {return}
+	if b.cursor.X == 0 {
+		b.insertRow(b.cursor.Y, []byte(" "))
+	} else {
+		b.insertRow(b.cursor.Y-1, b.Rows[b.cursor.Y][b.cursor.X:])
+		b.Rows[b.cursor.Y].Trim(b.cursor.X)
+	}
+	if b.cursor.Y != 0 {
+		b.cursor.Y--
+	}
+	b.cursor.X = 0
 	b.Modified = true
 }
