@@ -17,8 +17,8 @@ func NewNormalMode() *NormalMode {
 	}
 }
 
-func (m *NormalMode) Name() string {
-	return "normal"
+func (m *NormalMode) Name() ModeName {
+	return Normal
 }
 
 func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) actions.Action {

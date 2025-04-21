@@ -111,15 +111,58 @@ func (b *Buffer) Right() {
 		b.cursor.right()
 	}
 }
-
 // go to start of current line
 func (b *Buffer) StartLine() {
 	b.cursor.X = 0
 }
-
 // go to end of current line
 func (b *Buffer) EndLine() {
 	if b.cursor.Y < len(b.Rows) {
 		b.cursor.X = len(b.Rows[b.cursor.Y])
 	}
+}
+
+func (b *Buffer) appendRow(row []byte) {
+	newBufRow := make(BufRow, len(row))
+	copy(newBufRow, row) // Ensure a copy of the row to avoid unintended aliasing
+	b.Rows = append(b.Rows, newBufRow)
+}
+
+func (b *Buffer) deleteRow(at int) {
+	if at < 0 || at >= len(b.Rows) {
+		return
+	}
+	b.Rows = append(b.Rows[:at], b.Rows[at+1:]...)
+}
+
+
+func (b *Buffer) InsertChar(c byte) {
+	if b.ReadOnly {return}
+	if b.cursor.Y == len(b.Rows) {
+		b.appendRow([]byte{})
+	}
+	b.Rows[b.cursor.Y].InsertChar(b.cursor.X, c)
+	b.cursor.X++
+	b.Modified = true
+}
+
+func (b *Buffer) DeleteChar() {
+	if b.ReadOnly {return}
+	if b.cursor.Y == len(b.Rows) {
+		return
+	}
+	if b.cursor.X == 0 && b.cursor.Y == 0 {
+		return
+	}
+	if b.cursor.X > 0 {
+		b.Rows[b.cursor.Y].DelChar(b.cursor.X - 1)
+		b.cursor.X--
+	} else {
+		newX := len(b.Rows[b.cursor.Y-1])
+		b.Rows[b.cursor.Y-1].append(b.Rows[b.cursor.Y])
+		b.deleteRow(b.cursor.Y)
+		b.cursor.Y--
+		b.cursor.X = newX
+	}
+	b.Modified = true
 }

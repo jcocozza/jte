@@ -13,23 +13,26 @@ import (
 type Editor struct {
 	kb *keyboard.Keyboard
 	kq *keyboard.KeyQueue
-	sm *state.StateMachine
+	SM *state.StateMachine
 	aq *actions.ActionQueue
 	BM *buffer.BufferManager
+
+	logger *slog.Logger
 }
 
 func NewEditor(l *slog.Logger) *Editor {
 	kb := keyboard.NewKeyboard(l)
 	kq := keyboard.NewKeyQueue(l)
-	sm := state.NewStateMachine()
+	sm := state.NewStateMachine(l)
 	aq := actions.NewActionQueue(l)
 	BM := buffer.NewBufferManager(l)
 	return &Editor{
 		kb: kb,
 		kq: kq,
-		sm: sm,
+		SM: sm,
 		aq: aq,
 		BM: BM,
+		logger: l.WithGroup("editor"),
 	}
 }
 
@@ -42,7 +45,7 @@ func (e *Editor) EventLoopStep() (bool, error) {
 		return false, err
 	}
 	e.kq.Enqueue(kp)
-	action := e.sm.HandleKeyQueue(e.kq)
+	action := e.SM.HandleKeyQueue(e.kq)
 	e.aq.Enqueue(action)
 	for {
 		action, err := e.aq.Dequeue()
@@ -51,6 +54,10 @@ func (e *Editor) EventLoopStep() (bool, error) {
 		}
 		if action == actions.Exit {
 			return true, nil
+		}
+		if action == actions.InsertChar {
+			e.BM.Current.Buf.InsertChar(byte(kp))
+			return false, nil
 		}
 		fn, ok := Registry[action]
 		if !ok { // a non existent action

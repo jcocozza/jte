@@ -17,6 +17,10 @@ func NewKeyQueue(l *slog.Logger) *KeyQueue {
 	}
 }
 
+func (q *KeyQueue) String() string {
+	return string(q.keys)
+}
+
 func (q *KeyQueue) Enqueue(key Key) {
 	q.logger.Debug("enqueue", slog.String("key", key.String()))
 	q.keys = append(q.keys, key)

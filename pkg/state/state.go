@@ -2,33 +2,38 @@ package state
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/jcocozza/jte/pkg/actions"
 	"github.com/jcocozza/jte/pkg/keyboard"
 )
 
 type Mode interface {
-	Name() string
+	Name() ModeName
 	HandleInput(kq *keyboard.KeyQueue) actions.Action
 }
 
 type StateMachine struct {
 	current Mode
-	modes   map[string]Mode
+	modes   map[ModeName]Mode
+	logger *slog.Logger
 }
 
 // setup the state machine
 //
 // currently this just sets up the different modes
-func NewStateMachine() *StateMachine {
-	modes := make(map[string]Mode)
+func NewStateMachine(l *slog.Logger) *StateMachine {
+	modes := make(map[ModeName]Mode)
 	s := &StateMachine{
 		modes: modes,
+		logger: l.WithGroup("state-machine"),
 	}
 
 	normal := &NormalMode{}
+	insert := NewInsertMode(l)
 	s.register(normal)
-	s.SetMode("normal")
+	s.register(insert)
+	s.SetMode(Normal)
 	return s
 }
 
@@ -40,8 +45,9 @@ func (sm *StateMachine) register(m Mode) {
 	sm.modes[m.Name()] = m
 }
 
-func (sm *StateMachine) SetMode(name string) {
+func (sm *StateMachine) SetMode(name ModeName) {
 	if m, ok := sm.modes[name]; ok {
+	sm.logger.Debug("set mode", slog.String("mode", string(name)))
 		sm.current = m
 		return
 	}
