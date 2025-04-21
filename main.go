@@ -38,7 +38,7 @@ func main() {
 		readOnly := !writeable
 		buf = buffer.NewBuffer(path, readOnly, content)
 	} else {
-		buf = buffer.NewBuffer("[No Name]", true, buffer.SampleRows)
+		buf = buffer.NewBuffer("[No Name]", false, buffer.EmptyRows)
 	}
 
 	id := e.BM.Add(buf)

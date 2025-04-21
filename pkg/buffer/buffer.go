@@ -38,6 +38,8 @@ var SampleRows = []BufRow{
 	[]byte("asdfasdfasdf"),
 }
 
+var EmptyRows = []BufRow{}
+
 // an in memory representation of a file
 type Buffer struct {
 	// a unique identifier
