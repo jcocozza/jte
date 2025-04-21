@@ -53,14 +53,14 @@ func (r *TextRenderer) Setup() error {
 	if err != nil {
 		return err
 	}
-	r.screenrows = rows - 1     // leave room for status bar
-	r.initscreenrows = rows - 1 // leave room for status bar
+	r.screenrows = rows - 1 - 1     // leave room for status bar and command message
+	r.initscreenrows = rows - 1 - 1 // leave room for status bar and command message
 	r.screencols = cols
 	return nil
 }
 
 func (r *TextRenderer) cleanup() {
-	r.abuf.Append([]byte("\x1b[2J"))   // clear entire screen
+	r.abuf.Append([]byte("\x1b[2J")) // clear entire screen
 	r.abuf.Flush()
 	if r.rw == nil {
 		return
@@ -130,6 +130,33 @@ func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
 	}
 }
 
+func (r *TextRenderer) drawStatusBar(e *editor.Editor) {
+	r.abuf.Append([]byte("\x1b[7m"))
+	mode := e.SM.Current()
+
+	name := e.BM.Current.Buf.Name
+
+	var displayModified string = ""
+	if e.BM.Current.Buf.Modified {
+		displayModified = "(Δ)"
+	}
+
+	var displayRowNum int = 0
+	totalRows := len(e.BM.Current.Buf.Rows)
+	currRow := e.BM.Current.Buf.Y()
+	if totalRows != 0 {
+		displayRowNum = totalRows - 1 // -1 because i want a 0 indexed system
+	}
+	status := fmt.Sprintf("ln:%d/%d - %s %s", currRow, displayRowNum, displayModified, name)
+
+	r.abuf.Append([]byte(mode))
+	r.abuf.Append(bytes.Repeat([]byte(" "), r.screencols-len(status)-len(mode)))
+	r.abuf.Append([]byte(status))
+	r.abuf.Append([]byte("\x1b[m"))
+	//r.abuf.Append([]byte("\r\n"))
+	r.abuf.Append([]byte("\x1b[K"))
+}
+
 func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 	if buf.Y() < r.rowoffset {
 		r.rowoffset = buf.Y()
@@ -153,6 +180,7 @@ func (r *TextRenderer) construct(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
 
 	r.drawBuffer(e.BM.Current.Buf)
+	r.drawStatusBar(e)
 	r.drawCursor(e.BM.Current.Buf)
 	r.abuf.Append([]byte("\x1b[?25h")) // show the cursor
 }

@@ -37,6 +37,10 @@ func NewStateMachine(l *slog.Logger) *StateMachine {
 	return s
 }
 
+func (sm *StateMachine) Current() string {
+	return string(sm.current.Name())
+}
+
 func (sm *StateMachine) register(m Mode) {
 	if _, ok := sm.modes[m.Name()]; ok {
 		errMsg := fmt.Sprintf("mode: %s already registered", m.Name())
