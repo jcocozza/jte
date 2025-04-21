@@ -24,7 +24,7 @@ type TextRenderer struct {
 	rw *term.RawMode
 
 	screenrows     int
-	initscreenrows int
+	//initscreenrows int
 	screencols     int
 
 	rowoffset int
@@ -49,13 +49,6 @@ func (r *TextRenderer) Setup() error {
 		return err
 	}
 	r.rw = rw
-	rows, cols, err := rw.WindowSize()
-	if err != nil {
-		return err
-	}
-	r.screenrows = rows - 1 - 1     // leave room for status bar and command message
-	r.initscreenrows = rows - 1 - 1 // leave room for status bar and command message
-	r.screencols = cols
 	return nil
 }
 
@@ -157,6 +150,36 @@ func (r *TextRenderer) drawStatusBar(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[K"))
 }
 
+func (r *TextRenderer) setupThisRender(e *editor.Editor) {
+	rows, cols, _ := r.rw.WindowSize()
+	r.screenrows = rows - 1 //- 1     // leave room for status bar and command message
+	r.screencols = cols
+
+	if e.CW.ShowAll {
+		r.screenrows = r.screenrows - e.CW.Size()
+	} else {
+		r.screenrows-- // otherwise just leave room for 1 message
+	}
+}
+
+func (r *TextRenderer) drawCommandArea(e *editor.Editor) {
+	// we don't care if there are no messages
+	if e.CW.ShowAll {
+		contents := e.CW.Dump()
+		last := len(contents) -1
+		for i, c := range contents {
+			r.abuf.Append([]byte(c))
+			if i != last {
+				r.abuf.Append([]byte("\r\n"))
+			}
+		}
+		return
+	}
+	msg := e.CW.Next()
+	r.abuf.Append([]byte(msg))
+}
+
+
 func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 	if buf.Y() < r.rowoffset {
 		r.rowoffset = buf.Y()
@@ -173,6 +196,7 @@ func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 }
 
 func (r *TextRenderer) construct(e *editor.Editor) {
+	r.setupThisRender(e)
 	r.scroll(e.BM.Current.Buf)
 
 	r.abuf.Append([]byte("\x1b[?25l")) // hide cursor
@@ -181,6 +205,7 @@ func (r *TextRenderer) construct(e *editor.Editor) {
 
 	r.drawBuffer(e.BM.Current.Buf)
 	r.drawStatusBar(e)
+	r.drawCommandArea(e)
 	r.drawCursor(e.BM.Current.Buf)
 	r.abuf.Append([]byte("\x1b[?25h")) // show the cursor
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/jcocozza/jte/pkg/actions"
 	"github.com/jcocozza/jte/pkg/buffer"
+	commandwindow "github.com/jcocozza/jte/pkg/commandWindow"
 	"github.com/jcocozza/jte/pkg/keyboard"
 	"github.com/jcocozza/jte/pkg/state"
 )
@@ -16,6 +17,7 @@ type Editor struct {
 	SM *state.StateMachine
 	aq *actions.ActionQueue
 	BM *buffer.BufferManager
+	CW *commandwindow.CommandWindow
 
 	logger *slog.Logger
 }
@@ -26,12 +28,14 @@ func NewEditor(l *slog.Logger) *Editor {
 	sm := state.NewStateMachine(l)
 	aq := actions.NewActionQueue(l)
 	BM := buffer.NewBufferManager(l)
+	CW := commandwindow.NewCommandWindow(l)
 	return &Editor{
 		kb: kb,
 		kq: kq,
 		SM: sm,
 		aq: aq,
 		BM: BM,
+		CW: CW,
 		logger: l.WithGroup("editor"),
 	}
 }
