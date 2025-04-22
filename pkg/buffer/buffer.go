@@ -144,20 +144,6 @@ func (b *Buffer) deleteRow(at int) {
 	b.Rows = append(b.Rows[:at], b.Rows[at+1:]...)
 }
 
-func (b *Buffer) DeleteLine() {
-	if b.ReadOnly {return}
-	if len(b.Rows) == 0 {return}
-	if len(b.Rows) == 1 {
-		b.Rows[0] = BufRow(" ")
-	}
-	b.deleteRow(b.cursor.Y)
-	if b.cursor.Y != 0 {
-		b.cursor.Y--
-	}
-	b.cursor.X = 0
-	b.Modified = true
-}
-
 
 func (b *Buffer) InsertChar(c byte) {
 	if b.ReadOnly {return}
@@ -190,6 +176,17 @@ func (b *Buffer) DeleteChar() {
 	b.Modified = true
 }
 
+func (b *Buffer) DeleteLine() {
+	if b.ReadOnly {return}
+	if len(b.Rows) == 0 {return}
+	if len(b.Rows) == 1 {
+		b.Rows[0] = BufRow(" ")
+	}
+	b.deleteRow(b.cursor.Y)
+	b.cursor.X = 0
+	b.Modified = true
+}
+
 // this the expected behavior when you press <enter>
 func (b *Buffer) InsertNewLine() {
 	if b.ReadOnly {return}
@@ -212,7 +209,7 @@ func (b *Buffer) InsertNewLineBelow() {
 	} else {
 		//b.insertRow(b.cursor.Y+1, b.Rows[b.cursor.Y][b.cursor.X:])
 		b.insertRow(b.cursor.Y+1, []byte(" "))
-		b.Rows[b.cursor.Y].Trim(b.cursor.X)
+		b.Rows[b.cursor.Y].Trim(b.cursor.X+1)
 	}
 	b.cursor.Y++
 	b.cursor.X = 0
@@ -225,11 +222,8 @@ func (b *Buffer) InsertNewLineAbove() {
 	if b.cursor.X == 0 {
 		b.insertRow(b.cursor.Y, []byte(" "))
 	} else {
-		b.insertRow(b.cursor.Y-1, b.Rows[b.cursor.Y][b.cursor.X:])
-		b.Rows[b.cursor.Y].Trim(b.cursor.X)
-	}
-	if b.cursor.Y != 0 {
-		b.cursor.Y--
+		b.insertRow(b.cursor.Y, []byte(" "))
+		//b.Rows[b.cursor.Y].Trim(b.cursor.X)
 	}
 	b.cursor.X = 0
 	b.Modified = true
