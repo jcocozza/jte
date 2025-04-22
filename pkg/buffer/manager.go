@@ -136,3 +136,25 @@ func (m *BufferManager) Previous() {
 	m.logger.Debug(msg)
 	m.Current= m.Current.prev
 }
+
+type BufListData struct {
+	Id int
+	BufName string	
+}
+
+func (b *BufListData) String() string {
+	return fmt.Sprintf("%d %s", b.Id, b.BufName)
+}
+
+
+func (m *BufferManager) ListAll() []BufListData {
+	l := []BufListData{}
+	for id, buf := range m.bufMap {
+		b := BufListData{
+			Id: id,
+			BufName: buf.Buf.Name,
+		}	
+		l = append(l, b)	
+	}
+	return l
+}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/jcocozza/jte/pkg/buffer"
 	"github.com/jcocozza/jte/pkg/editor"
+	"github.com/jcocozza/jte/pkg/state"
 	"github.com/jcocozza/jte/pkg/term"
 )
 
@@ -23,9 +24,9 @@ type Renderer interface {
 type TextRenderer struct {
 	rw *term.RawMode
 
-	screenrows     int
+	screenrows int
 	//initscreenrows int
-	screencols     int
+	screencols int
 
 	rowoffset int
 	coloffset int
@@ -79,7 +80,7 @@ func (r *TextRenderer) Exit(msg string) {
 	os.Exit(0)
 }
 
-func (r *TextRenderer) drawCursor(buf *buffer.Buffer) {
+func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer) {
 	y := (buf.Y() - r.rowoffset) + 1
 	actualCol := 0
 	for i := 0; i < buf.X(); i++ {
@@ -89,7 +90,11 @@ func (r *TextRenderer) drawCursor(buf *buffer.Buffer) {
 			actualCol++
 		}
 	}
-	s := fmt.Sprintf("\x1b[%d;%dH", y, actualCol+1)
+	r.drawCursor(y, actualCol+1)
+}
+
+func (r *TextRenderer) drawCursor(x int, y int) {
+	s := fmt.Sprintf("\x1b[%d;%dH", x, y)
 	r.abuf.Append([]byte(s))
 }
 
@@ -155,7 +160,8 @@ func (r *TextRenderer) setupThisRender(e *editor.Editor) {
 	r.screenrows = rows - 1 //- 1     // leave room for status bar and command message
 	r.screencols = cols
 
-	if e.CW.ShowAll {
+	// add the 0 check to ensure we always have at least 1 row for the message
+	if e.CW.ShowAll && e.CW.Size() != 0 {
 		r.screenrows = r.screenrows - e.CW.Size()
 	} else {
 		r.screenrows-- // otherwise just leave room for 1 message
@@ -164,9 +170,10 @@ func (r *TextRenderer) setupThisRender(e *editor.Editor) {
 
 func (r *TextRenderer) drawCommandArea(e *editor.Editor) {
 	// we don't care if there are no messages
-	if e.CW.ShowAll {
+	// add the 0 check to ensure we always have at least 1 row for the message
+	if e.CW.ShowAll && e.CW.Size() != 0 {
 		contents := e.CW.Dump()
-		last := len(contents) -1
+		last := len(contents) - 1
 		for i, c := range contents {
 			r.abuf.Append([]byte(c))
 			if i != last {
@@ -175,10 +182,19 @@ func (r *TextRenderer) drawCommandArea(e *editor.Editor) {
 		}
 		return
 	}
+	// if the current command is not empty,
+	// then the user is typing
+	// so we want to keep rendering that
+	if e.CW.Active() {
+		r.abuf.Append([]byte("> "))
+		r.abuf.Append([]byte(e.CW.CmdBuf()))
+		return
+	}
+	// otherwise just show the next message
+	// (if there is one)
 	msg := e.CW.Next()
 	r.abuf.Append([]byte(msg))
 }
-
 
 func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 	if buf.Y() < r.rowoffset {
@@ -206,7 +222,14 @@ func (r *TextRenderer) construct(e *editor.Editor) {
 	r.drawBuffer(e.BM.Current.Buf)
 	r.drawStatusBar(e)
 	r.drawCommandArea(e)
-	r.drawCursor(e.BM.Current.Buf)
+
+	switch e.SM.Current() {
+	case string(state.Command):
+		r.drawCursor(r.screenrows+2, e.CW.X()+3) // +1 to keep cursor in right spot, +2 to include the "> " prompt
+	default:
+		r.drawCursorOnBuffer(e.BM.Current.Buf)
+	}
+
 	r.abuf.Append([]byte("\x1b[?25h")) // show the cursor
 }
 

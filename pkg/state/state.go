@@ -31,8 +31,11 @@ func NewStateMachine(l *slog.Logger) *StateMachine {
 
 	normal := &NormalMode{}
 	insert := NewInsertMode(l)
+	command := NewCommandMode()
 	s.register(normal)
 	s.register(insert)
+	s.register(command)
+
 	s.SetMode(Normal)
 	return s
 }

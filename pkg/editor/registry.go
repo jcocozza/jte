@@ -1,11 +1,15 @@
 package editor
 
 import (
+	"fmt"
+
 	"github.com/jcocozza/jte/pkg/actions"
+	commandwindow "github.com/jcocozza/jte/pkg/commandWindow"
 	"github.com/jcocozza/jte/pkg/state"
 )
 
 type ActionFn func(e *Editor)
+type CommandFn func(e *Editor, args []string) error
 
 var Registry = map[actions.Action]ActionFn{
 	actions.None:   func(e *Editor) {},
@@ -28,6 +32,44 @@ var Registry = map[actions.Action]ActionFn{
 	actions.RemoveChar:         func(e *Editor) { panic("remove char; unimplemented") },
 	actions.DeleteLine:         func(e *Editor) { panic("delete line: unimplemented") },
 
-	actions.Mode_Insert: func(e *Editor) { e.SM.SetMode(state.Insert) },
-	actions.Mode_Normal: func(e *Editor) { e.SM.SetMode(state.Normal) },
+	actions.Mode_Insert:  func(e *Editor) { e.SM.SetMode(state.Insert) },
+	actions.Mode_Normal:  func(e *Editor) { e.SM.SetMode(state.Normal) },
+	actions.Mode_Command: func(e *Editor) { e.SM.SetMode(state.Command); e.CW.Activate() },
+
+	// this is handled in the event loop
+	actions.InsertCommandChar: nil,
+	actions.DeleteCommandChar: func(e *Editor) { e.CW.RemoveCharFromCommand() },
+	actions.ClearCommand:      func(e *Editor) { e.CW.Reset() },
+	actions.Submit:            func(e *Editor) { e.SM.SetMode(state.Normal) },
+
+	actions.RunCommand: func(e *Editor) {
+		cmd, args, err := e.CW.ParseCommand()
+		// this means we have an invalid command
+		if err != nil {
+			e.CW.Push("error: " + err.Error())
+			return
+		}
+		fn, ok := CommandFnRegistry[cmd]
+		if !ok {
+			panic(fmt.Sprintf("command %d is not registered in the command function registry", cmd))
+		}
+		err = fn(e, args)
+		if err != nil {
+			e.CW.Push("error: " + err.Error())
+			return
+		}
+	},
+}
+
+var CommandFnRegistry = map[commandwindow.Command]CommandFn{
+	commandwindow.LS: func(e *Editor, args []string) error {
+		e.CW.Reset()
+		bl := e.BM.ListAll()
+		for _, bld := range bl {
+			e.CW.Push(bld.String())
+		}
+		e.CW.ShowAll = true
+		return nil
+	},
+	commandwindow.ECHO: nil,
 }

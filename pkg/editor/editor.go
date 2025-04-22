@@ -63,6 +63,10 @@ func (e *Editor) EventLoopStep() (bool, error) {
 			e.BM.Current.Buf.InsertChar(byte(kp))
 			return false, nil
 		}
+		if action == actions.InsertCommandChar {
+			e.CW.AppendCharToCommand(byte(kp))
+			return false, nil
+		}
 		fn, ok := Registry[action]
 		if !ok { // a non existent action
 			panic(fmt.Sprintf("action: %d does not exist in registry", action))

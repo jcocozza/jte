@@ -18,6 +18,8 @@ var Normal = &BindingNode{
 
 		'o': {children: nil, actions: []actions.Action{actions.InsertNewLineBelow, actions.Mode_Insert}},
 		'O': {children: nil, actions: []actions.Action{actions.InsertNewLineAbove, actions.Mode_Insert}},
+
+		':': {children: nil, actions: []actions.Action{actions.Mode_Command}},
 	},
 }
 
@@ -37,5 +39,15 @@ var Insert = &BindingNode{
 		keyboard.BACKSPACE_2: {children: nil, actions: []actions.Action{actions.DeleteChar}},
 		keyboard.DELETE:      {children: nil, actions: []actions.Action{actions.RemoveChar}},
 		keyboard.TAB:         {children: nil, actions: []actions.Action{actions.InsertChar}},
+	},
+}
+
+var Command = &BindingNode{
+	actions: []actions.Action{},
+	children: map[keyboard.Key]*BindingNode{
+		keyboard.ESC:   {children: nil, actions: []actions.Action{actions.Mode_Normal, actions.ClearCommand}},
+		keyboard.ENTER: {children: nil, actions: []actions.Action{actions.RunCommand, actions.Submit}},
+		keyboard.BACKSPACE:   {children: nil, actions: []actions.Action{actions.DeleteCommandChar}},
+		keyboard.BACKSPACE_2: {children: nil, actions: []actions.Action{actions.DeleteCommandChar}},
 	},
 }
