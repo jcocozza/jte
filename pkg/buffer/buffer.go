@@ -144,6 +144,20 @@ func (b *Buffer) deleteRow(at int) {
 	b.Rows = append(b.Rows[:at], b.Rows[at+1:]...)
 }
 
+func (b *Buffer) DeleteLine() {
+	if b.ReadOnly {return}
+	if len(b.Rows) == 0 {return}
+	if len(b.Rows) == 1 {
+		b.Rows[0] = BufRow(" ")
+	}
+	b.deleteRow(b.cursor.Y)
+	if b.cursor.Y != 0 {
+		b.cursor.Y--
+	}
+	b.cursor.X = 0
+	b.Modified = true
+}
+
 
 func (b *Buffer) InsertChar(c byte) {
 	if b.ReadOnly {return}

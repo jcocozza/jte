@@ -36,3 +36,11 @@ func (q *KeyQueue) Dequeue() (Key, error) {
 	}
 	return Key(-1), fmt.Errorf("nothing to dequeue")
 }
+
+func (q *KeyQueue) Keys() []Key {
+	return q.keys
+}
+
+func (q *KeyQueue) Clear() {
+	q.keys = []Key{}
+}

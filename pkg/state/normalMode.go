@@ -21,6 +21,28 @@ func (m *NormalMode) Name() ModeName {
 	return Normal
 }
 
+func (m *NormalMode) IsPossiblyValid(kq []keyboard.Key) bool {
+	if m.bindings != nil {
+		if m.bindings.IsPossiblyValid(kq) {
+			return true
+		} else {
+			return bindings.Normal.IsPossiblyValid(kq)
+		}
+	}
+	return bindings.Normal.IsPossiblyValid(kq)
+}
+
+func (m *NormalMode) Valid(kq []keyboard.Key) bool {
+	if m.bindings != nil {
+		if m.bindings.IsValid(kq) {
+			return true
+		} else {
+			return bindings.Normal.IsValid(kq)
+		}
+	}
+	return bindings.Normal.IsValid(kq)
+}
+
 func (m *NormalMode) HandleInput(kq *keyboard.KeyQueue) []actions.Action {
 	// we need to duplicate the key queue incase we need to retry with default bindings
 	// TODO: there has to be a better way to do this

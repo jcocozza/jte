@@ -30,12 +30,12 @@ func NewEditor(l *slog.Logger) *Editor {
 	BM := buffer.NewBufferManager(l)
 	CW := commandwindow.NewCommandWindow(l)
 	return &Editor{
-		kb: kb,
-		kq: kq,
-		SM: sm,
-		aq: aq,
-		BM: BM,
-		CW: CW,
+		kb:     kb,
+		kq:     kq,
+		SM:     sm,
+		aq:     aq,
+		BM:     BM,
+		CW:     CW,
 		logger: l.WithGroup("editor"),
 	}
 }
@@ -44,11 +44,24 @@ func NewEditor(l *slog.Logger) *Editor {
 //
 // return true if it is time to exit
 func (e *Editor) EventLoopStep() (bool, error) {
-	kp, err := e.kb.GetKeypress()
-	if err != nil {
-		return false, err
+	var latestKeyPress keyboard.Key
+	for {
+		kp, err := e.kb.GetKeypress()
+		if err != nil {
+			return false, err
+		}
+		e.kq.Enqueue(kp)
+		latestKeyPress = kp
+
+		keys := e.kq.Keys()
+		if e.SM.ValidSequence(keys) {
+			break
+		}
+		if !e.SM.IsPossiblyValid(keys) {
+			e.logger.Debug("sequence is not possibly valid, clearing", slog.String("key queue",e.kq.String()))
+			e.kq.Clear()
+		}
 	}
-	e.kq.Enqueue(kp)
 	actionList := e.SM.HandleKeyQueue(e.kq)
 	e.aq.EnqueueList(actionList)
 	for { // for each action in the queue, do the action
@@ -60,11 +73,11 @@ func (e *Editor) EventLoopStep() (bool, error) {
 			return true, nil
 		}
 		if action == actions.InsertChar {
-			e.BM.Current.Buf.InsertChar(byte(kp))
+			e.BM.Current.Buf.InsertChar(byte(latestKeyPress))
 			return false, nil
 		}
 		if action == actions.InsertCommandChar {
-			e.CW.AppendCharToCommand(byte(kp))
+			e.CW.AppendCharToCommand(byte(latestKeyPress))
 			return false, nil
 		}
 		fn, ok := Registry[action]
@@ -75,4 +88,3 @@ func (e *Editor) EventLoopStep() (bool, error) {
 	}
 	return false, nil
 }
-

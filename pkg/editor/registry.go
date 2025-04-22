@@ -2,6 +2,7 @@ package editor
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jcocozza/jte/pkg/actions"
 	commandwindow "github.com/jcocozza/jte/pkg/commandWindow"
@@ -30,7 +31,7 @@ var Registry = map[actions.Action]ActionFn{
 	actions.InsertNewLineBelow: func(e *Editor) { e.BM.Current.Buf.InsertNewLineBelow() },
 	actions.DeleteChar:         func(e *Editor) { e.BM.Current.Buf.DeleteChar() },
 	actions.RemoveChar:         func(e *Editor) { panic("remove char; unimplemented") },
-	actions.DeleteLine:         func(e *Editor) { panic("delete line: unimplemented") },
+	actions.DeleteLine:         func(e *Editor) { e.BM.Current.Buf.DeleteLine() },
 
 	actions.Mode_Insert:  func(e *Editor) { e.SM.SetMode(state.Insert) },
 	actions.Mode_Normal:  func(e *Editor) { e.SM.SetMode(state.Normal) },
@@ -71,5 +72,10 @@ var CommandFnRegistry = map[commandwindow.Command]CommandFn{
 		e.CW.ShowAll = true
 		return nil
 	},
-	commandwindow.ECHO: nil,
+	commandwindow.ECHO: func(e *Editor, args []string) error {
+		e.CW.Reset()
+		toPrint := strings.Join(args, " ")
+		e.CW.Push(toPrint)
+		return nil
+	},
 }

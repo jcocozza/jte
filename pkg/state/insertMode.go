@@ -21,6 +21,32 @@ func NewInsertMode(l *slog.Logger) *InsertMode {
 	}
 }
 
+func (m *InsertMode) IsPossiblyValid(kq []keyboard.Key) bool {
+	if len(kq) == 1 && kq[0].IsUnicode() {
+		return true
+	}
+	if m.bindings != nil {
+		if !m.bindings.IsPossiblyValid(kq) {
+			return bindings.Insert.IsPossiblyValid(kq)
+		}
+		return true
+	}
+	return bindings.Insert.IsPossiblyValid(kq)
+}
+
+func (m *InsertMode) Valid(kq []keyboard.Key) bool {
+	if len(kq) == 1 && kq[0].IsUnicode() {
+		return true
+	}
+	if m.bindings != nil {
+		if !m.bindings.IsValid(kq) {
+			return bindings.Insert.IsValid(kq)
+		}
+		return true
+	}
+	return bindings.Insert.IsValid(kq)
+}
+
 func (m *InsertMode) Name() ModeName {
 	return Insert
 }

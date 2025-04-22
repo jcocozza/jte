@@ -10,13 +10,13 @@ import (
 // the 'root' will always have a None action
 type BindingNode struct {
 	children map[keyboard.Key]*BindingNode
-	actions   []actions.Action
+	actions  []actions.Action
 }
 
 func RootBindingNode() *BindingNode {
 	return &BindingNode{
 		children: make(map[keyboard.Key]*BindingNode),
-		actions:   []actions.Action{},
+		actions:  []actions.Action{},
 	}
 }
 
@@ -44,4 +44,32 @@ func (bn *BindingNode) Traverse(kq *keyboard.KeyQueue) []actions.Action {
 		curr = next
 	}
 	return curr.actions
+}
+
+func (bn *BindingNode) IsPossiblyValid(kq []keyboard.Key) bool {
+	curr := bn
+	for _, key := range kq {
+		next, ok := curr.children[key]
+		if !ok {
+			return false
+		}
+		curr = next
+	}
+	return true
+}
+
+// a queue of keys is valid if it returns one or more actions
+func (bn *BindingNode) IsValid(kq []keyboard.Key) bool {
+	curr := bn
+	for _, key := range kq {
+		next, ok := curr.children[key]
+		if !ok {
+			break
+		}
+		if next == nil {
+			panic("a keynode cannot have a child be nil when the key exists in the set of bindings")
+		}
+		curr = next
+	}
+	return len(curr.actions) > 0
 }

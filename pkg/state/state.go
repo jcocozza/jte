@@ -11,6 +11,8 @@ import (
 type Mode interface {
 	Name() ModeName
 	HandleInput(kq *keyboard.KeyQueue) []actions.Action
+	IsPossiblyValid(kq []keyboard.Key) bool
+	Valid(kq []keyboard.Key) bool
 }
 
 type StateMachine struct {
@@ -59,6 +61,20 @@ func (sm *StateMachine) SetMode(name ModeName) {
 		return
 	}
 	panic("unexpected mode")
+}
+
+func (sm *StateMachine) IsPossiblyValid(keys []keyboard.Key) bool {
+	if len(keys) == 0 {
+		return false
+	}
+	return sm.current.IsPossiblyValid(keys)
+}
+
+func (sm *StateMachine) ValidSequence(keys []keyboard.Key) bool {
+	if len(keys) == 0 {
+		return false
+	}
+	return sm.current.Valid(keys)
 }
 
 func (sm *StateMachine) HandleKeyQueue(kq *keyboard.KeyQueue) []actions.Action {

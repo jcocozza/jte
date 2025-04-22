@@ -192,6 +192,7 @@ func (r *TextRenderer) drawCommandArea(e *editor.Editor) {
 	}
 	// otherwise just show the next message
 	// (if there is one)
+	r.abuf.Append([]byte("\r\n"))
 	msg := e.CW.Next()
 	r.abuf.Append([]byte(msg))
 }
