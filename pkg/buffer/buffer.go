@@ -1,5 +1,7 @@
 package buffer
 
+import "github.com/jcocozza/jte/pkg/fileutil"
+
 type FileType string
 
 // cursor location in the buffer
@@ -66,11 +68,25 @@ type Buffer struct {
 
 func NewBuffer(name string, readOnly bool, rows []BufRow) *Buffer {
 	return &Buffer{
-		Name:   name,
-		Rows:   rows,
+		Name:     name,
+		Rows:     rows,
 		ReadOnly: readOnly,
-		cursor: &Cursor{},
+		cursor:   &Cursor{},
 	}
+}
+
+func ReadFileIntoBuffer(path string) (*Buffer, error) {
+	content, writeable, err := fileutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	readOnly := !writeable
+	bufrows := make([]BufRow, len(content))
+	for i, row := range content {
+		bufrows[i] = BufRow(row)
+	}
+	buf := NewBuffer(path, readOnly, bufrows)
+	return buf, nil
 }
 
 func (b *Buffer) X() int {
@@ -109,14 +125,16 @@ func (b *Buffer) Left() {
 	}
 }
 func (b *Buffer) Right() {
-	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y]) - 1 {
+	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y])-1 {
 		b.cursor.right()
 	}
 }
+
 // go to start of current line
 func (b *Buffer) StartLine() {
 	b.cursor.X = 0
 }
+
 // go to end of current line
 func (b *Buffer) EndLine() {
 	if b.cursor.Y < len(b.Rows) {
@@ -144,9 +162,10 @@ func (b *Buffer) deleteRow(at int) {
 	b.Rows = append(b.Rows[:at], b.Rows[at+1:]...)
 }
 
-
 func (b *Buffer) InsertChar(c byte) {
-	if b.ReadOnly {return}
+	if b.ReadOnly {
+		return
+	}
 	if b.cursor.Y == len(b.Rows) {
 		b.appendRow([]byte{})
 	}
@@ -156,7 +175,9 @@ func (b *Buffer) InsertChar(c byte) {
 }
 
 func (b *Buffer) DeleteChar() {
-	if b.ReadOnly {return}
+	if b.ReadOnly {
+		return
+	}
 	if b.cursor.Y == len(b.Rows) {
 		return
 	}
@@ -177,8 +198,12 @@ func (b *Buffer) DeleteChar() {
 }
 
 func (b *Buffer) DeleteLine() {
-	if b.ReadOnly {return}
-	if len(b.Rows) == 0 {return}
+	if b.ReadOnly {
+		return
+	}
+	if len(b.Rows) == 0 {
+		return
+	}
 	if len(b.Rows) == 1 {
 		b.Rows[0] = BufRow(" ")
 	}
@@ -189,7 +214,9 @@ func (b *Buffer) DeleteLine() {
 
 // this the expected behavior when you press <enter>
 func (b *Buffer) InsertNewLine() {
-	if b.ReadOnly {return}
+	if b.ReadOnly {
+		return
+	}
 	if b.cursor.X == 0 {
 		b.insertRow(b.cursor.Y, []byte(" "))
 	} else {
@@ -203,13 +230,15 @@ func (b *Buffer) InsertNewLine() {
 
 // similar to pressing "o" in vim normal mode
 func (b *Buffer) InsertNewLineBelow() {
-	if b.ReadOnly {return}
+	if b.ReadOnly {
+		return
+	}
 	if b.cursor.X == 0 {
 		b.insertRow(b.cursor.Y+1, []byte(" "))
 	} else {
 		//b.insertRow(b.cursor.Y+1, b.Rows[b.cursor.Y][b.cursor.X:])
 		b.insertRow(b.cursor.Y+1, []byte(" "))
-		b.Rows[b.cursor.Y].Trim(b.cursor.X+1)
+		b.Rows[b.cursor.Y].Trim(b.cursor.X + 1)
 	}
 	b.cursor.Y++
 	b.cursor.X = 0
@@ -218,7 +247,9 @@ func (b *Buffer) InsertNewLineBelow() {
 
 // similar to pressing "O" in vim normal mode
 func (b *Buffer) InsertNewLineAbove() {
-	if b.ReadOnly {return}
+	if b.ReadOnly {
+		return
+	}
 	if b.cursor.X == 0 {
 		b.insertRow(b.cursor.Y, []byte(" "))
 	} else {

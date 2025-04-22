@@ -12,12 +12,18 @@ type Command int
 const (
 	LS Command = iota
 	ECHO
+	EDIT
+	NextBuf
+	PrevBuf
 )
 
 // map commands to a list of actions
 var commandRegistry = map[string]Command{
-	"ls": LS,
+	"ls":   LS,
 	"echo": ECHO,
+	"e":    EDIT,
+	"bn":   NextBuf,
+	"bp":   PrevBuf,
 }
 
 // return an error if the command is not found

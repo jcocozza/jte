@@ -36,7 +36,11 @@ func main() {
 			return
 		}
 		readOnly := !writeable
-		buf = buffer.NewBuffer(path, readOnly, content)
+		bufrows := make([]buffer.BufRow, len(content))
+		for i, row := range content {
+			bufrows[i] = buffer.BufRow(row)
+		}
+		buf = buffer.NewBuffer(path, readOnly, bufrows)
 	} else {
 		buf = buffer.NewBuffer("[No Name]", false, buffer.EmptyRows)
 	}

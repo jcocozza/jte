@@ -23,14 +23,14 @@ func (n *BufferNode) Insert(buf *Buffer) *BufferNode {
 	if n == nil {
 		newBufNode.next = newBufNode
 		newBufNode.prev = newBufNode
-		n = newBufNode
-		return n
+		return newBufNode
 	}
-	last := n.prev
-	newBufNode.next = n
-	newBufNode.prev = last
-	last.next = newBufNode
-	n.prev = newBufNode
+	next := n.prev
+
+	newBufNode.prev = n
+	newBufNode.next = next
+	n.next = newBufNode
+	next.prev = newBufNode
 	return newBufNode
 }
 
@@ -95,8 +95,8 @@ func NewBufferManager(l *slog.Logger) *BufferManager {
 	return &BufferManager{
 		Current: nil,
 		bufList: nil,
-		bufMap: make(map[int]*BufferNode),
-		logger: l.WithGroup("buffer-manager"),
+		bufMap:  make(map[int]*BufferNode),
+		logger:  l.WithGroup("buffer-manager"),
 	}
 }
 
@@ -104,7 +104,10 @@ func (m *BufferManager) Add(buf *Buffer) int {
 	m.idCounter++
 	buf.id = m.idCounter
 	newBufNode := m.bufList.Insert(buf)
-	m.bufMap[newBufNode.id]	= newBufNode
+	if m.bufList == nil {
+		m.bufList = newBufNode
+	}
+	m.bufMap[newBufNode.id] = newBufNode
 	m.logger.Debug("add buffer", slog.Int("id", newBufNode.id))
 	return newBufNode.id
 }
@@ -134,27 +137,26 @@ func (m *BufferManager) Next() {
 func (m *BufferManager) Previous() {
 	msg := fmt.Sprintf("to prev: %d -> %d", m.Current.id, m.Current.prev.id)
 	m.logger.Debug(msg)
-	m.Current= m.Current.prev
+	m.Current = m.Current.prev
 }
 
 type BufListData struct {
-	Id int
-	BufName string	
+	Id      int
+	BufName string
 }
 
 func (b *BufListData) String() string {
 	return fmt.Sprintf("%d %s", b.Id, b.BufName)
 }
 
-
 func (m *BufferManager) ListAll() []BufListData {
 	l := []BufListData{}
 	for id, buf := range m.bufMap {
 		b := BufListData{
-			Id: id,
+			Id:      id,
 			BufName: buf.Buf.Name,
-		}	
-		l = append(l, b)	
+		}
+		l = append(l, b)
 	}
 	return l
 }

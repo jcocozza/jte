@@ -58,6 +58,7 @@ func (c *CommandWindow) ParseCommand() (Command, []string, error) {
 	cmdArgs := args[1:]
 	command, err := GetCommand(cmd)
 	if err != nil {
+		c.currcmd = ""
 		return command, nil, err
 	}
 	return command, cmdArgs, nil

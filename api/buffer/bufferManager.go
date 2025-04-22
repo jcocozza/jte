@@ -79,7 +79,7 @@ type BufferManager struct {
 	// incremented every time a buffer is added
 	// not decremented for any reason as to keep id's unique
 	idCounter int
-	logger *slog.Logger
+	logger    *slog.Logger
 }
 
 func NewBufferManager(l *slog.Logger) *BufferManager {
@@ -88,7 +88,7 @@ func NewBufferManager(l *slog.Logger) *BufferManager {
 	return &BufferManager{
 		bufferList: bufList,
 		bufMap:     bufMap,
-		logger: l.WithGroup("buffer manager"),
+		logger:     l.WithGroup("buffer manager"),
 	}
 }
 

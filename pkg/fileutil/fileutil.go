@@ -6,14 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
-	"github.com/jcocozza/jte/pkg/buffer"
 )
 
 var ErrNoFilename = errors.New("no file name")
 
 // returns the contents, a bool telling you if the file is writeable
-func ReadFile(path string) ([]buffer.BufRow, bool, error) {
+func ReadFile(path string) ([][]byte, bool, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, false, err
@@ -30,7 +28,7 @@ func ReadFile(path string) ([]buffer.BufRow, bool, error) {
 	scanner := bufio.NewScanner(f)
 	numScans := 0
 
-	contents := []buffer.BufRow{}
+	contents := [][]byte{}
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		line = bytes.TrimRight(line, "\r\n")
