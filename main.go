@@ -43,7 +43,7 @@ func main() {
 
 	id := e.BM.Add(buf)
 	e.BM.SetCurrent(id)
-	e.CW.PushMany([]string{"hello world!", "you won't see this yet"})
+	//e.CW.PushMany([]string{"hello world!", "you won't see this yet"})
 	//e.CW.ShowAll = true
 	r.Render(e) // need to do an inital render
 	// enter into the main event loop

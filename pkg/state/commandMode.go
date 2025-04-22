@@ -22,6 +22,15 @@ func (m *CommandMode) Name() ModeName {
 }
 
 func (m *CommandMode) IsPossiblyValid(kq []keyboard.Key) bool {
+	allAreUnicode := true
+	for _, k := range kq {
+		if !k.IsUnicode() {
+			allAreUnicode = false
+		}
+	}
+	if allAreUnicode {
+		return true
+	}
 	if m.bindings != nil {
 		if !m.bindings.IsPossiblyValid(kq) {
 			return bindings.Command.IsPossiblyValid(kq)
@@ -32,6 +41,21 @@ func (m *CommandMode) IsPossiblyValid(kq []keyboard.Key) bool {
 }
 
 func (m *CommandMode) Valid(kq []keyboard.Key) bool {
+	// this is a little weird
+	// because of how the event loop operates,
+	// as long as everything passed intot the command sequence is unicode
+	// it is valid. the actually checking for a command happens later.
+	//
+	// i am fairly sure that kq will always have len(kq) = 1
+	allAreUnicode := true
+	for _, k := range kq {
+		if !k.IsUnicode() {
+			allAreUnicode = false
+		}
+	}
+	if allAreUnicode {
+		return true
+	}
 	if m.bindings != nil {
 		if !m.bindings.IsValid(kq) {
 			return bindings.Command.IsValid(kq)
