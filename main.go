@@ -11,12 +11,13 @@ import (
 )
 
 func main() {
-	l, f, err := logger.NewLogger()
+	f, err := logger.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
+	l := logger.Logger
 	e := editor.NewEditor(l)
 	r := renderer.NewTextRenderer(l)
 	err = r.Setup()
