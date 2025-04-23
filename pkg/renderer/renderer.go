@@ -108,7 +108,7 @@ type RowData struct {
 	gutterMaxSize int
 }
 
-func (r *TextRenderer) drawRow(rd RowData) {
+func (r *TextRenderer) drawRow(buf *buffer.Buffer, rd RowData) {
 	// if i ever decide to do a 'background' color
 	//r.abuf.Append([]byte("\x1b[48;5;25m\x1b[38;5;231m"))
 	var expanded []byte
@@ -126,9 +126,27 @@ func (r *TextRenderer) drawRow(rd RowData) {
 	line := string(expanded)
 	tokens := filetypes.GetMatches(rd.ftype, line)
 
-	gutterMsg := strconv.Itoa(rd.rownum)
-	spacing := strings.Repeat(" ", rd.gutterMaxSize-len(gutterMsg))
-	finalGutterMsg := spacing + gutterMsg + " "
+	// quick helper func to compute absolute values
+	abs := func(i int) int {
+		if i < 0 {
+			return i * -1
+		}
+		return i
+	}
+
+	// compute relative line numbers
+	relLine := abs(rd.rownum - buf.Y())
+
+	var finalGutterMsg string
+	if relLine == 0 {
+		gutterMsg := strconv.Itoa(rd.rownum)
+		spacing := strings.Repeat(" ", rd.gutterMaxSize-len(gutterMsg))
+		finalGutterMsg = gutterMsg + spacing + " "
+	} else {
+		gutterMsg := strconv.Itoa(abs(rd.rownum - buf.Y()))
+		spacing := strings.Repeat(" ", rd.gutterMaxSize-len(gutterMsg))
+		finalGutterMsg = spacing + gutterMsg + " "
+	}
 	r.abuf.Append([]byte(finalGutterMsg))
 	//rowLen := 0 // for the background color
 	for _, tkn := range tokens {
@@ -137,12 +155,14 @@ func (r *TextRenderer) drawRow(rd RowData) {
 		r.abuf.Append([]byte(filetypes.Reset))
 		// rowLen++
 	}
-	// if i ever decide to do a 'background' color
-	//if rowLen < r.screencols {
-	//	_ = strings.Repeat(" ", r.screencols-rowLen)
-	//	r.abuf.Append([]byte("\x1b[48;5;25m\x1b[38;5;231m")) // ensure BG color matches
-	//}
-	//r.abuf.Append(expanded)
+
+	/* if i ever decide to do a 'background' color
+	if rowLen < r.screencols {
+		_ = strings.Repeat(" ", r.screencols-rowLen)
+		r.abuf.Append([]byte("\x1b[48;5;25m\x1b[38;5;231m")) // ensure BG color matches
+	}
+	r.abuf.Append(expanded)
+	*/
 }
 
 func (r *TextRenderer) drawBuffer(buf *buffer.Buffer, gutterMaxSize int) {
@@ -157,7 +177,7 @@ func (r *TextRenderer) drawBuffer(buf *buffer.Buffer, gutterMaxSize int) {
 				rownum:        filerow,
 				gutterMaxSize: gutterMaxSize,
 			}
-			r.drawRow(rd)
+			r.drawRow(buf, rd)
 		}
 		r.abuf.Append([]byte("\x1b[K"))
 		r.abuf.Append([]byte("\r\n"))
@@ -268,7 +288,7 @@ func (r *TextRenderer) construct(e *editor.Editor) {
 	case string(state.Command):
 		r.drawCursor(r.screenrows+2, e.CW.X()+3) // +1 to keep cursor in right spot, +2 to include the "> " prompt
 	default:
-		r.drawCursorOnBuffer(e.BM.Current.Buf, gutterMaxSize)
+		r.drawCursorOnBuffer(e.BM.Current.Buf, gutterMaxSize+1)
 	}
 
 	r.abuf.Append([]byte("\x1b[?25h")) // show the cursor
