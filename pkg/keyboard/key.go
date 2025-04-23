@@ -1,5 +1,7 @@
 package keyboard
 
+import "unicode"
+
 type Key rune
 
 func (k *Key) String() string {
@@ -7,6 +9,10 @@ func (k *Key) String() string {
 		return s
 	}
 	return string(*k)
+}
+
+func (k Key) IsDigit() bool {
+	return unicode.IsDigit(rune(k))
 }
 
 func (k Key) IsUnicode() bool {

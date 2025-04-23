@@ -91,7 +91,7 @@ var FileTypes = [...]string{
 
 var FileTypeRegistry = map[FileType]map[SyntaxType]*regexp.Regexp{
 	Go: {
-		KEYWORD: regexp.MustCompile(`\b(if|else|for|return|func|package)\b`),
+		KEYWORD: regexp.MustCompile(`\b(if|else|for|return|func|package|panic|map|var)\b`),
 		STRING:  regexp.MustCompilePOSIX(`"(.*?)"`),
 		COMMENT: regexp.MustCompile(`//.*`),
 	},

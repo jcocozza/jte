@@ -31,7 +31,7 @@ func NewStateMachine(l *slog.Logger) *StateMachine {
 		logger: l.WithGroup("state-machine"),
 	}
 
-	normal := &NormalMode{}
+	normal := NewNormalMode(l)
 	insert := NewInsertMode(l)
 	command := NewCommandMode()
 	s.register(normal)
