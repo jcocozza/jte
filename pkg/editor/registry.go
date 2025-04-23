@@ -92,6 +92,15 @@ var CommandFnRegistry = map[commandwindow.Command]CommandFn{
 			return fmt.Errorf("invalid path")
 		}
 		path := args[0]
+		exists, bufId, err := e.BM.HasPath(path)
+		if err != nil {
+			return err
+		}
+		if exists {
+			e.CW.Push("already is file open")
+			e.BM.SetCurrent(bufId)
+			return nil
+		}
 		buf, err := buffer.ReadFileIntoBuffer(path)
 		if err != nil {
 			return err

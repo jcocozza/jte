@@ -3,6 +3,8 @@ package buffer
 import (
 	"fmt"
 	"log/slog"
+
+	"github.com/jcocozza/jte/pkg/fileutil"
 )
 
 // A circular, doubly linked list
@@ -138,6 +140,20 @@ func (m *BufferManager) Previous() {
 	msg := fmt.Sprintf("to prev: %d -> %d", m.Current.id, m.Current.prev.id)
 	m.logger.Debug(msg)
 	m.Current = m.Current.prev
+}
+
+func (m *BufferManager) HasPath(path string) (bool, int, error) {
+	for id, buf := range m.bufMap {
+		m.logger.Debug("checking if paths are the same:", slog.String("path 1", path), slog.String("path 2", buf.Buf.FilePath))
+		same, err := fileutil.SamePath(path, buf.Buf.FilePath)
+		if err != nil {
+			return false, -1, err
+		}
+		if same {
+			return true, id, nil
+		}
+	}
+	return false, -1, nil
 }
 
 type BufListData struct {

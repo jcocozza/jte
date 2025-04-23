@@ -6,21 +6,24 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+
+	"github.com/jcocozza/jte/pkg/filetypes"
 )
 
 var ErrNoFilename = errors.New("no file name")
 
 // returns the contents, a bool telling you if the file is writeable
-func ReadFile(path string) ([][]byte, bool, error) {
+func ReadFile(path string) ([][]byte, bool, filetypes.FileType, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, false, err
+		return nil, false, filetypes.Unknown, err
 	}
 	defer f.Close()
 
 	info, err := f.Stat()
 	if err != nil {
-		return nil, false, err
+		return nil, false, filetypes.Unknown, err
 	}
 	mode := info.Mode()
 	writeable := mode&0200 != 0
@@ -38,7 +41,8 @@ func ReadFile(path string) ([][]byte, bool, error) {
 	if numScans == 0 {
 		contents = append(contents, []byte{})
 	}
-	return contents, writeable, nil
+	t := filetypes.DetermineFileType(path)
+	return contents, writeable, t, nil
 }
 
 func Save(filename string, buf []byte) (int, error) {
@@ -54,4 +58,16 @@ func Save(filename string, buf []byte) (int, error) {
 		return 0, fmt.Errorf("unable to write file: %w", err)
 	}
 	return n, nil
+}
+
+func SamePath(p1, p2 string) (bool, error) {
+	abs1, err := filepath.EvalSymlinks(p1)
+	if err != nil {
+		return false, err
+	}
+	abs2, err := filepath.EvalSymlinks(p2)
+	if err != nil {
+		return false, err
+	}
+	return abs1 == abs2, nil
 }

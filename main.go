@@ -6,7 +6,6 @@ import (
 
 	"github.com/jcocozza/jte/pkg/buffer"
 	"github.com/jcocozza/jte/pkg/editor"
-	"github.com/jcocozza/jte/pkg/fileutil"
 	"github.com/jcocozza/jte/pkg/logger"
 	"github.com/jcocozza/jte/pkg/renderer"
 )
@@ -30,19 +29,13 @@ func main() {
 
 	if len(os.Args) > 1 {
 		path := os.Args[1]
-		content, writeable, err := fileutil.ReadFile(path)
+		buf, err = buffer.ReadFileIntoBuffer(path)
 		if err != nil {
 			r.ExitErr(fmt.Errorf("unable to read filepath: %w", err))
 			return
 		}
-		readOnly := !writeable
-		bufrows := make([]buffer.BufRow, len(content))
-		for i, row := range content {
-			bufrows[i] = buffer.BufRow(row)
-		}
-		buf = buffer.NewBuffer(path, readOnly, bufrows)
 	} else {
-		buf = buffer.NewBuffer("[No Name]", false, buffer.EmptyRows)
+		buf = buffer.NewBuffer("[No Name]", "", false, buffer.EmptyRows)
 	}
 
 	id := e.BM.Add(buf)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/jcocozza/jte/pkg/buffer"
 	"github.com/jcocozza/jte/pkg/editor"
+	"github.com/jcocozza/jte/pkg/filetypes"
 	"github.com/jcocozza/jte/pkg/state"
 	"github.com/jcocozza/jte/pkg/term"
 )
@@ -98,7 +99,7 @@ func (r *TextRenderer) drawCursor(x int, y int) {
 	r.abuf.Append([]byte(s))
 }
 
-func (r *TextRenderer) drawRow(row []byte) {
+func (r *TextRenderer) drawRow(fileType filetypes.FileType, row []byte) {
 	var expanded []byte
 	col := 0
 	for _, b := range row {
@@ -111,8 +112,14 @@ func (r *TextRenderer) drawRow(row []byte) {
 			col++
 		}
 	}
-	//line := string(expanded)
-	r.abuf.Append(expanded)
+	line := string(expanded)
+	tokens := filetypes.GetMatches(fileType, line)
+	for _, tkn := range tokens {
+		r.abuf.Append([]byte(tkn.Color))
+		r.abuf.Append([]byte(tkn.Text))
+		r.abuf.Append([]byte(filetypes.Reset))
+	}
+	//r.abuf.Append(expanded)
 }
 
 func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
@@ -121,7 +128,7 @@ func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
 		if filerow >= len(buf.Rows) {
 			r.abuf.Append([]byte("~"))
 		} else {
-			r.drawRow(buf.Rows[filerow])
+			r.drawRow(buf.FileType, buf.Rows[filerow])
 		}
 		r.abuf.Append([]byte("\x1b[K"))
 		r.abuf.Append([]byte("\r\n"))

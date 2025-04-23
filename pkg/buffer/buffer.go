@@ -1,8 +1,9 @@
 package buffer
 
-import "github.com/jcocozza/jte/pkg/fileutil"
-
-type FileType string
+import (
+	"github.com/jcocozza/jte/pkg/filetypes"
+	"github.com/jcocozza/jte/pkg/fileutil"
+)
 
 // cursor location in the buffer
 //
@@ -59,16 +60,16 @@ type Buffer struct {
 	// state stuff
 	Modified bool
 	ReadOnly bool
-	FileType FileType
+	FileType filetypes.FileType
 
 	// file stuff
-	FileName string
 	FilePath string
 }
 
-func NewBuffer(name string, readOnly bool, rows []BufRow) *Buffer {
+func NewBuffer(name string, filePath string, readOnly bool, rows []BufRow) *Buffer {
 	return &Buffer{
 		Name:     name,
+		FilePath: filePath,
 		Rows:     rows,
 		ReadOnly: readOnly,
 		cursor:   &Cursor{},
@@ -76,7 +77,7 @@ func NewBuffer(name string, readOnly bool, rows []BufRow) *Buffer {
 }
 
 func ReadFileIntoBuffer(path string) (*Buffer, error) {
-	content, writeable, err := fileutil.ReadFile(path)
+	content, writeable, ftype, err := fileutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +86,8 @@ func ReadFileIntoBuffer(path string) (*Buffer, error) {
 	for i, row := range content {
 		bufrows[i] = BufRow(row)
 	}
-	buf := NewBuffer(path, readOnly, bufrows)
+	buf := NewBuffer(path, path, readOnly, bufrows)
+	buf.FileType = ftype
 	return buf, nil
 }
 
