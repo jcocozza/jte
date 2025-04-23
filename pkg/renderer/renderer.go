@@ -100,6 +100,8 @@ func (r *TextRenderer) drawCursor(x int, y int) {
 }
 
 func (r *TextRenderer) drawRow(fileType filetypes.FileType, row []byte) {
+	// if i ever decide to do a 'background' color
+	//r.abuf.Append([]byte("\x1b[48;5;25m\x1b[38;5;231m"))
 	var expanded []byte
 	col := 0
 	for _, b := range row {
@@ -114,11 +116,19 @@ func (r *TextRenderer) drawRow(fileType filetypes.FileType, row []byte) {
 	}
 	line := string(expanded)
 	tokens := filetypes.GetMatches(fileType, line)
+
+	//rowLen := 0 // for the background color
 	for _, tkn := range tokens {
 		r.abuf.Append([]byte(tkn.Color))
 		r.abuf.Append([]byte(tkn.Text))
 		r.abuf.Append([]byte(filetypes.Reset))
+		// rowLen++
 	}
+	// if i ever decide to do a 'background' color
+	//if rowLen < r.screencols {
+	//	_ = strings.Repeat(" ", r.screencols-rowLen)
+	//	r.abuf.Append([]byte("\x1b[48;5;25m\x1b[38;5;231m")) // ensure BG color matches
+	//}
 	//r.abuf.Append(expanded)
 }
 
