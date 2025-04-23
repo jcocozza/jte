@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/jcocozza/jte/pkg/buffer"
 	"github.com/jcocozza/jte/pkg/editor"
@@ -81,7 +83,7 @@ func (r *TextRenderer) Exit(msg string) {
 	os.Exit(0)
 }
 
-func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer) {
+func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer, gutterMaxSize int) {
 	y := (buf.Y() - r.rowoffset) + 1
 	actualCol := 0
 	for i := 0; i < buf.X(); i++ {
@@ -91,7 +93,7 @@ func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer) {
 			actualCol++
 		}
 	}
-	r.drawCursor(y, actualCol+1)
+	r.drawCursor(y, actualCol+1+gutterMaxSize)
 }
 
 func (r *TextRenderer) drawCursor(x int, y int) {
@@ -99,12 +101,19 @@ func (r *TextRenderer) drawCursor(x int, y int) {
 	r.abuf.Append([]byte(s))
 }
 
-func (r *TextRenderer) drawRow(fileType filetypes.FileType, row []byte) {
+type RowData struct {
+	ftype         filetypes.FileType
+	row           []byte
+	rownum        int
+	gutterMaxSize int
+}
+
+func (r *TextRenderer) drawRow(rd RowData) {
 	// if i ever decide to do a 'background' color
 	//r.abuf.Append([]byte("\x1b[48;5;25m\x1b[38;5;231m"))
 	var expanded []byte
 	col := 0
-	for _, b := range row {
+	for _, b := range rd.row {
 		if b == '\t' {
 			spaces := TAB_STOP - (col % TAB_STOP)
 			expanded = append(expanded, bytes.Repeat([]byte(" "), spaces)...)
@@ -115,8 +124,12 @@ func (r *TextRenderer) drawRow(fileType filetypes.FileType, row []byte) {
 		}
 	}
 	line := string(expanded)
-	tokens := filetypes.GetMatches(fileType, line)
+	tokens := filetypes.GetMatches(rd.ftype, line)
 
+	gutterMsg := strconv.Itoa(rd.rownum)
+	spacing := strings.Repeat(" ", rd.gutterMaxSize-len(gutterMsg))
+	finalGutterMsg := spacing + gutterMsg + " "
+	r.abuf.Append([]byte(finalGutterMsg))
 	//rowLen := 0 // for the background color
 	for _, tkn := range tokens {
 		r.abuf.Append([]byte(tkn.Color))
@@ -132,13 +145,19 @@ func (r *TextRenderer) drawRow(fileType filetypes.FileType, row []byte) {
 	//r.abuf.Append(expanded)
 }
 
-func (r *TextRenderer) drawBuffer(buf *buffer.Buffer) {
+func (r *TextRenderer) drawBuffer(buf *buffer.Buffer, gutterMaxSize int) {
 	for i := 0; i < r.screenrows; i++ {
 		filerow := i + r.rowoffset
 		if filerow >= len(buf.Rows) {
 			r.abuf.Append([]byte("~"))
 		} else {
-			r.drawRow(buf.FileType, buf.Rows[filerow])
+			rd := RowData{
+				ftype:         buf.FileType,
+				row:           buf.Rows[filerow],
+				rownum:        filerow,
+				gutterMaxSize: gutterMaxSize,
+			}
+			r.drawRow(rd)
 		}
 		r.abuf.Append([]byte("\x1b[K"))
 		r.abuf.Append([]byte("\r\n"))
@@ -174,8 +193,11 @@ func (r *TextRenderer) drawStatusBar(e *editor.Editor) {
 
 func (r *TextRenderer) setupThisRender(e *editor.Editor) {
 	rows, cols, _ := r.rw.WindowSize()
-	r.screenrows = rows - 1 //- 1     // leave room for status bar and command message
-	r.screencols = cols
+
+	//largestRowNumLen := len(strconv.Itoa(cols))
+
+	r.screenrows = rows - 1 // leave room for status bar and command message
+	r.screencols = cols     //- largestRowNumLen // leave room for line nums
 
 	// add the 0 check to ensure we always have at least 1 row for the message
 	if e.CW.ShowAll && e.CW.Size() != 0 {
@@ -230,6 +252,7 @@ func (r *TextRenderer) scroll(buf *buffer.Buffer) {
 }
 
 func (r *TextRenderer) construct(e *editor.Editor) {
+	gutterMaxSize := len(strconv.Itoa(len(e.BM.Current.Buf.Rows))) + 1 // +1 for a space after the gutter content
 	r.setupThisRender(e)
 	r.scroll(e.BM.Current.Buf)
 
@@ -237,7 +260,7 @@ func (r *TextRenderer) construct(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[2J"))   // clear entire screen
 	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
 
-	r.drawBuffer(e.BM.Current.Buf)
+	r.drawBuffer(e.BM.Current.Buf, gutterMaxSize)
 	r.drawStatusBar(e)
 	r.drawCommandArea(e)
 
@@ -245,7 +268,7 @@ func (r *TextRenderer) construct(e *editor.Editor) {
 	case string(state.Command):
 		r.drawCursor(r.screenrows+2, e.CW.X()+3) // +1 to keep cursor in right spot, +2 to include the "> " prompt
 	default:
-		r.drawCursorOnBuffer(e.BM.Current.Buf)
+		r.drawCursorOnBuffer(e.BM.Current.Buf, gutterMaxSize)
 	}
 
 	r.abuf.Append([]byte("\x1b[?25h")) // show the cursor
