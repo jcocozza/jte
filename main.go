@@ -1,14 +1,58 @@
 package main
 
 import (
-	//"log/slog"
+	"fmt"
+	"os"
 
-	//"github.com/jcocozza/jte/editor"
-	//"github.com/jcocozza/jte/logger"
+	"github.com/jcocozza/jte/pkg/buffer"
+	"github.com/jcocozza/jte/pkg/editor"
+	"github.com/jcocozza/jte/pkg/logger"
+	"github.com/jcocozza/jte/pkg/renderer"
 )
 
 func main() {
-	//l := logger.CreateLogger(slog.LevelDebug)
-	//e := editor.NewTextEditor(l)
-	//e.Run()
+	f, err := logger.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	l := logger.Logger
+	e := editor.NewEditor(l)
+	r := renderer.NewTextRenderer(l)
+	err = r.Setup()
+	if err != nil {
+		panic("unable to setup")
+	}
+
+	var buf *buffer.Buffer
+
+
+	if len(os.Args) > 1 {
+		path := os.Args[1]
+		buf, err = buffer.ReadFileIntoBuffer(path)
+		if err != nil {
+			r.ExitErr(fmt.Errorf("unable to read filepath: %w", err))
+			return
+		}
+	} else {
+		buf = buffer.NewBuffer("[No Name]", "", false, buffer.EmptyRows)
+	}
+
+	id := e.BM.Add(buf)
+	e.BM.SetCurrent(id)
+	//e.CW.PushMany([]string{"hello world!", "you won't see this yet"})
+	//e.CW.ShowAll = true
+	r.Render(e) // need to do an inital render
+	// enter into the main event loop
+	for {
+		exit, err := e.EventLoopStep()
+		if err != nil {
+			r.ExitErr(err)
+		}
+		if exit {
+			r.Exit("")
+		}
+		r.Render(e)
+	}
 }
