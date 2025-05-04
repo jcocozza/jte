@@ -94,7 +94,7 @@ func (b *Buffer) DeleteChar() {
 		return
 	}
 	if b.cursor.X > 0 {
-		b.Rows[b.cursor.Y].DelChar(b.cursor.X - 1)
+		b.Rows[b.cursor.Y].DeleteChar(b.cursor.X - 1)
 		b.cursor.X--
 	} else {
 		newX := len(b.Rows[b.cursor.Y-1])
