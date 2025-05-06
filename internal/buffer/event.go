@@ -74,4 +74,5 @@ func (e *EventManager) StartEvent(etype EventType) error {
 
 func (e *EventManager) AddChange(c Change) {
 	e.current.changes = append(e.current.changes, c)
+	e.logger.Debug("added change: ", c)
 }

@@ -21,13 +21,18 @@ func main() {
 	if err != nil {panic(err)}
 
 
-	buf := buffer.NewBuffer("[No Name]", "", false, []buffer.BufRow{{}}, logger.Logger)
+	buf := buffer.NewBuffer("[No Name]", "", false, []buffer.BufRow{{'f','o','o'}}, logger.Logger)
 	id := e.BM.Add(buf)
 	e.BM.SetCurrent(id)
+
+	p := &editor.Pane{nil, buf}
+	e.SN = &editor.SplitNode{Pane: p}
+	r.Render(e) // initial render
 	for {
 		err := e.HandleKeypress()
 		if err != nil {
 			r.ExitErr(err)
 		}
+		r.Render(e)
 	}
 }

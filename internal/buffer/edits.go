@@ -23,7 +23,7 @@ func (b *Buffer) insertRow(at int, row []rune) {
 
 func (b *Buffer) deleteRow(at int) ([]rune, error) {
 	if at < 0 || at >= len(b.Rows) {
-		return  nil, fmt.Errorf("cannot delete row at %d", at)
+		return nil, fmt.Errorf("cannot delete row at %d", at)
 	}
 	content := b.Rows[at]
 	b.Rows = append(b.Rows[:at], b.Rows[at+1:]...)
@@ -41,9 +41,12 @@ func (b *Buffer) insertAt(at Cursor, content [][]rune) error {
 		if err != nil {
 			return err
 		}
+		b.cursor.X++
 	}
 	for j := 1; j < len(content); j++ {
 		b.insertRow(at.Y+j, content[j])
+		b.cursor.Y++
+		b.cursor.X = len(content[j])
 	}
 	return nil
 }
@@ -100,10 +103,37 @@ func (b *Buffer) deleteAt(start Cursor, end Cursor) ([][]rune, error) {
 	}
 	// actually delete everything inbetween
 	b.Rows = append(b.Rows[:start.Y+1], b.Rows[end.Y+1:]...)
+
+	b.cursor = &start
 	return allDeleted, nil
 }
 
 // wrapper around DeleteAt for the current cursor position
 func (b *Buffer) delete() ([][]rune, error) {
 	return b.deleteAt(*b.cursor, *b.cursor)
+}
+
+func (b *Buffer) backspace() ([][]rune, error) {
+	if b.cursor.Y == len(b.Rows) {
+		return nil, nil
+	}
+	if b.cursor.X == 0 && b.cursor.Y == 0 {
+		return nil, nil
+	}
+	if b.cursor.X > 0 {
+		r, err := b.Rows[b.cursor.Y].DeleteChar(b.cursor.X - 1)
+		if err != nil {
+			return nil, err
+		}
+		b.cursor.X--
+		return [][]rune{{r}}, nil
+	} else {
+		newX := len(b.Rows[b.cursor.Y-1])
+		b.Rows[b.cursor.Y-1].append(b.Rows[b.cursor.Y])
+		rns, err := b.deleteRow(b.cursor.Y)
+		if err != nil { return nil, err }
+		b.cursor.Y--
+		b.cursor.X = newX
+		return [][]rune{rns}, nil
+	}
 }

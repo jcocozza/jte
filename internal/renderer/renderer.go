@@ -1,10 +1,13 @@
 package renderer
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/jcocozza/jte/internal/buffer"
+	"github.com/jcocozza/jte/internal/editor"
 	"github.com/jcocozza/jte/internal/term"
 )
 
@@ -12,7 +15,7 @@ type Renderer interface {
 	Setup() error
 	Exit(msg string)
 	ExitErr(err error)
-	Render()
+	Render(e *editor.Editor)
 }
 
 type TextRenderer struct {
@@ -25,6 +28,8 @@ type TextRenderer struct {
 	rowoffset int
 	coloffset int
 
+	pr *TextPaneRenderer
+
 	// the content that is actually rendered to the screen
 	abuf abuf
 
@@ -34,6 +39,7 @@ type TextRenderer struct {
 func NewTextRenderer(l *slog.Logger) *TextRenderer {
 	return &TextRenderer{
 		abuf:   abuf{},
+		pr:     NewTextPaneRenderer(l),
 		logger: l.WithGroup("renderer"),
 	}
 }
@@ -72,4 +78,40 @@ func (r *TextRenderer) Exit(msg string) {
 	}
 	fmt.Fprintln(os.Stdout, msg)
 	os.Exit(0)
+}
+
+func (r *TextRenderer) drawCursor(x int, y int) {
+	s := fmt.Sprintf("\x1b[%d;%dH", x, y) // set cursor position
+	r.abuf.Append([]byte(s))
+	r.abuf.Append([]byte("\x1b[?25h")) // show cursor
+}
+func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer) {
+	y := (buf.Y() - r.rowoffset) + 1
+	actualCol := 0
+	for i := 0; i < buf.X(); i++ {
+		if buf.Rows[buf.Y()][i] == '\t' {
+			actualCol += TAB_STOP - (actualCol % TAB_STOP)
+		} else {
+			actualCol++
+		}
+	}
+	r.drawCursor(y, actualCol+1)
+}
+
+func (r *TextRenderer) Render(e *editor.Editor) {
+	r.logger.Debug("begin rendering")
+	r.abuf.Append([]byte("\x1b[?25l")) // hide cursor
+	r.abuf.Append([]byte("\x1b[2J"))   // clear entire screen
+	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
+
+	rows, cols, _ := r.rw.WindowSize() // for some reason, rows seems to be 1 too many
+	content := RenderLayout(e.SN, r.pr, rows-1, cols)
+	for _, row := range content {
+		r.logger.Log(context.TODO(), slog.LevelDebug-1, "row", slog.String("row", string(row)))
+		r.abuf.Append(row)
+		r.abuf.Append([]byte("\x1b[K"))
+		r.abuf.Append([]byte("\r\n"))
+	}
+	r.drawCursorOnBuffer(e.BM.Current.Buf)
+	r.abuf.Flush()
 }

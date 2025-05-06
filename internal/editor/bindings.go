@@ -50,8 +50,17 @@ func (n *BindingNode) Lookup(keys keyboard.OrderedKeyList) (*BindingNode, error)
 var InsertBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
-		keyboard.ESC:   {Actions: []Action{Commit{}, SwitchMode{m: mode.Normal}}},
-		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
+		keyboard.ESC:         {Actions: []Action{Commit{}, SwitchMode{m: mode.Normal}}},
+		keyboard.CtrlC:       {children: nil, Actions: []Action{Exit{}}},
+		keyboard.BACKSPACE:   {children: nil, Actions: []Action{Backspace{}}},
+		keyboard.BACKSPACE_2: {children: nil, Actions: []Action{Backspace{}}},
+		keyboard.DELETE:      {children: nil, Actions: []Action{Delete{}}},
+		keyboard.TAB:         {children: nil, Actions: []Action{Insert{c: rune(keyboard.TAB)}}},
+
+		keyboard.ARROW_UP:    {children: nil, Actions: []Action{CursorUp{}}},
+		keyboard.ARROW_DOWN:  {children: nil, Actions: []Action{CursorDown{}}},
+		keyboard.ARROW_LEFT:  {children: nil, Actions: []Action{CursorLeft{}}},
+		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
 	},
 }
 
@@ -66,6 +75,13 @@ var NormalBindings = &BindingNode{
 				'd': {children: nil, Actions: []Action{DeleteLine{}}},
 			},
 		},
+		's': {children: nil},
+		'v': {children: nil},
+
+		'k':    {children: nil, Actions: []Action{CursorUp{}}},
+		'j':  {children: nil, Actions: []Action{CursorDown{}}},
+		'h':  {children: nil, Actions: []Action{CursorLeft{}}},
+		'l': {children: nil, Actions: []Action{CursorRight{}}},
 	},
 }
 

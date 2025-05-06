@@ -34,6 +34,16 @@ type SwitchMode struct {
 
 func (a SwitchMode) String() string { return fmt.Sprintf("switch mode: %s", a.m) }
 func (a SwitchMode) Apply(e *Editor) error {
+	switch a.m {
+	case mode.Insert:
+		e.BM.Current.Buf.StartEvent(buffer.Event_Insert)
+	case mode.Normal:
+		e.BM.Current.Buf.Commit()
+	case mode.Command:
+
+	default:
+		panic("nothing to do there")
+	}
 	e.m.SetMode(a.m)
 	return nil
 }
@@ -72,7 +82,14 @@ type Insert struct{ c rune }
 func (a Insert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }
 func (a Insert) Apply(e *Editor) error {
 	c := buffer.Insert{Contents: [][]rune{{a.c}}}
-	return e.BM.Current.Buf.StartAndAcceptChange(c, buffer.Event_Insert)
+	return e.BM.Current.Buf.AcceptChange(c)
+}
+
+type Backspace struct{}
+func (a Backspace) String() string { return "backspace" }
+func (a Backspace) Apply(e *Editor) error {
+	c := buffer.Backspace{}
+	return e.BM.Current.Buf.AcceptChange(c)
 }
 
 type Delete struct{}
@@ -80,7 +97,7 @@ type Delete struct{}
 func (a Delete) String() string { return "Delete" }
 func (a Delete) Apply(e *Editor) error {
 	c := buffer.Delete{}
-	return e.BM.Current.Buf.StartAndAcceptChange(c, buffer.Event_Delete)
+	return e.BM.Current.Buf.AcceptChange(c)
 }
 
 type DeleteLine struct{}

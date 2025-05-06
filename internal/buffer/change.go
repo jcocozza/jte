@@ -51,6 +51,21 @@ func (d Delete) Apply(buf *Buffer) error {
 	return nil
 }
 
+// backspace at buffer's internal cursor
+type Backspace struct {
+	contents [][]rune
+}
+
+func (b Backspace) Apply(buf *Buffer) error {
+	content, err := buf.backspace()
+	if err != nil {
+		return err
+	}
+	b.contents = content
+	return nil
+}
+
+
 // delete line at the cursor
 type DeleteLine struct{ contents []rune }
 

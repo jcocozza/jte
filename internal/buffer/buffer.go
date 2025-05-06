@@ -33,14 +33,16 @@ func (b *BufRow) Insert(at int, content []rune) error {
 	return nil
 }
 
-func (b *BufRow) DeleteChar(at int) {
+func (b *BufRow) DeleteChar(at int) (rune, error) {
 	if at < 0 || at >= len(*b) {
-		return
+		return -1, fmt.Errorf("invalid loc to delete")
 	}
+	char := (*b)[at]
 	newChars := make([]rune, len(*b)-1)
 	copy(newChars[:at], (*b)[:at])
 	copy(newChars[at:], (*b)[at+1:])
 	*b = newChars
+	return char, nil
 }
 
 func (b *BufRow) DeleteRange(start, end int) ([]rune, error) {
@@ -58,9 +60,9 @@ func (b *BufRow) DeleteRange(start, end int) ([]rune, error) {
 	return content, nil
 }
 
-//func (b *BufRow) append(bytes []byte) {
-//	*b = append(*b, bytes...)
-//}
+func (b *BufRow) append(runes []rune) {
+	*b = append(*b, runes...)
+}
 
 //func (b *BufRow) Trim(to int) {
 //	*b = (*b)[:to]

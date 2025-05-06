@@ -13,6 +13,7 @@ type Editor struct {
 	m  *mode.StateMachine
 	d  *Dispatcher
 	BM *buffer.BufferManager
+	SN *SplitNode
 
 	logger *slog.Logger
 }
@@ -23,6 +24,7 @@ func NewEditor(l *slog.Logger) *Editor {
 		m:  mode.NewStateMachine(l),
 		d:  NewDispatcher(l),
 		BM: buffer.NewBufferManager(l),
+		SN: nil,
 
 		logger: l.WithGroup("editor"),
 	}
