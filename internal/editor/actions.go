@@ -8,6 +8,7 @@ import (
 	"github.com/jcocozza/jte/internal/mode"
 )
 
+// an action is something that is done to the editor
 type Action interface {
 	// for debugging
 	String() string
