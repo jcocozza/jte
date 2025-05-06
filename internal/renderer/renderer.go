@@ -108,7 +108,7 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
 
 	rows, cols, _ := r.rw.WindowSize()
-	content := r.lr.RenderLayout(e.Root, r.pr, rows, cols)
+	content := r.lr.RenderLayout(e, e.Root, r.pr, rows, cols)
 	for _, row := range content {
 		r.logger.Log(context.TODO(), slog.LevelDebug-1, "row", slog.String("row", string(row)))
 		r.abuf.Append(row)

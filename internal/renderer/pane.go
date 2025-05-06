@@ -13,6 +13,7 @@ const TAB_STOP = 8
 
 type PaneStatusData struct {
 	Active bool
+	Mode string
 }
 
 type PaneRenderer interface {
@@ -72,7 +73,6 @@ func (r *TextPaneRenderer) renderRow(row buffer.BufRow) []byte {
 }
 
 func (r *TextPaneRenderer) renderStatus(cols int, psd PaneStatusData, buf *buffer.Buffer) []byte {
-	mode := "<todo: mode>"
 	var displayModified string = ""
 	if buf.Modified {
 		displayModified = "(Δ)"
@@ -84,8 +84,8 @@ func (r *TextPaneRenderer) renderStatus(cols int, psd PaneStatusData, buf *buffe
 		displayRowNum = totalRows - 1 // -1 because i want a 0 indexed system
 	}
 	status := fmt.Sprintf("(%v) ln:%d/%d - %s %s", psd.Active, currRow, displayRowNum, displayModified, buf.Name)
-	spacer := bytes.Repeat([]byte(" "), cols-len(status)-len(mode))
-	statusBuf := append([]byte(mode), append(spacer, []byte(status)...)...)
+	spacer := bytes.Repeat([]byte(" "), cols-len(status)-len(psd.Mode))
+	statusBuf := append([]byte(psd.Mode), append(spacer, []byte(status)...)...)
 	return statusBuf
 }
 

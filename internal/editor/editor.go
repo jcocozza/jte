@@ -33,6 +33,10 @@ func NewEditor(l *slog.Logger) *Editor {
 	}
 }
 
+func (e *Editor) Mode() string {
+	return string(e.m.Current())	
+}
+
 func (e *Editor) HandleKeypress() error {
 	k, err := e.kb.GetKeypress()
 	if err != nil {
