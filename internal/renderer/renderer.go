@@ -87,7 +87,8 @@ func (r *TextRenderer) drawCursor(x int, y int) {
 	r.abuf.Append([]byte(s))
 	r.abuf.Append([]byte("\x1b[?25h")) // show cursor
 }
-func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer) {
+
+func (r *TextRenderer) drawCursorOnBuffer(offsetX int, offsetY int, buf *buffer.Buffer) {
 	y := (buf.Y() - r.rowoffset) + 1
 	actualCol := 0
 	for i := 0; i < buf.X(); i++ {
@@ -97,7 +98,7 @@ func (r *TextRenderer) drawCursorOnBuffer(buf *buffer.Buffer) {
 			actualCol++
 		}
 	}
-	r.drawCursor(y, actualCol+1)
+	r.drawCursor(offsetY+y, offsetX+actualCol+1)
 }
 
 func (r *TextRenderer) Render(e *editor.Editor) {
@@ -106,16 +107,15 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[2J"))   // clear entire screen
 	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
 
-	rows, cols, _ := r.rw.WindowSize() // for some reason, rows seems to be 1 too many
-	content := r.lr.RenderLayout(e.Root, r.pr, rows-1, cols)
+	rows, cols, _ := r.rw.WindowSize()
+	content := r.lr.RenderLayout(e.Root, r.pr, rows, cols)
 	for _, row := range content {
 		r.logger.Log(context.TODO(), slog.LevelDebug-1, "row", slog.String("row", string(row)))
 		r.abuf.Append(row)
-		r.abuf.Append([]byte("\x1b[K"))
-		r.abuf.Append([]byte("\r\n"))
+		//r.abuf.Append([]byte("\x1b[K"))
 	}
 
-	r.drawCursorOnBuffer(e.BM.Current.Buf)
+	r.drawCursorOnBuffer(0,0, e.Active.Pane.Buf)
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")
 }

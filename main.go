@@ -26,8 +26,8 @@ func main() {
 	id := e.BM.Add(buf)
 	e.BM.SetCurrent(id)
 
-	p := &editor.Pane{nil, buf}
-
+	// this is some setup stuff we're going to have to figure out
+	p := &editor.Pane{nil, buf, true}
 	n := &editor.SplitNode{Pane: p}
 	e.Root = n
 	e.Active = n

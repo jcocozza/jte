@@ -11,8 +11,12 @@ import (
 
 const TAB_STOP = 8
 
+type PaneStatusData struct {
+	Active bool
+}
+
 type PaneRenderer interface {
-	Render(panerows int, panecols int, g *gutter.Gutter, buf *buffer.Buffer) [][]byte
+	Render(rows int, cols int, psd PaneStatusData, g *gutter.Gutter, buf *buffer.Buffer) [][]byte
 }
 
 type TextPaneRenderer struct {
@@ -67,7 +71,7 @@ func (r *TextPaneRenderer) renderRow(row buffer.BufRow) []byte {
 	return expanded
 }
 
-func (r *TextPaneRenderer) renderStatus(cols int, buf *buffer.Buffer) []byte {
+func (r *TextPaneRenderer) renderStatus(cols int, psd PaneStatusData, buf *buffer.Buffer) []byte {
 	mode := "<todo: mode>"
 	var displayModified string = ""
 	if buf.Modified {
@@ -79,13 +83,13 @@ func (r *TextPaneRenderer) renderStatus(cols int, buf *buffer.Buffer) []byte {
 	if totalRows != 0 {
 		displayRowNum = totalRows - 1 // -1 because i want a 0 indexed system
 	}
-	status := fmt.Sprintf("ln:%d/%d - %s %s", currRow, displayRowNum, displayModified, buf.Name)
+	status := fmt.Sprintf("(%v) ln:%d/%d - %s %s", psd.Active, currRow, displayRowNum, displayModified, buf.Name)
 	spacer := bytes.Repeat([]byte(" "), cols-len(status)-len(mode))
 	statusBuf := append([]byte(mode), append(spacer, []byte(status)...)...)
 	return statusBuf
 }
 
-func (r *TextPaneRenderer) Render(rows int, cols int, g *gutter.Gutter, buf *buffer.Buffer) [][]byte {
+func (r *TextPaneRenderer) Render(rows int, cols int, psd PaneStatusData, g *gutter.Gutter, buf *buffer.Buffer) [][]byte {
 	r.scroll(rows, cols, buf)
 	r.logger.Debug("rendering buffer", slog.String("name", buf.Name))
 	paneBuf := make([][]byte, rows)
@@ -98,6 +102,6 @@ func (r *TextPaneRenderer) Render(rows int, cols int, g *gutter.Gutter, buf *buf
 		paneBuf[i] = r.renderRow(buf.Rows[bufrownum])
 	}
 	// render status
-	paneBuf[rows-1] = r.renderStatus(cols, buf)
+	paneBuf[rows-1] = r.renderStatus(cols, psd, buf)
 	return paneBuf
 }

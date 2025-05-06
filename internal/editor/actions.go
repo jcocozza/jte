@@ -75,14 +75,18 @@ func (a CursorRight) Apply(e *Editor) error { e.BM.Current.Buf.Right(); return n
 type SplitVertical struct{}
 func (a SplitVertical) String() string { return "vert split" }
 func (a SplitVertical) Apply(e *Editor) error {
+	e.Active.Pane.Active = false
 	e.Active = e.Active.SplitVertical()
+	e.Active.Pane.Active = true
 	return nil
 }
 
 type SplitHorizontal struct {}
 func (a SplitHorizontal) String() string { return "horizontal split" }
 func (a SplitHorizontal) Apply(e *Editor) error {
+	e.Active.Pane.Active = false
 	e.Active = e.Active.SplitHorizontal()
+	e.Active.Pane.Active = true
 	return nil
 }
 

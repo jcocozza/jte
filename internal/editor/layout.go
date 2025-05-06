@@ -15,6 +15,7 @@ const (
 type Pane struct {
 	G   *gutter.Gutter
 	Buf *buffer.Buffer
+	Active bool // if the cursor is on this node
 }
 
 // Pane is nil if this is just a split tracking node
@@ -28,6 +29,11 @@ type SplitNode struct {
 
 	Pane *Pane // nil for internal
 }
+
+func (s *SplitNode) GetUp() {}
+func (s *SplitNode) GetDown() {}
+func (s *SplitNode) GetLeft() {}
+func (s *SplitNode) GetRight() {}
 
 func (s *SplitNode) Resize(newWidth, newHeight int) {
 	if s.Dir == Horizontal {
@@ -50,10 +56,12 @@ func (s *SplitNode) SplitVertical() *SplitNode {
 	if s.Pane == nil {
 		panic("cannot split an internal node")
 	}
-	panePtr := s.Pane
+	ogPane := s.Pane
+	clonedPane := *ogPane
+	clonedPane.Active = false
 	s.Dir = Vertical
-	s.First = &SplitNode{Pane: panePtr}
-	s.Second = &SplitNode{Pane: panePtr}
+	s.First = &SplitNode{Pane: ogPane}
+	s.Second = &SplitNode{Pane: &clonedPane}
 	s.FirstRatio = .5
 	s.Pane = nil
 	return s.First
@@ -64,10 +72,12 @@ func (s *SplitNode) SplitHorizontal() *SplitNode {
 	if s.Pane == nil {
 		panic("cannot split an internal node")
 	}
-	panePtr := s.Pane
+	ogPane := s.Pane
+	clonedPane := *ogPane
+	clonedPane.Active = false
 	s.Dir = Horizontal
-	s.First = &SplitNode{Pane: panePtr}
-	s.Second = &SplitNode{Pane: panePtr}
+	s.First = &SplitNode{Pane: ogPane}
+	s.Second = &SplitNode{Pane: &clonedPane}
 	s.FirstRatio = .5
 	s.Pane = nil
 	return s.First

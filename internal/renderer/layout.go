@@ -38,7 +38,8 @@ func (r *LayoutRenderer) RenderNode(node *editor.SplitNode, pr PaneRenderer, rec
 		return
 	}
 	if node.Pane != nil {
-		rendered := pr.Render(rect.Rows, rect.Cols, node.Pane.G, node.Pane.Buf)
+		psd := PaneStatusData{ Active: node.Pane.Active }
+		rendered := pr.Render(rect.Rows, rect.Cols, psd, node.Pane.G, node.Pane.Buf)
 		for i := 0; i < len(rendered) && i+rect.Y < len(screen); i++ {
 			copy(screen[i+rect.Y][rect.X:], rendered[i])
 		}
