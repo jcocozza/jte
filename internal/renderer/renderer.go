@@ -114,6 +114,7 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 		r.abuf.Append([]byte("\x1b[K"))
 		r.abuf.Append([]byte("\r\n"))
 	}
+
 	r.drawCursorOnBuffer(e.BM.Current.Buf)
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")

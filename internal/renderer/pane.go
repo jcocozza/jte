@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"bytes"
+	"fmt"
 	"log/slog"
 
 	"github.com/jcocozza/jte/internal/buffer"
@@ -66,11 +67,29 @@ func (r *TextPaneRenderer) renderRow(row buffer.BufRow) []byte {
 	return expanded
 }
 
+func (r *TextPaneRenderer) renderStatus(cols int, buf *buffer.Buffer) []byte {
+	mode := "<todo: mode>"
+	var displayModified string = ""
+	if buf.Modified {
+		displayModified = "(Δ)"
+	}
+	var displayRowNum int = 0
+	totalRows := len(buf.Rows)
+	currRow := buf.Y()
+	if totalRows != 0 {
+		displayRowNum = totalRows - 1 // -1 because i want a 0 indexed system
+	}
+	status := fmt.Sprintf("ln:%d/%d - %s %s", currRow, displayRowNum, displayModified, buf.Name)
+	spacer := bytes.Repeat([]byte(" "), cols-len(status)-len(mode))
+	statusBuf := append([]byte(mode), append(spacer, []byte(status)...)...)
+	return statusBuf
+}
+
 func (r *TextPaneRenderer) Render(rows int, cols int, g *gutter.Gutter, buf *buffer.Buffer) [][]byte {
 	r.scroll(rows, cols, buf)
 	r.logger.Debug("rendering buffer", slog.String("name", buf.Name))
 	paneBuf := make([][]byte, rows)
-	for i := 0; i < rows; i++ {
+	for i := 0; i < rows-1; i++ {
 		bufrownum := i + r.rowoffset
 		if bufrownum >= len(buf.Rows) {
 			paneBuf[bufrownum] = []byte("~")
@@ -78,5 +97,7 @@ func (r *TextPaneRenderer) Render(rows int, cols int, g *gutter.Gutter, buf *buf
 		}
 		paneBuf[i] = r.renderRow(buf.Rows[bufrownum])
 	}
+	// render status
+	paneBuf[rows-1] = r.renderStatus(cols, buf)
 	return paneBuf
 }
