@@ -1,19 +1,13 @@
-package dispatcher
+package editor
 
 import (
 	"errors"
 	"fmt"
 	"log/slog"
 
-	"github.com/jcocozza/jte/internal/bindings"
 	"github.com/jcocozza/jte/internal/keyboard"
 	"github.com/jcocozza/jte/internal/mode"
 )
-
-type Dispatch struct {
-	Keys    keyboard.OrderedKeyList
-	Actions []bindings.ActionId
-}
 
 // the Dispatcher worries about correctly grouping keys together
 //
@@ -32,8 +26,8 @@ func NewDispatcher(l *slog.Logger) *Dispatcher {
 }
 
 func (d *Dispatcher) accept(k keyboard.Key) {
-	d.logger.Debug("accepting key", slog.String("key", k.String()))
 	d.currKeys.Append(k)
+	d.logger.Debug("accepted key", slog.String("key", k.String()), slog.String("current keys", d.currKeys.Collapse()))
 }
 
 // in insert mode:
@@ -42,7 +36,7 @@ func (d *Dispatcher) accept(k keyboard.Key) {
 // 3. otherwise, generate an insert action for next text
 //
 // return true to flush, false to continue
-func (d *Dispatcher) processInsert(n *bindings.BindingNode) (bool, []bindings.ActionId) {
+func (d *Dispatcher) processInsert(n *BindingNode) (bool, []Action) {
 	possiblyValid := n.HasPrefix(d.currKeys)
 	if possiblyValid {
 		actionNode, err := n.Lookup(d.currKeys)
@@ -51,7 +45,7 @@ func (d *Dispatcher) processInsert(n *bindings.BindingNode) (bool, []bindings.Ac
 		}
 		return true, actionNode.Actions
 	}
-	return true, []bindings.ActionId{bindings.Action_InsertChar}
+	return true, []Action{Insert{rune(d.currKeys[0])}}
 }
 
 // in command mode:
@@ -60,7 +54,7 @@ func (d *Dispatcher) processInsert(n *bindings.BindingNode) (bool, []bindings.Ac
 // 3. otherwise, keep adding characters to command prompt
 //
 // return true to flush, false to continue
-func (d *Dispatcher) processCommand(n *bindings.BindingNode) (bool, []bindings.ActionId) {
+func (d *Dispatcher) processCommand(n *BindingNode) (bool, []Action) {
 	possiblyValid := n.HasPrefix(d.currKeys)
 	if possiblyValid {
 		actionNode, err := n.Lookup(d.currKeys)
@@ -69,7 +63,7 @@ func (d *Dispatcher) processCommand(n *bindings.BindingNode) (bool, []bindings.A
 		}
 		return true, actionNode.Actions
 	}
-	return true, []bindings.ActionId{bindings.InsertCommandChar}
+	return true, []Action{InsertCommandChar{rune(d.currKeys[0])}}
 }
 
 // in normal mode:
@@ -77,7 +71,7 @@ func (d *Dispatcher) processCommand(n *bindings.BindingNode) (bool, []bindings.A
 // 2. if valid or possibly valid, keep appending until we get a valid or invalid
 //
 // return true to flush, false to continue
-func (d *Dispatcher) processNormal(n *bindings.BindingNode) (bool, []bindings.ActionId) {
+func (d *Dispatcher) processNormal(n *BindingNode) (bool, []Action) {
 	possiblyValid := n.HasPrefix(d.currKeys)
 	if possiblyValid {
 		actionNode, err := n.Lookup(d.currKeys)
@@ -96,11 +90,11 @@ var ErrNoDispatch = errors.New("no dispatch")
 // based on the mode, process the keypress accordingly
 //
 // will return ErrNoDispatch if nothing to report
-func (d *Dispatcher) ProcessKeypress(k keyboard.Key, m mode.Mode, n *bindings.BindingNode) (Dispatch, error) {
+func (d *Dispatcher) ProcessKeypress(k keyboard.Key, m mode.Mode, n *BindingNode) ([]Action, error) {
 	d.accept(k)
 
 	var flush bool
-	var actions []bindings.ActionId
+	var actions []Action
 	switch m {
 	case mode.Normal:
 		flush, actions = d.processNormal(n)
@@ -113,13 +107,9 @@ func (d *Dispatcher) ProcessKeypress(k keyboard.Key, m mode.Mode, n *bindings.Bi
 	}
 
 	if !flush {
-		return Dispatch{}, ErrNoDispatch
+		return nil, ErrNoDispatch
 	}
 
-	dispatch := Dispatch{
-		Keys:    d.currKeys,
-		Actions: actions,
-	}
 	d.currKeys = keyboard.OrderedKeyList{}
-	return dispatch, nil
+	return actions, nil
 }

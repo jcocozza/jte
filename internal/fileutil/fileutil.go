@@ -7,23 +7,32 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/jcocozza/jte/pkg/filetypes"
+	"unicode/utf8"
 )
 
 var ErrNoFilename = errors.New("no file name")
 
+func BytesToRunes(b []byte) []rune {
+	var runes []rune
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
+		runes = append(runes, r)
+		b = b[size:]
+	}
+	return runes
+}
+
 // returns the contents, a bool telling you if the file is writeable
-func ReadFile(path string) ([][]byte, bool, filetypes.FileType, error) {
+func ReadFile(path string) ([][]rune, bool, FileType, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, false, filetypes.Unknown, err
+		return nil, false, Unknown, err
 	}
 	defer f.Close()
 
 	info, err := f.Stat()
 	if err != nil {
-		return nil, false, filetypes.Unknown, err
+		return nil, false, Unknown, err
 	}
 	mode := info.Mode()
 	writeable := mode&0200 != 0
@@ -31,17 +40,17 @@ func ReadFile(path string) ([][]byte, bool, filetypes.FileType, error) {
 	scanner := bufio.NewScanner(f)
 	numScans := 0
 
-	contents := [][]byte{}
+	contents := [][]rune{}
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		line = bytes.TrimRight(line, "\r\n")
-		contents = append(contents, line)
+		contents = append(contents, BytesToRunes(line))
 		numScans++
 	}
 	if numScans == 0 {
-		contents = append(contents, []byte{})
+		contents = append(contents, []rune{})
 	}
-	t := filetypes.DetermineFileType(path)
+	t := DetermineFileType(path)
 	return contents, writeable, t, nil
 }
 

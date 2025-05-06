@@ -1,32 +1,25 @@
 package buffer
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 type EventType int
 
 const (
 	Event_Insert EventType = iota
-	Event_Remove
+	Event_Delete
 	Event_Replace
 )
-
-// a change is the result of a single key press
-//
-// on delete, the "contents" is the deleted text
-// on insert, the "contents" is the inserted text
-// on replace, the "contents" is the replaced text (similar to delete)
-type change struct {
-	startCur Cursor
-	endCur   Cursor
-	contents []byte
-}
 
 // an event is a "block" of changes grouped together
 //
 // not 100% sure how the grouping will take place
 type Event struct {
-	etype   EventType
-	changes []change
+	complete bool
+	etype    EventType
+	changes  []Change
 }
 
 type EventStack []Event
@@ -42,4 +35,43 @@ func (s *EventStack) Pop() (Event, error) {
 	res := (*s)[len(*s)-1]
 	*s = (*s)[:len(*s)-1]
 	return res, nil
+}
+
+type EventManager struct {
+	history EventStack
+	redo    EventStack
+	current *Event
+
+	logger *slog.Logger
+}
+
+func NewEventManager(l *slog.Logger) *EventManager {
+	return &EventManager{
+		history: EventStack{},
+		redo: EventStack{},
+		current: nil,
+		logger: l.WithGroup("event-manager"),
+	}
+}
+
+func (e *EventManager) Commit() {
+	e.current.complete = true
+	e.history.Push(*e.current)
+	e.current = nil
+}
+
+func (e *EventManager) StartEvent(etype EventType) error {
+	if e.current != nil {
+		return fmt.Errorf("event already in progress")
+	}
+	e.current = &Event{
+		complete: false,
+		etype:    etype,
+		changes:  []Change{},
+	}
+	return nil
+}
+
+func (e *EventManager) AddChange(c Change) {
+	e.current.changes = append(e.current.changes, c)
 }
