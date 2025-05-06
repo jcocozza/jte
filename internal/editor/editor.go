@@ -14,7 +14,7 @@ type Editor struct {
 	d  *Dispatcher
 	BM *buffer.BufferManager
 
-	Root *SplitNode
+	Root   *SplitNode
 	Active *SplitNode
 
 	logger *slog.Logger
@@ -22,11 +22,11 @@ type Editor struct {
 
 func NewEditor(l *slog.Logger) *Editor {
 	return &Editor{
-		kb: keyboard.NewKeyboard(l),
-		m:  mode.NewStateMachine(l),
-		d:  NewDispatcher(l),
-		BM: buffer.NewBufferManager(l),
-		Root: nil,
+		kb:     keyboard.NewKeyboard(l),
+		m:      mode.NewStateMachine(l),
+		d:      NewDispatcher(l),
+		BM:     buffer.NewBufferManager(l),
+		Root:   nil,
 		Active: nil,
 
 		logger: l.WithGroup("editor"),
@@ -34,7 +34,7 @@ func NewEditor(l *slog.Logger) *Editor {
 }
 
 func (e *Editor) Mode() string {
-	return string(e.m.Current())	
+	return string(e.m.Current())
 }
 
 func (e *Editor) HandleKeypress() error {
