@@ -6,11 +6,9 @@ import (
 	"github.com/jcocozza/jte/internal/keyboard"
 )
 
-type action int
-
 type BindingNode struct {
 	children map[keyboard.Key]*BindingNode
-	actions  []action
+	Actions  []ActionId
 }
 
 // bwhahahaha classic recursion
@@ -39,4 +37,27 @@ func (n *BindingNode) Lookup(keys keyboard.OrderedKeyList) (*BindingNode, error)
 		return nil, fmt.Errorf("invalid key sequence %s", keys.Collapse())
 	}
 	return child.Lookup(keys[1:])
+}
+
+var InsertBindings = &BindingNode{
+	Actions: nil,
+	children: map[keyboard.Key]*BindingNode{
+		keyboard.ESC: {
+			Actions: []ActionId{Action_Commit, Action_ModeNormal},
+		},
+	},
+}
+
+var NormalBindings = &BindingNode{
+	Actions: nil,
+	children: map[keyboard.Key]*BindingNode{
+		'i': { children: nil, Actions: []ActionId{Action_ModeInsert} },
+	},
+}
+
+var CommandBindings = &BindingNode{
+	Actions: nil,
+	children: map[keyboard.Key]*BindingNode{
+		keyboard.ESC: { children: nil, Actions: []ActionId{Action_ModeNormal} },
+	},
 }
