@@ -4,6 +4,7 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -258,6 +259,6 @@ func (kb *Keyboard) GetKeypress() (Keypress, error) {
 		}
 		kp = Keypress{Unicode: r}
 	}
-	kb.logger.Debug("keypress", slog.String("raw input", string(buf)), slog.String("key", kp.String()))
+	kb.logger.Log(context.TODO(), slog.LevelDebug-1, "raw input", string(buf), slog.String("key", kp.String()))
 	return kp, nil
 }
