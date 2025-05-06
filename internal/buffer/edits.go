@@ -14,12 +14,18 @@ func (b *Buffer) validCursor(cur Cursor) error {
 	return nil
 }
 
-func (b *Buffer) insertRow(at int, row []rune) {
+func (b *Buffer) insertRowAt(at int, row []rune) {
 	if at < 0 || at > len(b.Rows) {
 		return
 	}
 	b.Rows = append(b.Rows[:at], append([]BufRow{row}, b.Rows[at:]...)...)
 }
+
+func (b *Buffer) insertRow(row []rune) {
+	b.insertRowAt(b.cursor.Y, row)
+	b.cursor.Y++
+}
+
 
 func (b *Buffer) deleteRow(at int) ([]rune, error) {
 	if at < 0 || at >= len(b.Rows) {
@@ -44,7 +50,7 @@ func (b *Buffer) insertAt(at Cursor, content [][]rune) error {
 		b.cursor.X++
 	}
 	for j := 1; j < len(content); j++ {
-		b.insertRow(at.Y+j, content[j])
+		b.insertRowAt(at.Y+j, content[j])
 		b.cursor.Y++
 		b.cursor.X = len(content[j])
 	}

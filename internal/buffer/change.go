@@ -14,13 +14,20 @@ func (i InsertAt) Apply(buf *Buffer) error {
 	return buf.insertAt(i.cur, i.contents)
 }
 
-// insert at the buffer's interal cursor
+// insert at the buffer's internal cursor
 type Insert struct {
 	Contents [][]rune
 }
 
 func (i Insert) Apply(buf *Buffer) error {
 	return buf.insert(i.Contents)
+}
+
+// insert new line at buffer's interal cursor
+type EnterNewLine struct {}
+func (i EnterNewLine) Apply(buf *Buffer) error {
+	buf.insertRow([]rune{})
+	return nil
 }
 
 type DeleteAt struct {

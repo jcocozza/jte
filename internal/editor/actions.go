@@ -85,6 +85,13 @@ func (a Insert) Apply(e *Editor) error {
 	return e.BM.Current.Buf.AcceptChange(c)
 }
 
+type EnterNewLine struct{}
+func (a EnterNewLine) String() string { return "insert new line" }
+func (a EnterNewLine) Apply(e *Editor) error {
+	c := buffer.EnterNewLine{}
+	return e.BM.Current.Buf.AcceptChange(c)
+}
+
 type Backspace struct{}
 func (a Backspace) String() string { return "backspace" }
 func (a Backspace) Apply(e *Editor) error {
