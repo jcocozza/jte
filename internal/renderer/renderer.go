@@ -28,6 +28,7 @@ type TextRenderer struct {
 	rowoffset int
 	coloffset int
 
+	lr *LayoutRenderer
 	pr *TextPaneRenderer
 
 	// the content that is actually rendered to the screen
@@ -39,6 +40,7 @@ type TextRenderer struct {
 func NewTextRenderer(l *slog.Logger) *TextRenderer {
 	return &TextRenderer{
 		abuf:   abuf{},
+		lr:     NewLayoutRenderer(l),
 		pr:     NewTextPaneRenderer(l),
 		logger: l.WithGroup("renderer"),
 	}
@@ -105,7 +107,7 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
 
 	rows, cols, _ := r.rw.WindowSize() // for some reason, rows seems to be 1 too many
-	content := RenderLayout(e.Root, r.pr, rows-1, cols)
+	content := r.lr.RenderLayout(e.Root, r.pr, rows-1, cols)
 	for _, row := range content {
 		r.logger.Log(context.TODO(), slog.LevelDebug-1, "row", slog.String("row", string(row)))
 		r.abuf.Append(row)
@@ -114,4 +116,5 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	}
 	r.drawCursorOnBuffer(e.BM.Current.Buf)
 	r.abuf.Flush()
+	r.logger.Debug("end rendering")
 }
