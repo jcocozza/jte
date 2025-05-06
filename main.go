@@ -18,15 +18,19 @@ func main() {
 	e := editor.NewEditor(logger.Logger)
 
 	err = r.Setup()
-	if err != nil {panic(err)}
+	if err != nil {
+		panic(err)
+	}
 
-
-	buf := buffer.NewBuffer("[No Name]", "", false, []buffer.BufRow{{'f','o','o'}}, logger.Logger)
+	buf := buffer.NewBuffer("[No Name]", "", false, []buffer.BufRow{{'f', 'o', 'o'}}, logger.Logger)
 	id := e.BM.Add(buf)
 	e.BM.SetCurrent(id)
 
 	p := &editor.Pane{nil, buf}
-	e.SN = &editor.SplitNode{Pane: p}
+
+	n := &editor.SplitNode{Pane: p}
+	e.Root = n
+	e.Active = n
 	r.Render(e) // initial render
 	for {
 		err := e.HandleKeypress()

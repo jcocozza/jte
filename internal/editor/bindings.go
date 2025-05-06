@@ -78,8 +78,8 @@ var NormalBindings = &BindingNode{
 				'd': {children: nil, Actions: []Action{DeleteLine{}}},
 			},
 		},
-		's': {children: nil},
-		'v': {children: nil},
+		's': {children: nil, Actions: []Action{SplitHorizontal{}}},
+		'v': {children: nil, Actions: []Action{SplitVertical{}}},
 
 		'k': {children: nil, Actions: []Action{CursorUp{}}},
 		'j': {children: nil, Actions: []Action{CursorDown{}}},

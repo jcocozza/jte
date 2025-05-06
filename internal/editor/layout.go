@@ -44,3 +44,31 @@ func (s *SplitNode) Resize(newWidth, newHeight int) {
 		s.Second.Resize(newWidth, secondHeight)
 	}
 }
+
+// return the new "active" split node
+func (s *SplitNode) SplitVertical() *SplitNode {
+	if s.Pane == nil {
+		panic("cannot split an internal node")
+	}
+	panePtr := s.Pane
+	s.Dir = Vertical
+	s.First = &SplitNode{Pane: panePtr}
+	s.Second = &SplitNode{Pane: panePtr}
+	s.FirstRatio = .5
+	s.Pane = nil
+	return s.First
+}
+
+// return the new "active" split node
+func (s *SplitNode) SplitHorizontal() *SplitNode {
+	if s.Pane == nil {
+		panic("cannot split an internal node")
+	}
+	panePtr := s.Pane
+	s.Dir = Horizontal
+	s.First = &SplitNode{Pane: panePtr}
+	s.Second = &SplitNode{Pane: panePtr}
+	s.FirstRatio = .5
+	s.Pane = nil
+	return s.First
+}
