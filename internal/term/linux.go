@@ -1,4 +1,4 @@
-//go:build darwin
+//go:build linux || freebsd || netbsd || openbsd
 
 package term
 
@@ -13,8 +13,11 @@ const (
 	TCSETS = 0x5402
 )
 
-const ioctlReadTermios = syscall.TIOCGETA
-const ioctlWriteTermios = syscall.TIOCSETA
+const (
+	ioctlReadTermios  = syscall.TCGETS
+	ioctlWriteTermios = syscall.TCSETS
+)
+
 
 func enableRawMode() (*RawMode, error) {
 	// Open /dev/tty explicitly instead of using stdin
