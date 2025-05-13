@@ -14,8 +14,9 @@ import (
 // when it has a good grouping, it *dispatches* the grouping and associated actions to the main process
 // for next steps
 type Dispatcher struct {
-	logger   *slog.Logger
-	currKeys keyboard.OrderedKeyList
+	logger         *slog.Logger
+	currKeys       keyboard.OrderedKeyList
+	repeatModifier int
 }
 
 func NewDispatcher(l *slog.Logger) *Dispatcher {
@@ -27,7 +28,7 @@ func NewDispatcher(l *slog.Logger) *Dispatcher {
 
 func (d *Dispatcher) accept(k keyboard.Key) {
 	d.currKeys.Append(k)
-	d.logger.Debug("accepted key", slog.String("key", k.String()), slog.String("current keys", d.currKeys.Collapse()))
+	d.logger.Debug("accepted key", slog.String("key", k.String()), slog.String("current keys", d.currKeys.Collapse()), slog.Int("repeat modifier", d.repeatModifier))
 }
 
 // in insert mode:
@@ -36,7 +37,8 @@ func (d *Dispatcher) accept(k keyboard.Key) {
 // 3. otherwise, generate an insert action for next text
 //
 // return true to flush, false to continue
-func (d *Dispatcher) processInsert(n *BindingNode) (bool, []Action) {
+func (d *Dispatcher) processInsert(k keyboard.Key, n *BindingNode) (bool, []Action) {
+	d.accept(k)
 	possiblyValid := n.HasPrefix(d.currKeys)
 	if possiblyValid {
 		actionNode, err := n.Lookup(d.currKeys)
@@ -54,7 +56,8 @@ func (d *Dispatcher) processInsert(n *BindingNode) (bool, []Action) {
 // 3. otherwise, keep adding characters to command prompt
 //
 // return true to flush, false to continue
-func (d *Dispatcher) processCommand(n *BindingNode) (bool, []Action) {
+func (d *Dispatcher) processCommand(k keyboard.Key, n *BindingNode) (bool, []Action) {
+	d.accept(k)
 	possiblyValid := n.HasPrefix(d.currKeys)
 	if possiblyValid {
 		actionNode, err := n.Lookup(d.currKeys)
@@ -71,14 +74,31 @@ func (d *Dispatcher) processCommand(n *BindingNode) (bool, []Action) {
 // 2. if valid or possibly valid, keep appending until we get a valid or invalid
 //
 // return true to flush, false to continue
-func (d *Dispatcher) processNormal(n *BindingNode) (bool, []Action) {
+func (d *Dispatcher) processNormal(k keyboard.Key, n *BindingNode) (bool, []Action) {
+	if k.IsDigit() {
+		digit := int(k - '0')
+		if d.repeatModifier == 0 {
+			d.repeatModifier = digit
+			return false, nil
+		}
+		d.repeatModifier = (d.repeatModifier * 10) + digit
+		return false, nil
+	}
+	d.accept(k)
 	possiblyValid := n.HasPrefix(d.currKeys)
 	if possiblyValid {
 		actionNode, err := n.Lookup(d.currKeys)
 		if err != nil {
 			return false, nil
 		}
-		return true, actionNode.Actions
+		if d.repeatModifier == 0 || d.repeatModifier == 1 {
+			return true, actionNode.Actions
+		}
+		repeatedActions := []Action{} // TODO: allocate this properly
+		for range d.repeatModifier {
+			repeatedActions = append(repeatedActions, actionNode.Actions...)
+		}
+		return true, repeatedActions
 	}
 	return true, nil // since nothing matches, we just want to flush right away
 }
@@ -91,17 +111,16 @@ var ErrNoDispatch = errors.New("no dispatch")
 //
 // will return ErrNoDispatch if nothing to report
 func (d *Dispatcher) ProcessKeypress(k keyboard.Key, m mode.Mode, n *BindingNode) ([]Action, error) {
-	d.accept(k)
 
 	var flush bool
 	var actions []Action
 	switch m {
 	case mode.Normal:
-		flush, actions = d.processNormal(n)
+		flush, actions = d.processNormal(k, n)
 	case mode.Command:
-		flush, actions = d.processCommand(n)
+		flush, actions = d.processCommand(k, n)
 	case mode.Insert:
-		flush, actions = d.processInsert(n)
+		flush, actions = d.processInsert(k, n)
 	default:
 		panic(fmt.Sprintf("invalid mode on dispatch: %s", m))
 	}
@@ -110,6 +129,7 @@ func (d *Dispatcher) ProcessKeypress(k keyboard.Key, m mode.Mode, n *BindingNode
 		return nil, ErrNoDispatch
 	}
 
+	d.repeatModifier = 0
 	d.currKeys = keyboard.OrderedKeyList{}
 	return actions, nil
 }
