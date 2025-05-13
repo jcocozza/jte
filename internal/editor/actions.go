@@ -108,7 +108,7 @@ func (a Insert) Apply(e *Editor) error {
 }
 
 type EnterNewLine struct{}
-func (a EnterNewLine) String() string { return "insert new line" }
+func (a EnterNewLine) String() string { return "new line (enter)" }
 func (a EnterNewLine) Apply(e *Editor) error {
 	c := buffer.EnterNewLine{}
 	return e.BM.Current.Buf.AcceptChange(c)
