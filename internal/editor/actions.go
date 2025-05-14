@@ -73,6 +73,7 @@ func (a CursorRight) Apply(e *Editor) error { e.BM.Current.Buf.Right(); return n
 // splits
 
 type SplitVertical struct{}
+
 func (a SplitVertical) String() string { return "vert split" }
 func (a SplitVertical) Apply(e *Editor) error {
 	e.Active.Pane.Active = false
@@ -81,7 +82,8 @@ func (a SplitVertical) Apply(e *Editor) error {
 	return nil
 }
 
-type SplitHorizontal struct {}
+type SplitHorizontal struct{}
+
 func (a SplitHorizontal) String() string { return "horizontal split" }
 func (a SplitHorizontal) Apply(e *Editor) error {
 	e.Active.Pane.Active = false
@@ -89,8 +91,6 @@ func (a SplitHorizontal) Apply(e *Editor) error {
 	e.Active.Pane.Active = true
 	return nil
 }
-
-
 
 // buffer stuff
 
@@ -108,13 +108,39 @@ func (a Insert) Apply(e *Editor) error {
 }
 
 type EnterNewLine struct{}
+
 func (a EnterNewLine) String() string { return "new line (enter)" }
 func (a EnterNewLine) Apply(e *Editor) error {
 	c := buffer.EnterNewLine{}
 	return e.BM.Current.Buf.AcceptChange(c)
 }
 
+type NewLineAbove struct{}
+
+func (a NewLineAbove) String() string { return "new line (above)" }
+func (a NewLineAbove) Apply(e *Editor) error {
+	y := e.BM.Current.Buf.Y() - 1
+	if y < 0 {
+		y = 0
+	}
+	c := buffer.InsertNewLine{Y: y}
+	return e.BM.Current.Buf.AcceptChange(c)
+}
+
+type NewLineBelow struct{}
+
+func (a NewLineBelow) String() string { return "new line (below)" }
+func (a NewLineBelow) Apply(e *Editor) error {
+	y := e.BM.Current.Buf.Y() + 1
+	if y > len(e.BM.Current.Buf.Rows) {
+		y = len(e.BM.Current.Buf.Rows)
+	}
+	c := buffer.InsertNewLine{Y: y}
+	return e.BM.Current.Buf.AcceptChange(c)
+}
+
 type Backspace struct{}
+
 func (a Backspace) String() string { return "backspace" }
 func (a Backspace) Apply(e *Editor) error {
 	c := buffer.Backspace{}

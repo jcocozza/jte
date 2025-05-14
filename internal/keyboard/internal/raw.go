@@ -225,7 +225,7 @@ func parseEscape(buf []byte, nread int) Keypress {
 		case '5':
 			return Keypress{Key: PAGE_UP}
 		case '6':
-			return  Keypress{Key: PAGE_DOWN}
+			return Keypress{Key: PAGE_DOWN}
 		}
 	}
 	return Keypress{Key: ESC}

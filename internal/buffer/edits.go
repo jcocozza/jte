@@ -14,16 +14,21 @@ func (b *Buffer) validCursor(cur Cursor) error {
 	return nil
 }
 
-func (b *Buffer) insertRowAt(at int, row []rune) {
+func (b *Buffer) insertRowAt(at int, row []rune) error {
 	if at < 0 || at > len(b.Rows) {
-		return
+		return fmt.Errorf("can not insert row at %d", at)
 	}
 	b.Rows = append(b.Rows[:at], append([]BufRow{row}, b.Rows[at:]...)...)
+	return nil
 }
 
-func (b *Buffer) insertRow(row []rune) {
-	b.insertRowAt(b.cursor.Y, row)
+func (b *Buffer) insertRow(row []rune) error {
+	err := b.insertRowAt(b.cursor.Y, row)
+	if err != nil {
+		return err
+	}
 	b.cursor.Y++
+	return nil
 }
 
 

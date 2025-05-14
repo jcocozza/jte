@@ -26,9 +26,24 @@ func (i Insert) Apply(buf *Buffer) error {
 // insert new line at buffer's interal cursor
 type EnterNewLine struct {}
 func (i EnterNewLine) Apply(buf *Buffer) error {
-	buf.insertRow([]rune{})
+	return buf.insertRow([]rune{})
+}
+
+type InsertNewLine struct { Y int }
+func (i InsertNewLine) Apply(buf *Buffer) error {
+	err := buf.insertRowAt(i.Y, []rune{})
+	if err != nil { return err }
+	if i.Y > buf.Y() {
+		buf.cursor.Y++
+	} else if i.Y == 0 {
+		return nil
+	} else {
+		buf.cursor.Y--
+	}
+	buf.cursor.X = 0
 	return nil
 }
+
 
 type DeleteAt struct {
 	StartCur, EndCur Cursor

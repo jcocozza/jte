@@ -73,6 +73,9 @@ var NormalBindings = &BindingNode{
 		'i':            {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}}},
 		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
 
+		'o': {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}, NewLineBelow{}}},
+		'O': {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}, NewLineAbove{}}},
+
 		'd': {Actions: nil,
 			children: map[keyboard.Key]*BindingNode{
 				'd': {children: nil, Actions: []Action{DeleteLine{}}},
