@@ -164,7 +164,6 @@ func (p *PaneNode) leftMostLeaf() *PaneNode {
 	return p.First.leftMostLeaf()
 }
 
-// TODO
 // return the node to the left of p that is a leaf
 func (p *PaneNode) Left() *PaneNode {
 	if p.Parent == nil {
@@ -177,12 +176,14 @@ func (p *PaneNode) Left() *PaneNode {
 		return q
 	}
 	q := p.Parent.Left()
+	if q == p.Parent {
+		return p
+	}
 	p.Active = false
 	q.Active = true
 	return q
 }
 
-// TODO
 // return the node to the right of p that is a leaf
 func (p *PaneNode) Right() *PaneNode {
 	if p.Parent == nil {
@@ -195,15 +196,66 @@ func (p *PaneNode) Right() *PaneNode {
 		return q
 	}
 	q := p.Parent.Right()
+	if q == p.Parent {
+		return p
+	}
+	p.Active = false
+	q.Active = true
+	return q
+}
+
+func (p *PaneNode) bottomMostLeaf() *PaneNode {
+	if p.IsLeaf() {
+		return p
+	}
+	return p.Second.bottomMostLeaf()
+}
+
+func (p *PaneNode) topMostLeaf() *PaneNode {
+	if p.IsLeaf() {
+		return p
+	}
+	return p.First.topMostLeaf()
+}
+
+// TODO
+// return the node above p that is a leaf
+func (p *PaneNode) Up() *PaneNode {
+	if p.Parent == nil {
+		return p
+	}
+	if p.Parent.Direction == Horizontal && p == p.Parent.Second {
+		q := p.Parent.First.bottomMostLeaf()
+		p.Active = false
+		q.Active = true
+		return q
+	}
+	q := p.Parent.Up()
+	if q == p.Parent {
+		return p
+	}
 	p.Active = false
 	q.Active = true
 	return q
 }
 
 // TODO
-// return the node above p that is a leaf
-func (p *PaneNode) Up() *PaneNode { return p }
-
-// TODO
 // return the node below p that is a leaf
-func (p *PaneNode) Down() *PaneNode { return p }
+func (p *PaneNode) Down() *PaneNode {
+	if p.Parent == nil {
+		return p
+	}
+	if p.Parent.Direction == Horizontal && p == p.Parent.First {
+		q := p.Parent.Second.topMostLeaf()
+		p.Active = false
+		q.Active = true
+		return q
+	}
+	q := p.Parent.Down()
+	if q == p.Parent {
+		return p
+	}
+	p.Active = false
+	q.Active = true
+	return p
+}
