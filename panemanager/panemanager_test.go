@@ -43,8 +43,8 @@ func TestDraw(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Println(tt.p.DrawSimple(0))
-			fmt.Println(tt.p)
+			//fmt.Println(tt.p.DrawSimple(0))
+			//fmt.Println(tt.p)
 		})
 	}
 }
@@ -59,9 +59,9 @@ func TestMovement(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			//tt.p.First.Right().Right().Left().Left()
-			//fmt.Println(tt.p.DrawSimple(0))
-			//fmt.Println(tt.p)
+			tt.p.First.Right().Right().Left().Left()
+			fmt.Println(tt.p.DrawSimple(0))
+			fmt.Println(tt.p)
 		})
 	}
 }

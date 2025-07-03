@@ -19,10 +19,12 @@ type PaneNode struct {
 	id        int
 	Direction SplitDirection
 	Parent    *PaneNode
-	First     *PaneNode
-	Second    *PaneNode
-	Ratio     float64 // ratio of first to second
-	Active    bool
+	// First is left or top
+	First *PaneNode
+	// Second is right or bottom
+	Second *PaneNode
+	Ratio  float64 // ratio of first to second
+	Active bool
 }
 
 const (
@@ -125,10 +127,10 @@ func ofm(n int) int {
 }
 
 func firstPaneId(parentId int) int {
-	return ofm(parentId) * 10 + 1
+	return ofm(parentId)*10 + 1
 }
 func secondPaneId(parentId int) int {
-	return ofm(parentId) * 10 + 2
+	return ofm(parentId)*10 + 2
 }
 
 // return the new split node
@@ -148,13 +150,55 @@ func (p *PaneNode) SplitHorizontal() *PaneNode {
 	return p.First
 }
 
+func (p *PaneNode) rightMostLeaf() *PaneNode {
+	if p.IsLeaf() {
+		return p
+	}
+	return p.Second.rightMostLeaf()
+}
+
+func (p *PaneNode) leftMostLeaf() *PaneNode {
+	if p.IsLeaf() {
+		return p
+	}
+	return p.First.leftMostLeaf()
+}
+
 // TODO
 // return the node to the left of p that is a leaf
-func (p *PaneNode) Left() *PaneNode { return p }
+func (p *PaneNode) Left() *PaneNode {
+	if p.Parent == nil {
+		return p
+	}
+	if p.Parent.Direction == Vertical && p == p.Parent.Second {
+		q := p.Parent.First.rightMostLeaf()
+		p.Active = false
+		q.Active = true
+		return q
+	}
+	q := p.Parent.Left()
+	p.Active = false
+	q.Active = true
+	return q
+}
 
 // TODO
 // return the node to the right of p that is a leaf
-func (p *PaneNode) Right() *PaneNode { return p }
+func (p *PaneNode) Right() *PaneNode {
+	if p.Parent == nil {
+		return p
+	}
+	if p.Parent.Direction == Vertical && p == p.Parent.First {
+		q := p.Parent.Second.leftMostLeaf()
+		p.Active = false
+		q.Active = true
+		return q
+	}
+	q := p.Parent.Right()
+	p.Active = false
+	q.Active = true
+	return q
+}
 
 // TODO
 // return the node above p that is a leaf
