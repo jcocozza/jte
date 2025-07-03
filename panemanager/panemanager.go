@@ -165,6 +165,7 @@ func (p *PaneNode) leftMostLeaf() *PaneNode {
 }
 
 // return the node to the left of p that is a leaf
+// and set it to active
 func (p *PaneNode) Left() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -185,6 +186,7 @@ func (p *PaneNode) Left() *PaneNode {
 }
 
 // return the node to the right of p that is a leaf
+// and set it to active
 func (p *PaneNode) Right() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -218,8 +220,8 @@ func (p *PaneNode) topMostLeaf() *PaneNode {
 	return p.First.topMostLeaf()
 }
 
-// TODO
 // return the node above p that is a leaf
+// and set it to active
 func (p *PaneNode) Up() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -239,8 +241,8 @@ func (p *PaneNode) Up() *PaneNode {
 	return q
 }
 
-// TODO
 // return the node below p that is a leaf
+// and set it to active
 func (p *PaneNode) Down() *PaneNode {
 	if p.Parent == nil {
 		return p
