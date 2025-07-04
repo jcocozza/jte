@@ -13,9 +13,10 @@ const (
 	Vertical                         // side by side
 )
 
-// a doubly linked tree structure
+// a doubly linked (complete) tree structure
+//
+// there should always be 2 children if there are any on a node
 type PaneNode struct {
-	// each order of magnitide increase in the id represents a tree level
 	id        int
 	Direction SplitDirection
 	Parent    *PaneNode
@@ -31,6 +32,20 @@ const (
 	vsplit = "|"
 	hsplit = "-"
 )
+
+func (p *PaneNode) isFirst() bool {
+	if p.Parent == nil {
+		return false
+	}
+	return p == p.Parent.First
+}
+
+func (p *PaneNode) isSecond() bool {
+	if p.Parent == nil {
+		return false
+	}
+	return p == p.Parent.Second
+}
 
 // solely for debugging
 func (p *PaneNode) DrawSimple(spaces int) string {
@@ -260,4 +275,58 @@ func (p *PaneNode) Down() *PaneNode {
 	p.Active = false
 	q.Active = true
 	return p
+}
+
+// move n1 to n2's position and drop n2
+//
+// assume n2 is parent of n1 and has a parent of its own
+func swapAndDrop(n1 *PaneNode, n2 *PaneNode) *PaneNode {
+	gp := n2.Parent
+	n1.Parent = gp
+	n1.Active = true
+	switch {
+	case n2.isFirst():
+		gp.First = n1
+	case n2.isSecond():
+		gp.Second = n1
+	default:
+		panic("unexpected state - swap and drop")
+	}
+	return n1
+}
+
+func (p *PaneNode) Delete() *PaneNode {
+	p.Active = false
+
+	// we should always have 1 node
+	if p.Parent == nil {
+		return p
+	}
+	// the parent is root, so alternate becomes root
+	// TODO: this case doesn't seem to be working right
+	if p.Parent.Parent == nil {
+		var promotee *PaneNode
+		if p.isFirst() {
+			promotee = p.Parent.Second
+			p.Parent.First = nil
+		} else if p.isSecond() {
+			promotee = p.Parent.First
+			p.Parent.Second = nil
+		} else {
+			panic("unexpected state")
+		}
+		promotee.Parent = nil
+		promotee.Active = true
+		return promotee
+	}
+
+	// now we are guaranteed parent and grandparent nodes
+	switch {
+	case p.isFirst():
+		return swapAndDrop(p.Parent.Second, p.Parent)
+	case p.isSecond():
+		return swapAndDrop(p.Parent.First, p.Parent)
+	default:
+		panic("unexpected state")
+	}
 }

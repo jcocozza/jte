@@ -60,7 +60,8 @@ func TestMovement(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.p.First.Right().Right()
+			tt.p.First.Right().Right().Delete().Delete().Delete()
+			//p.Delete()//.Delete()//.Delete()
 			fmt.Println(tt.p.DrawSimple(0))
 			fmt.Println(tt.p)
 		})
