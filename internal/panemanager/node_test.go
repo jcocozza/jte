@@ -13,20 +13,20 @@ var root = &PaneNode{
 
 func VSplit() *PaneNode {
 	r := &PaneNode{ Ratio: 1}
-	r.SplitVertical()
+	r.splitVertical()
 	return r
 }
 
 func HSplit() *PaneNode {
 	r := &PaneNode{ Ratio: 1}
-	r.SplitHorizontal()
+	r.splitHorizontal()
 	return r
 }
 
 func ComplexSplit() *PaneNode {
 	r := &PaneNode{ Ratio: 1}
-	r.SplitVertical()
-	r.Second.SplitHorizontal().SplitVertical()
+	r.splitVertical()
+	r.Second.splitHorizontal().splitVertical()
 	return r
 }
 

@@ -20,9 +20,13 @@ type PaneNode struct {
 	id        int
 	Direction SplitDirection
 	Parent    *PaneNode
-	First *PaneNode // First is left or top (depending on direction)
-	Second *PaneNode // Second is right or bottom (depending on direction)
-	Ratio  float64 // ratio of first to second
+	First     *PaneNode // First is left or top (depending on direction)
+	Second    *PaneNode // Second is right or bottom (depending on direction)
+	Ratio     float64   // ratio of first to second
+}
+
+func newRootPaneNode() *PaneNode {
+	return &PaneNode{Ratio: 1}
 }
 
 const (
@@ -144,7 +148,7 @@ func secondPaneId(parentId int) int {
 }
 
 // return the new split node
-func (p *PaneNode) SplitVertical() *PaneNode {
+func (p *PaneNode) splitVertical() *PaneNode {
 	p.Direction = Vertical
 	p.Ratio = 0.5
 	p.First = &PaneNode{id: firstPaneId(p.id), Parent: p}
@@ -152,7 +156,7 @@ func (p *PaneNode) SplitVertical() *PaneNode {
 	return p.First
 }
 
-func (p *PaneNode) SplitHorizontal() *PaneNode {
+func (p *PaneNode) splitHorizontal() *PaneNode {
 	p.Direction = Horizontal
 	p.Ratio = 0.5
 	p.First = &PaneNode{id: firstPaneId(p.id), Parent: p}
