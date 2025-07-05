@@ -20,10 +20,8 @@ type PaneNode struct {
 	id        int
 	Direction SplitDirection
 	Parent    *PaneNode
-	// First is left or top
-	First *PaneNode
-	// Second is right or bottom
-	Second *PaneNode
+	First *PaneNode // First is left or top (depending on direction)
+	Second *PaneNode // Second is right or bottom (depending on direction)
 	Ratio  float64 // ratio of first to second
 }
 
@@ -56,6 +54,7 @@ func (p *PaneNode) DrawSimple(spaces int) string {
 	return idStr + p.First.DrawSimple(spaces+1) + p.Second.DrawSimple(spaces+1)
 }
 
+// solely for debugging
 func (p *PaneNode) Draw(s [][]string, startX int, startY int, rows int, cols int) [][]string {
 	switch p.Direction {
 	case Vertical:
@@ -176,7 +175,6 @@ func (p *PaneNode) leftMostLeaf() *PaneNode {
 }
 
 // return the node to the left of p that is a leaf
-// and set it to active
 func (p *PaneNode) Left() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -193,7 +191,6 @@ func (p *PaneNode) Left() *PaneNode {
 }
 
 // return the node to the right of p that is a leaf
-// and set it to active
 func (p *PaneNode) Right() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -224,7 +221,6 @@ func (p *PaneNode) topMostLeaf() *PaneNode {
 }
 
 // return the node above p that is a leaf
-// and set it to active
 func (p *PaneNode) Up() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -241,7 +237,6 @@ func (p *PaneNode) Up() *PaneNode {
 }
 
 // return the node below p that is a leaf
-// and set it to active
 func (p *PaneNode) Down() *PaneNode {
 	if p.Parent == nil {
 		return p
@@ -258,7 +253,10 @@ func (p *PaneNode) Down() *PaneNode {
 }
 
 // return new current and (optionally) a new root
+//
+// if the new root is NOT nil, then whereever root is being maintained needs to be updated
 func (p *PaneNode) Delete() (*PaneNode, *PaneNode) {
+	// we must always have 1 node
 	if p.Parent == nil {
 		return p, p
 	}
