@@ -4,6 +4,10 @@ import "unicode"
 
 type Key rune
 
+func Collapse(keys []Key) string {
+	return string(keys)
+}
+
 var specialKeys map[Key]string = map[Key]string{
 	F1:          "F1",
 	F2:          "F2",
