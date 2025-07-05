@@ -25,7 +25,6 @@ type PaneNode struct {
 	// Second is right or bottom
 	Second *PaneNode
 	Ratio  float64 // ratio of first to second
-	Active bool
 }
 
 const (
@@ -50,9 +49,6 @@ func (p *PaneNode) isSecond() bool {
 // solely for debugging
 func (p *PaneNode) DrawSimple(spaces int) string {
 	idStr := strings.Repeat(" ", spaces) + strconv.Itoa(p.id)
-	if p.Active {
-		idStr += "(A)"
-	}
 	idStr += "\n"
 	if p.IsLeaf() {
 		return idStr
@@ -187,16 +183,12 @@ func (p *PaneNode) Left() *PaneNode {
 	}
 	if p.Parent.Direction == Vertical && p == p.Parent.Second {
 		q := p.Parent.First.rightMostLeaf()
-		p.Active = false
-		q.Active = true
 		return q
 	}
 	q := p.Parent.Left()
 	if q == p.Parent {
 		return p
 	}
-	p.Active = false
-	q.Active = true
 	return q
 }
 
@@ -208,16 +200,12 @@ func (p *PaneNode) Right() *PaneNode {
 	}
 	if p.Parent.Direction == Vertical && p == p.Parent.First {
 		q := p.Parent.Second.leftMostLeaf()
-		p.Active = false
-		q.Active = true
 		return q
 	}
 	q := p.Parent.Right()
 	if q == p.Parent {
 		return p
 	}
-	p.Active = false
-	q.Active = true
 	return q
 }
 
@@ -243,16 +231,12 @@ func (p *PaneNode) Up() *PaneNode {
 	}
 	if p.Parent.Direction == Horizontal && p == p.Parent.Second {
 		q := p.Parent.First.bottomMostLeaf()
-		p.Active = false
-		q.Active = true
 		return q
 	}
 	q := p.Parent.Up()
 	if q == p.Parent {
 		return p
 	}
-	p.Active = false
-	q.Active = true
 	return q
 }
 
@@ -264,69 +248,61 @@ func (p *PaneNode) Down() *PaneNode {
 	}
 	if p.Parent.Direction == Horizontal && p == p.Parent.First {
 		q := p.Parent.Second.topMostLeaf()
-		p.Active = false
-		q.Active = true
 		return q
 	}
 	q := p.Parent.Down()
 	if q == p.Parent {
 		return p
 	}
-	p.Active = false
-	q.Active = true
 	return p
 }
 
-// move n1 to n2's position and drop n2
-//
-// assume n2 is parent of n1 and has a parent of its own
-func swapAndDrop(n1 *PaneNode, n2 *PaneNode) *PaneNode {
-	gp := n2.Parent
-	n1.Parent = gp
-	n1.Active = true
-	switch {
-	case n2.isFirst():
-		gp.First = n1
-	case n2.isSecond():
-		gp.Second = n1
-	default:
-		panic("unexpected state - swap and drop")
-	}
-	return n1
-}
-
-func (p *PaneNode) Delete() *PaneNode {
-	p.Active = false
-
-	// we should always have 1 node
+// return new current and (optionally) a new root
+func (p *PaneNode) Delete() (*PaneNode, *PaneNode) {
 	if p.Parent == nil {
-		return p
-	}
-	// the parent is root, so alternate becomes root
-	// TODO: this case doesn't seem to be working right
-	if p.Parent.Parent == nil {
-		var promotee *PaneNode
-		if p.isFirst() {
-			promotee = p.Parent.Second
-			p.Parent.First = nil
-		} else if p.isSecond() {
-			promotee = p.Parent.First
-			p.Parent.Second = nil
-		} else {
-			panic("unexpected state")
-		}
-		promotee.Parent = nil
-		promotee.Active = true
-		return promotee
+		return p, p
 	}
 
-	// now we are guaranteed parent and grandparent nodes
-	switch {
-	case p.isFirst():
-		return swapAndDrop(p.Parent.Second, p.Parent)
-	case p.isSecond():
-		return swapAndDrop(p.Parent.First, p.Parent)
-	default:
-		panic("unexpected state")
+	if p.isFirst() {
+		sibling := p.Parent.Second
+		gp := p.Parent.Parent
+
+		if gp == nil {
+			p.Parent = nil
+			sibling.Parent = nil
+			return sibling, sibling
+		}
+
+		switch {
+		case p.Parent.isFirst():
+			gp.First = sibling
+		case p.Parent.isSecond():
+			gp.Second = sibling
+		default:
+			panic("delete")
+		}
+		sibling.Parent = gp
+		return sibling, nil
 	}
+
+	if p.isSecond() {
+		sibling := p.Parent.First
+		gp := p.Parent.Parent
+		if gp == nil {
+			sibling.Parent = nil
+			p.Parent = sibling
+			return sibling, sibling
+		}
+		switch {
+		case p.Parent.isFirst():
+			gp.First = sibling
+		case p.Parent.isSecond():
+			gp.Second = sibling
+		default:
+			panic("delete")
+		}
+		sibling.Parent = gp
+		return sibling, nil
+	}
+	panic("unexpected state - delete")
 }
