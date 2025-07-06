@@ -25,7 +25,7 @@ type PaneNode struct {
 	First     *PaneNode // First is left or top (depending on direction)
 	Second    *PaneNode // Second is right or bottom (depending on direction)
 	Ratio     float64   // ratio of first to second
-	Bn		  *buffer.BufferNode
+	Bn        *buffer.BufferNode
 }
 
 func newRootPaneNode() *PaneNode {
@@ -154,16 +154,16 @@ func secondPaneId(parentId int) int {
 func (p *PaneNode) splitVertical() *PaneNode {
 	p.Direction = Vertical
 	p.Ratio = 0.5
-	p.First = &PaneNode{id: firstPaneId(p.id), Parent: p}
-	p.Second = &PaneNode{id: secondPaneId(p.id), Parent: p}
+	p.First = &PaneNode{id: firstPaneId(p.id), Parent: p, Bn: p.Bn}
+	p.Second = &PaneNode{id: secondPaneId(p.id), Parent: p, Bn: p.Bn}
 	return p.First
 }
 
 func (p *PaneNode) splitHorizontal() *PaneNode {
 	p.Direction = Horizontal
 	p.Ratio = 0.5
-	p.First = &PaneNode{id: firstPaneId(p.id), Parent: p}
-	p.Second = &PaneNode{id: secondPaneId(p.id), Parent: p}
+	p.First = &PaneNode{id: firstPaneId(p.id), Parent: p, Bn: p.Bn}
+	p.Second = &PaneNode{id: secondPaneId(p.id), Parent: p, Bn: p.Bn}
 	return p.First
 }
 
