@@ -3,6 +3,8 @@ package panemanager
 import (
 	"strconv"
 	"strings"
+
+	"github.com/jcocozza/jte/internal/buffer"
 )
 
 type SplitDirection int
@@ -23,6 +25,7 @@ type PaneNode struct {
 	First     *PaneNode // First is left or top (depending on direction)
 	Second    *PaneNode // Second is right or bottom (depending on direction)
 	Ratio     float64   // ratio of first to second
+	Bn		  *buffer.BufferNode
 }
 
 func newRootPaneNode() *PaneNode {

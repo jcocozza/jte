@@ -4,59 +4,60 @@ import (
 	"log/slog"
 )
 
-// drawn from the root
+// drawn from the Root
 //
-// curr is a pointer keeping track of the current pane
+// Curr is a pointer keeping track of the Current pane
 type PaneManager struct {
 	logger *slog.Logger
-	root   *PaneNode
-	curr   *PaneNode
+	Root   *PaneNode
+	Curr   *PaneNode
 }
 
+// initialize pane manager with 1 Root pane
 func NewPaneManager(l *slog.Logger) *PaneManager {
 	r := newRootPaneNode()
 	return &PaneManager{
 		logger: l.WithGroup("pane-manager"),
-		root:   r,
-		curr:   r,
+		Root:   r,
+		Curr:   r,
 	}
 }
 
 func (p *PaneManager) Vsplit() {
 	p.logger.Debug("v split")
-	p.curr = p.curr.splitVertical()
+	p.Curr = p.Curr.splitVertical()
 }
 
 func (p *PaneManager) Hsplit() {
 	p.logger.Debug("h split")
-	p.curr = p.curr.splitHorizontal()
+	p.Curr = p.Curr.splitHorizontal()
 }
 
 func (p *PaneManager) Left() {
 	p.logger.Debug("move left")
-	p.curr = p.curr.Left()
+	p.Curr = p.Curr.Left()
 }
 
 func (p *PaneManager) Right() {
 	p.logger.Debug("move right")
-	p.curr = p.curr.Right()
+	p.Curr = p.Curr.Right()
 }
 
 func (p *PaneManager) Up() {
 	p.logger.Debug("move up")
-	p.curr = p.curr.Up()
+	p.Curr = p.Curr.Up()
 }
 
 func (p *PaneManager) Down() {
 	p.logger.Debug("move down")
-	p.curr = p.curr.Down()
+	p.Curr = p.Curr.Down()
 }
 
 func (p *PaneManager) Delete() {
 	p.logger.Debug("delete pane")
-	curr, root := p.curr.Delete()
-	if root != nil {
-		p.root = root
+	Curr, Root := p.Curr.Delete()
+	if Root != nil {
+		p.Root = Root
 	}
-	p.curr = curr
+	p.Curr = Curr
 }
