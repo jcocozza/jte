@@ -30,18 +30,18 @@ func NewTextPaneRenderer(l *slog.Logger) *TextBufferRenderer {
 	}
 }
 
-func (r *TextBufferRenderer) scroll(panerows int, panecols int, buf *buffer.Buffer) {
-	if buf.Y() < r.rowoffset {
-		r.rowoffset = buf.Y()
+func (r *TextBufferRenderer) scroll(panerows int, panecols int, x int, y int) {
+	if y < r.rowoffset {
+		r.rowoffset = y
 	}
-	if buf.Y() >= r.rowoffset+panerows {
-		r.rowoffset = buf.Y() - panerows + 1
+	if y >= r.rowoffset+panerows {
+		r.rowoffset = y - panerows + 1
 	}
-	if buf.X() < r.coloffset {
-		r.coloffset = buf.X()
+	if x < r.coloffset {
+		r.coloffset = x
 	}
-	if buf.X() >= r.coloffset+panecols {
-		r.coloffset = buf.X() - panecols + 1
+	if x >= r.coloffset+panecols {
+		r.coloffset = x - panecols + 1
 	}
 }
 
@@ -63,6 +63,7 @@ func renderRow(row buffer.BufRow) []byte {
 }
 
 func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]byte {
+	r.scroll(rows, cols, buf.X(), buf.Y())
 	paneBuf := make([][]byte, rows)
 	for i := 0; i < rows-1; i++ {
 		bufrownum := i + r.rowoffset
@@ -70,7 +71,7 @@ func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]
 			paneBuf[bufrownum] = []byte("~")
 			continue
 		}
-		paneBuf[i] = renderRow(buf.Rows[bufrownum])
+		paneBuf[i] = renderRow(buf.Rows[bufrownum][r.coloffset:])
 	}
 	// render status
 	// paneBuf[rows-1] = renderStatus(cols, psd, buf)

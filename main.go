@@ -19,10 +19,14 @@ func main() {
 	e := editor.NewEditor(l)
 
 	err := r.Setup()
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
-	buf, err := buffer.ReadFileIntoBuffer("/Users/josephcocozza/Repositories/text-editor/jte/README.md", l)
-	if err != nil {panic(err)}
+	buf, err := buffer.ReadFileIntoBuffer("/home/water/projects/jte/jte.log", l)
+	if err != nil {
+		panic(err)
+	}
 
 	e.BM.SetCurrent(e.BM.Add(buf))
 	e.PM.Root.Bn = e.BM.Current
@@ -31,7 +35,9 @@ func main() {
 	// event loop
 	for {
 		key, err := kb.GetKeypress()
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 
 		var n *action.BindingNode
 		state := e.M.Current()
@@ -45,7 +51,9 @@ func main() {
 		}
 
 		actions, done := ap.AcceptKey(key, state, n)
-		if !done { continue }
+		if !done {
+			continue
+		}
 
 		for _, a := range actions {
 			err := a.Apply(e)

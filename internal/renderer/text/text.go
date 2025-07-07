@@ -94,7 +94,7 @@ func (r *TextRenderer) drawCursorOnBuffer(offsetX int, offsetY int, buf *buffer.
 			actualCol++
 		}
 	}
-	r.drawCursor(offsetY+y, offsetX+actualCol+1)
+	r.drawCursor(offsetY+y - r.br.rowoffset, offsetX+actualCol+1 - r.br.coloffset)
 }
 
 func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, screen [][]byte) {
