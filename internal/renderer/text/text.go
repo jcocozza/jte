@@ -79,22 +79,21 @@ func (r *TextRenderer) Exit(msg string) {
 }
 
 func (r *TextRenderer) drawCursor(x int, y int) {
-	s := fmt.Sprintf("\x1b[%d;%dH", x, y) // set cursor position
+	s := fmt.Sprintf("\x1b[%d;%dH", y, x) // set cursor position
 	r.abuf.Append([]byte(s))
 	r.abuf.Append([]byte("\x1b[?25h")) // show cursor
 }
 
-func (r *TextRenderer) drawCursorOnBuffer(offsetX int, offsetY int, buf *buffer.Buffer) {
-	y := (buf.Y() - r.rowoffset) + 1
+func (r *TextRenderer) renderCursor(x int, y int, currRow buffer.BufRow) {
 	actualCol := 0
-	for i := 0; i < buf.X(); i++ {
-		if buf.Rows[buf.Y()][i] == '\t' {
+	for _, b := range currRow {
+		if b == '\t' {
 			actualCol += TAB_STOP - (actualCol % TAB_STOP)
 		} else {
 			actualCol++
 		}
 	}
-	r.drawCursor(offsetY+y - r.br.rowoffset, offsetX+actualCol+1 - r.br.coloffset)
+	r.drawCursor(x-r.br.coloffset, y-r.br.rowoffset+1)
 }
 
 func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, screen [][]byte) {
@@ -155,7 +154,7 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 		r.abuf.Append(row)
 		//r.abuf.Append([]byte("\x1b[K"))
 	}
-	r.drawCursorOnBuffer(0, 0, e.PM.Curr.Bn.Buf)
+	r.renderCursor(e.BM.Current.Buf.X(), e.BM.Current.Buf.Y(), e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")
 }
