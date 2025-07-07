@@ -24,3 +24,14 @@ func NewEditor(l *slog.Logger) *Editor {
 		CW: commmand.NewCommandWindow(l),
 	}
 }
+
+// useful bits about the editor
+type EditorStatus struct {
+	Mode mode.Mode
+}
+
+func (e *Editor) Status() *EditorStatus {
+	return &EditorStatus{
+		Mode: e.M.Current(),
+	}
+}

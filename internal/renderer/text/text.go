@@ -116,7 +116,7 @@ func (r *TextRenderer) renderCursor(x int, y int, currRow buffer.BufRow) {
 	}
 }
 
-func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, screen [][]byte) {
+func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorStatus, rect LayoutRect, screen [][]byte) {
 	if pn == nil {
 		return
 	}
@@ -124,28 +124,30 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, scr
 	case panemanager.Horizontal:
 		firstH := int(float64(rect.Rows) * pn.Ratio)
 		secondH := rect.Rows - firstH
-		r.RenderPane(pn.First, LayoutRect{rect.X, rect.Y, firstH, rect.Cols}, screen)
-		r.RenderPane(pn.Second, LayoutRect{rect.X, rect.Y + firstH, secondH, rect.Cols}, screen)
+		r.RenderPane(pn.First, es, LayoutRect{rect.X, rect.Y, firstH, rect.Cols}, screen)
+		r.RenderPane(pn.Second, es, LayoutRect{rect.X, rect.Y + firstH, secondH, rect.Cols}, screen)
 		return
 	case panemanager.Vertical:
 		firstW := int(float64(rect.Cols) * pn.Ratio)
 		secondW := rect.Cols - firstW
-		r.RenderPane(pn.First, LayoutRect{rect.X, rect.Y, rect.Rows, firstW}, screen)
+		r.RenderPane(pn.First, es, LayoutRect{rect.X, rect.Y, rect.Rows, firstW}, screen)
 
 		for i := 0; i < rect.Rows-1; i++ {
 			screen[i][rect.X+firstW] = '|'
 			screen[i][rect.X+firstW+1] = ' '
 		}
 
-		r.RenderPane(pn.Second, LayoutRect{rect.X + firstW + 2, rect.Y, rect.Rows, secondW}, screen)
+		r.RenderPane(pn.Second, es, LayoutRect{rect.X + firstW + 2, rect.Y, rect.Rows, secondW}, screen)
 		return
 	case panemanager.None:
 		rendered := r.br.render(rect.Rows, rect.Cols, pn.Bn.Buf)
 		for i := 0; i < len(rendered) && i+rect.Y < len(screen); i++ {
 			copy(screen[i+rect.Y][rect.X:], rendered[i])
 		}
-		//status := []byte(fmt.Sprintf("floob status"))
-		status := fmt.Appendf([]byte{}, "[%s]", pn.Bn.Buf.Name)
+		/*
+			THE STATUS BAR IS DRAWN HERE
+		*/
+		status := fmt.Appendf([]byte{}, "[%s] %s (%s) ln: %d/%d", es.Mode.String(), pn.Bn.Buf.Name, pn.Bn.Buf.FileType.String(), pn.Bn.Buf.Y(), len(pn.Bn.Buf.Rows))
 		copy(screen[len(rendered)-1+rect.Y][rect.X:], status)
 		return
 	default:
@@ -153,7 +155,7 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, scr
 	}
 }
 
-func (r *TextRenderer) RenderLayout(root *panemanager.PaneNode, screenrows int, screencols int) [][]byte {
+func (r *TextRenderer) RenderLayout(root *panemanager.PaneNode, es *editor.EditorStatus, screenrows int, screencols int) [][]byte {
 	screen := make([][]byte, screenrows)
 	for i := range screen {
 		screen[i] = make([]byte, screencols)
@@ -161,7 +163,7 @@ func (r *TextRenderer) RenderLayout(root *panemanager.PaneNode, screenrows int, 
 			screen[i][j] = ' '
 		}
 	}
-	r.RenderPane(root, LayoutRect{X: 0, Y: 0, Rows: screenrows, Cols: screencols}, screen)
+	r.RenderPane(root, es, LayoutRect{X: 0, Y: 0, Rows: screenrows, Cols: screencols}, screen)
 	return screen
 }
 
@@ -180,7 +182,7 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 		rows -= 1
 	}
 
-	content := r.RenderLayout(e.PM.Root, rows, cols)
+	content := r.RenderLayout(e.PM.Root, e.Status(), rows, cols)
 	for _, row := range content {
 		r.abuf.Append(row)
 		//r.abuf.Append([]byte("\x1b[K"))

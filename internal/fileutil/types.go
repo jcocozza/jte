@@ -17,7 +17,6 @@ const (
 	IDENTIFIER
 	KEYWORD
 )
-
 // colors
 const (
 	Reset      = "\x1b[0m"
@@ -63,6 +62,10 @@ func SyntaxTypeToColor(st SyntaxType) string {
 // 2. add to the FileTypes list
 // 3. add to the Registry
 type FileType int
+
+func (f *FileType) String() string {
+	return FileTypes[*f]
+}
 
 func DetermineFileType(path string) FileType {
 	ext := filepath.Ext(path)

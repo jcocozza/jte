@@ -7,6 +7,10 @@ import (
 
 type Mode int
 
+func (m *Mode) String() string {
+	return modes[*m]
+}
+
 const (
 	Normal Mode = iota
 	Insert
