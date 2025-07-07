@@ -57,14 +57,40 @@ func (ap *ActionParser) parseNormal(n *BindingNode) ([]Action, bool) {
 	return  nil, true // since nothing matches, we just want to flush right away
 }
 
+// in insert mode:
+// 1. check for a valid sequence (very few)
+// 2. if valid, generate the action/changed based on that
+// 3. otherwise generate an insert action
+//
 // the bool will be true if we have completed parsing
-func (ap *ActionParser) parseInsert() ([]Action, bool) {
-	return nil, false
+func (ap *ActionParser) parseInsert(n *BindingNode) ([]Action, bool) {
+	possiblyValid := n.HasPrefix(ap.currentKeys)
+	if possiblyValid {
+		actionNode, err :=  n.Lookup(ap.currentKeys)
+		if err != nil {
+			return nil, false
+		}
+		return actionNode.Actions, true
+	}
+	return []Action{Insert{rune(ap.currentKeys[0])}}, true
 }
 
+// in command mode:
+// 1. check for a valid sequence (e.g. <enter>, <esc>)
+// 2. if valid, generate the action based on that
+// 3. otherwise, keep adding characters to the command prompt
+//
 // the bool will be true if we have completed parsing
-func (ap *ActionParser) parseCommand() ([]Action, bool) {
-	return nil, false
+func (ap *ActionParser) parseCommand(n *BindingNode) ([]Action, bool) {
+	possiblyValid := n.HasPrefix(ap.currentKeys)
+	if possiblyValid {
+		actionNode, err :=  n.Lookup(ap.currentKeys)
+		if err != nil {
+			return nil, false
+		}
+		return actionNode.Actions, true
+	}
+	return []Action{CommandInsert{ap.currentKeys[0]}}, true
 }
 
 // this is run one time per event loop
@@ -81,10 +107,10 @@ func (ap *ActionParser) AcceptKey(key keyboard.Key, m mode.Mode, b *BindingNode)
 		actions, done = ap.parseNormal(NormalBindings)
 	case mode.Insert:
 		ap.appendKey(key)
-		actions, done = ap.parseInsert()
+		actions, done = ap.parseInsert(InsertBindings)
 	case mode.Command:
 		ap.appendKey(key)
-		actions, done = ap.parseCommand()
+		actions, done = ap.parseCommand(CommandBindings)
 	}
 	if done {
 		ap.flush()

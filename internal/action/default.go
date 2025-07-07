@@ -11,6 +11,7 @@ var NormalBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
 		'i':            {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}}},
+		':': 			{children: nil, Actions: []Action{CommandClearOutput{},SwitchMode{m: mode.Command}}},
 		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
 
 		//'o': {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}, NewLineBelow{}}},
@@ -29,5 +30,30 @@ var NormalBindings = &BindingNode{
 		'j': {children: nil, Actions: []Action{CursorDown{}}},
 		'h': {children: nil, Actions: []Action{CursorLeft{}}},
 		'l': {children: nil, Actions: []Action{CursorRight{}}},
+		keyboard.ARROW_UP: {children: nil, Actions: []Action{CursorUp{}}},
+		keyboard.ARROW_DOWN: {children: nil, Actions: []Action{CursorDown{}}},
+		keyboard.ARROW_LEFT: {children: nil, Actions: []Action{CursorLeft{}}},
+		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
+	},
+}
+
+var InsertBindings = &BindingNode{
+	Actions: nil,
+	children: map[keyboard.Key]*BindingNode{
+		keyboard.ESC: {children: nil, Actions: []Action{SwitchMode{m: mode.Normal}}},
+		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
+		keyboard.ARROW_UP: {children: nil, Actions: []Action{CursorUp{}}},
+		keyboard.ARROW_DOWN: {children: nil, Actions: []Action{CursorDown{}}},
+		keyboard.ARROW_LEFT: {children: nil, Actions: []Action{CursorLeft{}}},
+		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
+	},
+}
+
+var CommandBindings = &BindingNode{
+	Actions: nil,
+	children: map[keyboard.Key]*BindingNode{
+		keyboard.ESC: {children: nil, Actions: []Action{CommandClearOutput{}, CommandClearInput{}, SwitchMode{m: mode.Normal}}},
+		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
+		keyboard.ENTER: {children: nil, Actions: []Action{CommandRun{}}},
 	},
 }

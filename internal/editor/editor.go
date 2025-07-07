@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/jcocozza/jte/internal/buffer"
+	"github.com/jcocozza/jte/internal/commmand"
 	"github.com/jcocozza/jte/internal/mode"
 	"github.com/jcocozza/jte/internal/panemanager"
 )
@@ -12,6 +13,7 @@ type Editor struct {
 	M *mode.ModeMachine
 	BM *buffer.BufferManager
 	PM *panemanager.PaneManager
+	CW *commmand.CommandWindow
 }
 
 func NewEditor(l *slog.Logger) *Editor {
@@ -19,5 +21,6 @@ func NewEditor(l *slog.Logger) *Editor {
 		M: mode.NewModeMachine(l),
 		BM: buffer.NewBufferManager(l),
 		PM: panemanager.NewPaneManager(l),
+		CW: commmand.NewCommandWindow(l),
 	}
 }

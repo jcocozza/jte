@@ -7,6 +7,7 @@ import (
 
 	"github.com/jcocozza/jte/internal/buffer"
 	"github.com/jcocozza/jte/internal/editor"
+	"github.com/jcocozza/jte/internal/mode"
 	"github.com/jcocozza/jte/internal/panemanager"
 	"github.com/jcocozza/jte/internal/renderer/term"
 )
@@ -131,7 +132,7 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, scr
 		secondW := rect.Cols - firstW
 		r.RenderPane(pn.First, LayoutRect{rect.X, rect.Y, rect.Rows, firstW}, screen)
 
-		for i := 0; i < rect.Rows; i++ {
+		for i := 0; i < rect.Rows-1; i++ {
 			screen[i][rect.X+firstW] = '|'
 			screen[i][rect.X+firstW+1] = ' '
 		}
@@ -143,6 +144,9 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, scr
 		for i := 0; i < len(rendered) && i+rect.Y < len(screen); i++ {
 			copy(screen[i+rect.Y][rect.X:], rendered[i])
 		}
+		//status := []byte(fmt.Sprintf("floob status"))
+		status := fmt.Appendf([]byte{}, "[%s]", pn.Bn.Buf.Name)
+		copy(screen[len(rendered)-1+rect.Y][rect.X:], status)
 		return
 	default:
 		panic("invalid render pane state")
@@ -168,11 +172,33 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	r.abuf.Append([]byte("\x1b[H"))    // cursor to home
 
 	rows, cols, _ := r.rw.WindowSize()
+	//rows -= len(e.CW.Output) //+ 1 // leave room for command line and possible output
+
+	if len(e.CW.Output) > 0 {
+		rows -= len(e.CW.Output)
+	} else {
+		rows -= 1
+	}
+
 	content := r.RenderLayout(e.PM.Root, rows, cols)
 	for _, row := range content {
 		r.abuf.Append(row)
 		//r.abuf.Append([]byte("\x1b[K"))
 	}
+
+	// render command window output
+	if e.CW.ShowOutput {
+		for i, o := range e.CW.Output {
+			r.abuf.Append([]byte(o))
+			if i < len(e.CW.Output)-1 {
+				r.abuf.Append([]byte("\n"))
+			}
+		}
+	} else if e.M.Current() == mode.Command {
+		r.abuf.Append([]byte("> "))
+		r.abuf.Append([]byte(string(e.CW.Input)))
+	}
+
 	r.renderCursor(e.BM.Current.Buf.X(), e.BM.Current.Buf.Y(), e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")

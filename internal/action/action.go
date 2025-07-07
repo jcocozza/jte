@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jcocozza/jte/internal/editor"
+	"github.com/jcocozza/jte/internal/keyboard"
 	"github.com/jcocozza/jte/internal/mode"
 )
 
@@ -34,6 +35,8 @@ func (a SwitchMode) Apply(e *editor.Editor) error {
 	case mode.Insert:
 	case mode.Normal:
 	case mode.Command:
+		e.CW.Unlock()
+		e.CW.Hide()
 	default:
 		panic("nothing to do there")
 	}
@@ -82,5 +85,52 @@ type SplitClose struct{}
 func (a SplitClose) String() string { return "close split" }
 func (a SplitClose) Apply(e *editor.Editor) error {
 	e.PM.Delete()
+	return nil
+}
+
+// command
+type CommandRun struct{}
+
+func (a CommandRun) String() string { return "run" }
+func (a CommandRun) Apply(e *editor.Editor) error {
+	if e.CW.Locked() {
+		return nil
+	}
+	_, err := e.CW.GetCommand()
+	if err != nil {
+		e.M.SetMode(mode.Normal)
+	}
+	return nil
+}
+
+type CommandInsert struct{ c keyboard.Key }
+
+func (a CommandInsert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }
+func (a CommandInsert) Apply(e *editor.Editor) error {
+	e.CW.AddInput(a.c)
+	return nil
+}
+
+type CommandClearOutput struct{}
+
+func (a CommandClearOutput) String() string { return "clear output" }
+func (a CommandClearOutput) Apply(e *editor.Editor) error {
+	e.CW.ClearOutput()
+	return nil
+}
+
+type CommandClearInput struct{}
+func (a CommandClearInput) String() string { return "clear Input" }
+func (a CommandClearInput) Apply(e *editor.Editor) error {
+	e.CW.ClearInput()
+	return nil
+}
+
+// buffer editing
+type Insert struct{ c rune }
+
+func (a Insert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }
+func (a Insert) Apply(e *editor.Editor) error {
+	// TODO
 	return nil
 }
