@@ -85,15 +85,34 @@ func (r *TextRenderer) drawCursor(x int, y int) {
 }
 
 func (r *TextRenderer) renderCursor(x int, y int, currRow buffer.BufRow) {
-	actualCol := 0
-	for _, b := range currRow {
-		if b == '\t' {
-			actualCol += TAB_STOP - (actualCol % TAB_STOP)
-		} else {
-			actualCol++
-		}
+	// unsure if i need this - i think i might later
+	// for now,  just leaving it commented out
+	//actualCol := 0
+	//for _, b := range currRow {
+	//	if b == '\t' {
+	//		actualCol += TAB_STOP - (actualCol % TAB_STOP)
+	//	} else {
+	//		actualCol++
+	//	}
+	//}
+
+	rx := x - r.br.coloffset
+	ry := y - r.br.rowoffset + 1
+	r.logger.Debug("render cursor",
+		slog.Int("rendered x", rx),
+		slog.Int("rendered y", ry),
+		slog.Int("real x", x),
+		slog.Int("real y", y),
+		slog.Int("col offset", r.br.coloffset),
+		slog.Int("row offset", r.br.rowoffset),
+	)
+
+	// this keeps the cursor from going into the status/message bar
+	if y >= ry-1 {
+		r.drawCursor(rx, ry-1)
+	} else {
+		r.drawCursor(rx, ry)
 	}
-	r.drawCursor(x-r.br.coloffset, y-r.br.rowoffset+1)
 }
 
 func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, rect LayoutRect, screen [][]byte) {
