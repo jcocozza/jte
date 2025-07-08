@@ -19,17 +19,18 @@ func runeWidth(r rune) int {
 }
 
 type TextBufferRenderer struct {
+	buf *buffer.Buffer
 	rowoffset int
 	coloffset int
-
 	gutterShift int
 
 	logger *slog.Logger
 }
 
-func NewTextPaneRenderer(l *slog.Logger) *TextBufferRenderer {
+func NewTextPaneRenderer(l *slog.Logger, buf *buffer.Buffer) *TextBufferRenderer {
 	return &TextBufferRenderer{
 		logger: l.WithGroup("pane-renderer"),
+		buf: buf,
 	}
 }
 
@@ -74,6 +75,11 @@ func renderRow(row buffer.BufRow) []byte {
 	return expanded
 }
 
+// +2 for a space on either side
+func maxGutterWidth(numRows int) int {
+	return len(strconv.Itoa(numRows)) + 2
+}
+
 func renderGutter(num int, maxWidth int) []byte {
 	b := []byte(strconv.Itoa(num))
 	repeat := maxWidth - len(b) - 1
@@ -85,27 +91,27 @@ func renderGutter(num int, maxWidth int) []byte {
 	return gutter
 }
 
-func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]byte {
-	r.scroll(rows, cols, buf.X(), buf.Y())
+func (r *TextBufferRenderer) render(rows int, cols int) [][]byte {
+	r.scroll(rows, cols, r.buf.X(), r.buf.Y())
 	paneBuf := make([][]byte, rows)
 	for i := 0; i < rows-1; i++ {
 		bufrownum := i + r.rowoffset
-		if bufrownum >= len(buf.Rows) {
+		if bufrownum >= len(r.buf.Rows) {
 			paneBuf[bufrownum] = []byte("~")
 			continue
 		}
 		//r.logger.Debug("rendering row", slog.Int("bufrownum", bufrownum), slog.Int("coloffset", r.coloffset))
 
-		maxGutterWidth := len(strconv.Itoa(len(buf.Rows)))
+		maxGutterWidth := maxGutterWidth(len(r.buf.Rows))
 		r.gutterShift = maxGutterWidth
-		if bufrownum == buf.Y() {
-			paneBuf[i] = append(renderGutter(buf.Y(), maxGutterWidth), renderRow(buf.Rows[bufrownum][r.coloffset:])...)
+		if bufrownum == r.buf.Y() {
+			paneBuf[i] = append(renderGutter(r.buf.Y(), maxGutterWidth), renderRow(r.buf.Rows[bufrownum][r.coloffset:])...)
 		} else {
-			relNum := i + r.rowoffset - buf.Y()
+			relNum := i + r.rowoffset - r.buf.Y()
 			if relNum < 0 {
 				relNum = relNum * -1
 			}
-			paneBuf[i] = append(renderGutter(relNum, maxGutterWidth), renderRow(buf.Rows[bufrownum][r.coloffset:])...)
+			paneBuf[i] = append(renderGutter(relNum, maxGutterWidth), renderRow(r.buf.Rows[bufrownum][r.coloffset:])...)
 		}
 	}
 	return paneBuf

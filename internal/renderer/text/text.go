@@ -28,8 +28,6 @@ type TextRenderer struct {
 	currColoffset int
 	currRect      LayoutRect
 
-	br *TextBufferRenderer
-
 	// the content that is actually rendered to the screen
 	abuf abuf
 
@@ -39,7 +37,6 @@ type TextRenderer struct {
 func NewTextRenderer(l *slog.Logger) *TextRenderer {
 	return &TextRenderer{
 		abuf:   abuf{},
-		br:     NewTextPaneRenderer(l),
 		logger: l.WithGroup("renderer"),
 	}
 }
@@ -150,8 +147,9 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 		r.RenderPane(pn.Second, es, LayoutRect{rect.X + firstW + 2, rect.Y, rect.Rows, secondW}, screen)
 		return
 	case panemanager.None:
+		renderer := NewTextPaneRenderer(r.logger, pn.Bn.Buf)
 		r.logger.Debug("rect", slog.Any("rect", rect))
-		rendered := r.br.render(rect.Rows, rect.Cols, pn.Bn.Buf)
+		rendered := renderer.render(rect.Rows, rect.Cols)
 		for i := 0; i < len(rendered) && i+rect.Y < len(screen); i++ {
 			copy(screen[i+rect.Y][rect.X:], rendered[i])
 		}
@@ -162,8 +160,8 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 		if es.CurrentPane == pn {
 			active = "(a)"
 			r.currRect = rect
-			r.currColoffset = r.br.coloffset
-			r.currRowoffset = r.br.rowoffset
+			r.currColoffset = renderer.coloffset
+			r.currRowoffset = renderer.rowoffset
 		} else {
 			active = ""
 		}
@@ -226,7 +224,9 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	r.logger.Debug("curr rect", slog.Any("rect", r.currRect))
 
 	//r.logger.Debug("current buf offsets", slog.Int("col offset", r.coloffset), slog.Int("row offset", r.rowoffset))
-	r.renderCursor(x+r.br.gutterShift, y, e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
+	gutterLen := maxGutterWidth(len(e.BM.Current.Buf.Rows))
+	r.logger.Debug("gutter length", slog.Int("len", gutterLen))
+	r.renderCursor(x+gutterLen, y, e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")
 }
