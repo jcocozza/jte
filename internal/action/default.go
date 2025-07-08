@@ -5,13 +5,15 @@ import (
 	"github.com/jcocozza/jte/internal/mode"
 )
 
+var leader keyboard.Key = keyboard.CtrlW
+
 // this contains the default key bindings
 
 var NormalBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
 		'i':            {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}}},
-		':': 			{children: nil, Actions: []Action{CommandClearOutput{},SwitchMode{m: mode.Command}}},
+		':':            {children: nil, Actions: []Action{CommandClearOutput{}, SwitchMode{m: mode.Command}}},
 		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
 
 		//'o': {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}, NewLineBelow{}}},
@@ -62,7 +64,7 @@ var InsertBindings = &BindingNode{
 var CommandBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
-		keyboard.ESC: {children: nil, Actions: []Action{CommandClearOutput{}, CommandClearInput{}, SwitchMode{m: mode.Normal}}},
+		keyboard.ESC:   {children: nil, Actions: []Action{CommandClearOutput{}, CommandClearInput{}, SwitchMode{m: mode.Normal}}},
 		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
 		keyboard.ENTER: {children: nil, Actions: []Action{CommandRun{}}},
 	},

@@ -34,6 +34,7 @@ func (r *TextBufferRenderer) scroll(panerows int, panecols int, x int, y int) {
 	if y < r.rowoffset {
 		r.rowoffset = y
 	}
+	panerows = panerows - 1 // leave room for the status bar in each pane
 	if y >= r.rowoffset+panerows {
 		r.rowoffset = y - panerows + 1
 	}

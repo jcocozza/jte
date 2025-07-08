@@ -24,8 +24,9 @@ type TextRenderer struct {
 	//initscreenrows int
 	screencols int
 
-	rowoffset int
-	coloffset int
+	currRowoffset int
+	currColoffset int
+	currRect      LayoutRect
 
 	br *TextBufferRenderer
 
@@ -80,7 +81,7 @@ func (r *TextRenderer) Exit(msg string) {
 }
 
 func (r *TextRenderer) drawCursor(x int, y int) {
-	s := fmt.Sprintf("\x1b[%d;%dH", y, x) // set cursor position
+	s := fmt.Sprintf("\x1b[%d;%dH", y+1, x+1) // set cursor position
 	r.abuf.Append([]byte(s))
 	r.abuf.Append([]byte("\x1b[?25h")) // show cursor
 }
@@ -97,23 +98,31 @@ func (r *TextRenderer) renderCursor(x int, y int, currRow buffer.BufRow) {
 	//	}
 	//}
 
-	rx := x - r.br.coloffset
-	ry := y - r.br.rowoffset + 1
+	rx := x - r.currColoffset + r.currRect.X
+	ry := y - r.currRowoffset + r.currRect.Y
+	maxCursorRow := r.currRect.Y + r.currRect.Rows - 2
 	r.logger.Debug("render cursor",
 		slog.Int("rendered x", rx),
-		slog.Int("rendered y", ry),
 		slog.Int("real x", x),
+		slog.Int("rendered y", ry),
 		slog.Int("real y", y),
-		slog.Int("col offset", r.br.coloffset),
-		slog.Int("row offset", r.br.rowoffset),
+		slog.Int("col offset", r.currColoffset),
+		slog.Int("row offset", r.currRowoffset),
+		slog.Int("max row", maxCursorRow),
 	)
-
-	// this keeps the cursor from going into the status/message bar
-	if y >= ry-1 {
-		r.drawCursor(rx, ry-1)
-	} else {
-		r.drawCursor(rx, ry)
+	//if ry > maxCursorRow {
+	//	ry  = maxCursorRow
+	//}
+	//if ry < r.currRect.Y {
+	//	ry = r.currRect.Y
+	//} else if ry > maxCursorRow {
+	//	ry = maxCursorRow
+	//}
+	if ry > maxCursorRow {
+		ry = maxCursorRow
 	}
+
+	r.drawCursor(rx, ry)
 }
 
 // TODO: need a way to determine if the panenode is the current
@@ -151,6 +160,9 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 		var active string
 		if es.CurrentPane == pn {
 			active = "(a)"
+			r.currRect = rect
+			r.currColoffset = r.br.coloffset
+			r.currRowoffset = r.br.rowoffset
 		} else {
 			active = ""
 		}
@@ -209,7 +221,18 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 		r.abuf.Append([]byte(string(e.CW.Input)))
 	}
 
-	r.renderCursor(e.BM.Current.Buf.X(), e.BM.Current.Buf.Y(), e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
+	x, y := e.BM.Current.Buf.X(), e.BM.Current.Buf.Y()
+	// r.coloffset+1 because we need to leave room for the ' ' after a vsplit
+	//if x < len(e.BM.Current.Buf.Rows[y]) {
+	//	x++
+	//}
+	//if y != r.currRect.Rows {
+	//	y++
+	//}
+	r.logger.Debug("curr rect", slog.Any("rect", r.currRect))
+
+	//r.logger.Debug("current buf offsets", slog.Int("col offset", r.coloffset), slog.Int("row offset", r.rowoffset))
+	r.renderCursor(x, y, e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")
 }
