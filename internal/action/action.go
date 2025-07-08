@@ -84,7 +84,7 @@ type SplitClose struct{}
 
 func (a SplitClose) String() string { return "close split" }
 func (a SplitClose) Apply(e *editor.Editor) error {
-	e.PM.Delete()
+	e.Close()
 	return nil
 }
 

@@ -25,6 +25,11 @@ func NewEditor(l *slog.Logger) *Editor {
 	}
 }
 
+func (e *Editor) Close() {
+	e.PM.Delete()
+	e.BM.Current = e.PM.Curr.Bn
+}
+
 func (e *Editor) Up() {
 	e.PM.Up()
 	e.BM.Current = e.PM.Curr.Bn
