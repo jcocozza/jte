@@ -41,3 +41,12 @@ func (b *Buffer) Right() {
 		b.cursor.X++
 	}
 }
+
+func (b *Buffer) Top() {
+	b.cursor.Y =  0
+	b.cursor.X = 0
+}
+func (b *Buffer) Bottom() {
+	b.cursor.Y = len(b.Rows) - 1
+	b.cursor.X = 0
+}

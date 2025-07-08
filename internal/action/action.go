@@ -64,6 +64,14 @@ type CursorRight struct{}
 func (a CursorRight) String() string               { return "CursorRight" }
 func (a CursorRight) Apply(e *editor.Editor) error { e.BM.Current.Buf.Right(); return nil }
 
+
+type CursorTop struct {}
+func (a CursorTop) String() string               { return "cursor top" }
+func (a CursorTop) Apply(e *editor.Editor) error { e.BM.Current.Buf.Top(); return nil }
+type CursorBottom struct {}
+func (a CursorBottom) String() string               { return "cursor bottom" }
+func (a CursorBottom) Apply(e *editor.Editor) error { e.BM.Current.Buf.Bottom(); return nil }
+
 type SplitVertical struct{}
 
 func (a SplitVertical) String() string { return "vert split" }
