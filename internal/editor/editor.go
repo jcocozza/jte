@@ -25,6 +25,23 @@ func NewEditor(l *slog.Logger) *Editor {
 	}
 }
 
+func (e *Editor) Up() {
+	e.PM.Up()
+	e.BM.Current = e.PM.Curr.Bn
+}
+func (e *Editor) Down() {
+	e.PM.Down()
+	e.BM.Current = e.PM.Curr.Bn
+}
+func (e *Editor) Left() {
+	e.PM.Left()
+	e.BM.Current = e.PM.Curr.Bn
+}
+func (e *Editor) Right() {
+	e.PM.Right()
+	e.BM.Current = e.PM.Curr.Bn
+}
+
 // useful bits about the editor
 type EditorStatus struct {
 	Mode mode.Mode

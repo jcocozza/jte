@@ -26,25 +26,35 @@ var NormalBindings = &BindingNode{
 		'v': {children: nil, Actions: []Action{SplitVertical{}}},
 		'q': {children: nil, Actions: []Action{SplitClose{}}},
 
-		'k': {children: nil, Actions: []Action{CursorUp{}}},
-		'j': {children: nil, Actions: []Action{CursorDown{}}},
-		'h': {children: nil, Actions: []Action{CursorLeft{}}},
-		'l': {children: nil, Actions: []Action{CursorRight{}}},
-		keyboard.ARROW_UP: {children: nil, Actions: []Action{CursorUp{}}},
-		keyboard.ARROW_DOWN: {children: nil, Actions: []Action{CursorDown{}}},
-		keyboard.ARROW_LEFT: {children: nil, Actions: []Action{CursorLeft{}}},
+		'k':                  {children: nil, Actions: []Action{CursorUp{}}},
+		'j':                  {children: nil, Actions: []Action{CursorDown{}}},
+		'h':                  {children: nil, Actions: []Action{CursorLeft{}}},
+		'l':                  {children: nil, Actions: []Action{CursorRight{}}},
+		keyboard.ARROW_UP:    {children: nil, Actions: []Action{CursorUp{}}},
+		keyboard.ARROW_DOWN:  {children: nil, Actions: []Action{CursorDown{}}},
+		keyboard.ARROW_LEFT:  {children: nil, Actions: []Action{CursorLeft{}}},
 		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
+
+		leader: {
+			Actions: nil,
+			children: map[keyboard.Key]*BindingNode{
+				'k': {children: nil, Actions: []Action{PaneUp{}}},
+				'j': {children: nil, Actions: []Action{PaneDown{}}},
+				'h': {children: nil, Actions: []Action{PaneLeft{}}},
+				'l': {children: nil, Actions: []Action{PaneRight{}}},
+			},
+		},
 	},
 }
 
 var InsertBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
-		keyboard.ESC: {children: nil, Actions: []Action{SwitchMode{m: mode.Normal}}},
-		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},
-		keyboard.ARROW_UP: {children: nil, Actions: []Action{CursorUp{}}},
-		keyboard.ARROW_DOWN: {children: nil, Actions: []Action{CursorDown{}}},
-		keyboard.ARROW_LEFT: {children: nil, Actions: []Action{CursorLeft{}}},
+		keyboard.ESC:         {children: nil, Actions: []Action{SwitchMode{m: mode.Normal}}},
+		keyboard.CtrlC:       {children: nil, Actions: []Action{Exit{}}},
+		keyboard.ARROW_UP:    {children: nil, Actions: []Action{CursorUp{}}},
+		keyboard.ARROW_DOWN:  {children: nil, Actions: []Action{CursorDown{}}},
+		keyboard.ARROW_LEFT:  {children: nil, Actions: []Action{CursorLeft{}}},
 		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
 	},
 }

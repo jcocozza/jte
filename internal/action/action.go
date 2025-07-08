@@ -88,6 +88,33 @@ func (a SplitClose) Apply(e *editor.Editor) error {
 	return nil
 }
 
+type PaneUp struct{}
+func (a PaneUp) String() string { return "pane up" }
+func (a PaneUp) Apply(e *editor.Editor) error {
+	e.Up()
+	return nil
+}
+type PaneDown struct{}
+func (a PaneDown) String() string { return "pane down" }
+func (a PaneDown) Apply(e *editor.Editor) error {
+	e.Down()
+	return nil
+}
+type PaneLeft struct{}
+
+func (a PaneLeft) String() string { return "pane left" }
+func (a PaneLeft) Apply(e *editor.Editor) error {
+	e.Left()
+	return nil
+}
+type PaneRight struct{}
+
+func (a PaneRight) String() string { return "pane right" }
+func (a PaneRight) Apply(e *editor.Editor) error {
+	e.Right()
+	return nil
+}
+
 // command
 type CommandRun struct{}
 
