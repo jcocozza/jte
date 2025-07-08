@@ -116,6 +116,7 @@ func (r *TextRenderer) renderCursor(x int, y int, currRow buffer.BufRow) {
 	}
 }
 
+// TODO: need a way to determine if the panenode is the current
 func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorStatus, rect LayoutRect, screen [][]byte) {
 	if pn == nil {
 		return
@@ -147,7 +148,14 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 		/*
 			THE STATUS BAR IS DRAWN HERE
 		*/
-		status := fmt.Appendf([]byte{}, "[%s] %s (%s) ln: %d/%d", es.Mode.String(), pn.Bn.Buf.Name, pn.Bn.Buf.FileType.String(), pn.Bn.Buf.Y(), len(pn.Bn.Buf.Rows))
+		var active string
+		if es.CurrentPane == pn {
+			active = "(a)"
+		} else {
+			active = ""
+		}
+
+		status := fmt.Appendf([]byte{}, "%s[%s] %s (%s) ln: %d/%d", active, es.Mode.String(), pn.Bn.Buf.Name, pn.Bn.Buf.FileType.String(), pn.Bn.Buf.Y(), len(pn.Bn.Buf.Rows))
 		copy(screen[len(rendered)-1+rect.Y][rect.X:], status)
 		return
 	default:

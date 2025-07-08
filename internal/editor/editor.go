@@ -28,10 +28,12 @@ func NewEditor(l *slog.Logger) *Editor {
 // useful bits about the editor
 type EditorStatus struct {
 	Mode mode.Mode
+	CurrentPane *panemanager.PaneNode
 }
 
 func (e *Editor) Status() *EditorStatus {
 	return &EditorStatus{
 		Mode: e.M.Current(),
+		CurrentPane: e.PM.Curr,
 	}
 }
