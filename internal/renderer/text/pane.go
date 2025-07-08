@@ -3,6 +3,7 @@ package text
 import (
 	"bytes"
 	"log/slog"
+	"strconv"
 
 	"github.com/jcocozza/jte/internal/buffer"
 )
@@ -20,6 +21,8 @@ func runeWidth(r rune) int {
 type TextBufferRenderer struct {
 	rowoffset int
 	coloffset int
+
+	gutterShift int
 
 	logger *slog.Logger
 }
@@ -71,6 +74,13 @@ func renderRow(row buffer.BufRow) []byte {
 	return expanded
 }
 
+func renderGutter(num int, maxWidth int) []byte {
+	b := []byte(strconv.Itoa(num))
+	gutter := append(bytes.Repeat([]byte(" "), maxWidth-len(b)-1), b...)
+	gutter = append(gutter, []byte(" ")...)
+	return gutter
+}
+
 func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]byte {
 	r.scroll(rows, cols, buf.X(), buf.Y())
 	paneBuf := make([][]byte, rows)
@@ -81,9 +91,18 @@ func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]
 			continue
 		}
 		r.logger.Debug("rendering row", slog.Int("bufrownum", bufrownum), slog.Int("coloffset", r.coloffset))
-		paneBuf[i] = renderRow(buf.Rows[bufrownum][r.coloffset:])
+
+		maxGutterWidth := len(strconv.Itoa(len(buf.Rows)))
+		r.gutterShift = maxGutterWidth
+		if bufrownum == buf.Y() {
+			paneBuf[i] = append(renderGutter(buf.Y(), maxGutterWidth), renderRow(buf.Rows[bufrownum][r.coloffset:])...)
+		} else {
+			relNum := i + r.rowoffset - buf.Y()
+			if relNum < 0 {
+				relNum = relNum * -1
+			}
+			paneBuf[i] = append(renderGutter(relNum, maxGutterWidth), renderRow(buf.Rows[bufrownum][r.coloffset:])...)
+		}
 	}
-	// render status
-	// paneBuf[rows-1] = renderStatus(cols, psd, buf)
 	return paneBuf
 }

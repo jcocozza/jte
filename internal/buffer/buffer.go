@@ -25,8 +25,6 @@ type Buffer struct {
 	// extra cursors
 	cursors []*Cursor
 
-	gutter *Gutter
-
 	// state stuff
 	Modified bool
 	ReadOnly bool
@@ -43,7 +41,7 @@ func NewBuffer(name string, filePath string, readOnly bool, rows []BufRow, l *sl
 		Rows:     rows,
 		ReadOnly: readOnly,
 		cursor:   &Cursor{},
-		gutter:   &Gutter{},
+		//gutter:   &Gutter{},
 	}
 }
 

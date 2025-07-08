@@ -222,17 +222,10 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	}
 
 	x, y := e.BM.Current.Buf.X(), e.BM.Current.Buf.Y()
-	// r.coloffset+1 because we need to leave room for the ' ' after a vsplit
-	//if x < len(e.BM.Current.Buf.Rows[y]) {
-	//	x++
-	//}
-	//if y != r.currRect.Rows {
-	//	y++
-	//}
 	r.logger.Debug("curr rect", slog.Any("rect", r.currRect))
 
 	//r.logger.Debug("current buf offsets", slog.Int("col offset", r.coloffset), slog.Int("row offset", r.rowoffset))
-	r.renderCursor(x, y, e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
+	r.renderCursor(x+r.br.gutterShift, y, e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")
 }
