@@ -23,7 +23,7 @@ func main() {
 		panic(err)
 	}
 
-	buf, err := buffer.ReadFileIntoBuffer("/home/water/projects/jte/jte.log", l)
+	buf, err := buffer.ReadFileIntoBuffer("/home/water/projects/jte/test.txt", l)
 	if err != nil {
 		panic(err)
 	}

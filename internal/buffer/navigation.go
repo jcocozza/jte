@@ -11,6 +11,9 @@ func (b *Buffer) adjustCursor() {
 		return
 	}
 	newRowLen := len(b.Rows[b.cursor.Y]) -1
+	if newRowLen < 0 {
+		newRowLen = 0
+	}
 	if b.cursor.X > newRowLen {
 		b.cursor.X = newRowLen
 	}

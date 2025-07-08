@@ -44,6 +44,14 @@ func (r *TextBufferRenderer) scroll(panerows int, panecols int, x int, y int) {
 	if x >= r.coloffset+panecols {
 		r.coloffset = x - panecols + 1
 	}
+	r.logger.Debug("scroll",
+		slog.Int("x", x),
+		slog.Int("y", y),
+		slog.Int("rowoffset", r.rowoffset),
+		slog.Int("coloffset", r.coloffset),
+		slog.Int("panerows", panerows),
+		slog.Int("panecols", panecols),
+	)
 }
 
 func renderRow(row buffer.BufRow) []byte {
@@ -72,6 +80,7 @@ func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]
 			paneBuf[bufrownum] = []byte("~")
 			continue
 		}
+		r.logger.Debug("rendering row", slog.Int("bufrownum", bufrownum), slog.Int("coloffset", r.coloffset))
 		paneBuf[i] = renderRow(buf.Rows[bufrownum][r.coloffset:])
 	}
 	// render status
