@@ -150,6 +150,7 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 		r.RenderPane(pn.Second, es, LayoutRect{rect.X + firstW + 2, rect.Y, rect.Rows, secondW}, screen)
 		return
 	case panemanager.None:
+		r.logger.Debug("rect", slog.Any("rect", rect))
 		rendered := r.br.render(rect.Rows, rect.Cols, pn.Bn.Buf)
 		for i := 0; i < len(rendered) && i+rect.Y < len(screen); i++ {
 			copy(screen[i+rect.Y][rect.X:], rendered[i])

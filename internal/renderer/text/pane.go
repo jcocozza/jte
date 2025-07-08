@@ -76,7 +76,11 @@ func renderRow(row buffer.BufRow) []byte {
 
 func renderGutter(num int, maxWidth int) []byte {
 	b := []byte(strconv.Itoa(num))
-	gutter := append(bytes.Repeat([]byte(" "), maxWidth-len(b)-1), b...)
+	repeat := maxWidth - len(b) - 1
+	if repeat < 1 {
+		repeat = 1
+	}
+	gutter := append(bytes.Repeat([]byte(" "), repeat), b...)
 	gutter = append(gutter, []byte(" ")...)
 	return gutter
 }
@@ -90,7 +94,7 @@ func (r *TextBufferRenderer) render(rows int, cols int, buf *buffer.Buffer) [][]
 			paneBuf[bufrownum] = []byte("~")
 			continue
 		}
-		r.logger.Debug("rendering row", slog.Int("bufrownum", bufrownum), slog.Int("coloffset", r.coloffset))
+		//r.logger.Debug("rendering row", slog.Int("bufrownum", bufrownum), slog.Int("coloffset", r.coloffset))
 
 		maxGutterWidth := len(strconv.Itoa(len(buf.Rows)))
 		r.gutterShift = maxGutterWidth
