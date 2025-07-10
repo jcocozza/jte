@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/jcocozza/jte/internal/action"
 	"github.com/jcocozza/jte/internal/buffer"
 	"github.com/jcocozza/jte/internal/editor"
@@ -23,7 +25,11 @@ func main() {
 		panic(err)
 	}
 
-	buf, err := buffer.ReadFileIntoBuffer("/home/water/projects/jte/jte.log", l)
+	if len(os.Args) <= 1 {
+		panic("invalid args")
+	}
+
+	buf, err := buffer.ReadFileIntoBuffer(os.Args[1], l)
 	if err != nil {
 		panic(err)
 	}
