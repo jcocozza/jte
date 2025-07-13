@@ -69,6 +69,7 @@ var InsertBindings = &BindingNode{
 		keyboard.ARROW_DOWN:  {children: nil, Actions: []Action{CursorDown{}}},
 		keyboard.ARROW_LEFT:  {children: nil, Actions: []Action{CursorLeft{}}},
 		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
+		keyboard.BACKSPACE_2: {children: nil, Actions: []Action{Backspace{}}},
 	},
 }
 

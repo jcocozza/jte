@@ -11,7 +11,7 @@ func (b *Buffer) Insert(char rune, loc Location) {
 }
 
 func (b *Buffer) Delete(loc Location) rune {
-	b.cursor.X = loc.X
+	//b.cursor.X = loc.X
 	b.cursor.Y = loc.Y
 	char := b.Rows[loc.Y].Delete(loc.X)
 	b.cursor.X--

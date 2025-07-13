@@ -274,3 +274,13 @@ func (a Delete) Apply(e *editor.Editor) error {
 	e.BM.Current.Buf.CT.Add(change)
 	return nil
 }
+
+type Backspace struct{}
+
+func (a Backspace) String() string { return "backspace" }
+func (a Backspace) Apply(e *editor.Editor) error {
+	change := &buffer.Delete{Loc: buffer.Location{X: e.BM.Current.Buf.X()-1, Y: e.BM.Current.Buf.Y()}}
+	change.Do(e.BM.Current.Buf)
+	e.BM.Current.Buf.CT.Add(change)
+	return nil
+}
