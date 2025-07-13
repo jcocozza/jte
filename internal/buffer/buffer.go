@@ -45,6 +45,15 @@ func NewBuffer(name string, filePath string, readOnly bool, rows []BufRow, l *sl
 	}
 }
 
+func NewEmptyBuffer() *Buffer {
+	return &Buffer{
+		Name: "No Name",
+		ReadOnly: true,
+		cursor: &Cursor{},
+		Rows: make([]BufRow, 1),
+	}
+}
+
 func ReadFileIntoBuffer(path string, l *slog.Logger) (*Buffer, error) {
 	content, writeable, ftype, err := fileutil.ReadFile(path)
 	if err != nil {

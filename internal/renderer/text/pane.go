@@ -92,6 +92,9 @@ func renderGutter(num int, maxWidth int) []byte {
 }
 
 func (r *TextBufferRenderer) render(rows int, cols int) [][]byte {
+	if rows == 0 {
+		rows = 1
+	}
 	r.scroll(rows, cols, r.buf.X(), r.buf.Y())
 	paneBuf := make([][]byte, rows)
 	for i := 0; i < rows-1; i++ {

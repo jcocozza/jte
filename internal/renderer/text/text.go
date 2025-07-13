@@ -169,7 +169,7 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 			active = ""
 		}
 
-		status := fmt.Appendf([]byte{}, "%s[%s] %s (%s) ln: %d/%d", active, es.Mode.String(), pn.Bn.Buf.Name, pn.Bn.Buf.FileType.String(), pn.Bn.Buf.Y(), len(pn.Bn.Buf.Rows))
+		status := fmt.Appendf([]byte{}, "%s[%s] %s (%s) ln: %d/%d", active, es.Mode.String(), pn.Bn.Buf.Name, pn.Bn.Buf.FileType.String(), pn.Bn.Buf.Y(), len(pn.Bn.Buf.Rows)-1)
 		copy(screen[len(rendered)-1+rect.Y][rect.X:], status)
 		return
 	default:

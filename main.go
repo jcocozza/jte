@@ -26,13 +26,14 @@ func main() {
 		r.ExitErr(err)
 	}
 
+	var buf *buffer.Buffer
 	if len(os.Args) <= 1 {
-		r.ExitErr(fmt.Errorf("invald args"))
-	}
-
-	buf, err := buffer.ReadFileIntoBuffer(os.Args[1], l)
-	if err != nil {
-		r.ExitErr(err)
+		buf = buffer.NewEmptyBuffer()
+	} else {
+		buf, err = buffer.ReadFileIntoBuffer(os.Args[1], l)
+		if err != nil {
+			r.ExitErr(err)
+		}
 	}
 
 	e.BM.SetCurrent(e.BM.Add(buf))
