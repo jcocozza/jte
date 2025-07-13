@@ -19,9 +19,9 @@ func runeWidth(r rune) int {
 }
 
 type TextBufferRenderer struct {
-	buf *buffer.Buffer
-	rowoffset int
-	coloffset int
+	buf         *buffer.Buffer
+	rowoffset   int
+	coloffset   int
 	gutterShift int
 
 	logger *slog.Logger
@@ -30,24 +30,39 @@ type TextBufferRenderer struct {
 func NewTextPaneRenderer(l *slog.Logger, buf *buffer.Buffer) *TextBufferRenderer {
 	return &TextBufferRenderer{
 		logger: l.WithGroup("pane-renderer"),
-		buf: buf,
+		buf:    buf,
 	}
 }
 
+const scrollMargin = 10
+
+// i hate everything about this
+// it is very cursed
+//
+// i'm pretty sure it works though...don't mess with it
 func (r *TextBufferRenderer) scroll(panerows int, panecols int, x int, y int) {
-	if y < r.rowoffset {
-		r.rowoffset = y
+	panerows = panerows - 1 // status bar row
+
+	// Vertical scroll
+	if y < r.rowoffset+scrollMargin {
+		r.rowoffset = y - scrollMargin
+		if r.rowoffset < 0 {
+			r.rowoffset = 0
+		}
+	} else if y >= r.rowoffset+panerows-scrollMargin {
+		r.rowoffset = y - (panerows - scrollMargin) + 1
 	}
-	panerows = panerows - 1 // leave room for the status bar in each pane
-	if y >= r.rowoffset+panerows {
-		r.rowoffset = y - panerows + 1
+
+	// Horizontal scroll
+	if x < r.coloffset+scrollMargin {
+		r.coloffset = x - scrollMargin
+		if r.coloffset < 0 {
+			r.coloffset = 0
+		}
+	} else if x >= r.coloffset+panecols-scrollMargin {
+		r.coloffset = x - (panecols - scrollMargin) + 1
 	}
-	if x < r.coloffset {
-		r.coloffset = x
-	}
-	if x >= r.coloffset+panecols {
-		r.coloffset = x - panecols + 1
-	}
+
 	r.logger.Debug("scroll",
 		slog.Int("x", x),
 		slog.Int("y", y),
@@ -100,11 +115,9 @@ func (r *TextBufferRenderer) render(rows int, cols int) [][]byte {
 	for i := 0; i < rows-1; i++ {
 		bufrownum := i + r.rowoffset
 		if bufrownum >= len(r.buf.Rows) {
-			paneBuf[bufrownum] = []byte("~")
+			paneBuf[i] = []byte("~")
 			continue
 		}
-		//r.logger.Debug("rendering row", slog.Int("bufrownum", bufrownum), slog.Int("coloffset", r.coloffset))
-
 		maxGutterWidth := maxGutterWidth(len(r.buf.Rows))
 		r.gutterShift = maxGutterWidth
 		if bufrownum == r.buf.Y() {
