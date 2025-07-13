@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jcocozza/jte/internal/buffer"
+	"github.com/jcocozza/jte/internal/commmand"
 	"github.com/jcocozza/jte/internal/editor"
 	"github.com/jcocozza/jte/internal/keyboard"
 	"github.com/jcocozza/jte/internal/mode"
@@ -24,6 +26,14 @@ func (a Exit) String() string { return "exit" }
 func (a Exit) Apply(e *editor.Editor) error {
 	return ErrExit
 }
+
+// for debugging purposes
+type InduceErr struct {
+	msg string
+}
+
+func (a InduceErr) String() string               { return a.msg }
+func (a InduceErr) Apply(e *editor.Editor) error { return fmt.Errorf(a.msg) }
 
 type SwitchMode struct {
 	m mode.Mode
@@ -64,11 +74,13 @@ type CursorRight struct{}
 func (a CursorRight) String() string               { return "CursorRight" }
 func (a CursorRight) Apply(e *editor.Editor) error { e.BM.Current.Buf.Right(); return nil }
 
+type CursorTop struct{}
 
-type CursorTop struct {}
 func (a CursorTop) String() string               { return "cursor top" }
 func (a CursorTop) Apply(e *editor.Editor) error { e.BM.Current.Buf.Top(); return nil }
-type CursorBottom struct {}
+
+type CursorBottom struct{}
+
 func (a CursorBottom) String() string               { return "cursor bottom" }
 func (a CursorBottom) Apply(e *editor.Editor) error { e.BM.Current.Buf.Bottom(); return nil }
 
@@ -97,17 +109,21 @@ func (a SplitClose) Apply(e *editor.Editor) error {
 }
 
 type PaneUp struct{}
+
 func (a PaneUp) String() string { return "pane up" }
 func (a PaneUp) Apply(e *editor.Editor) error {
 	e.Up()
 	return nil
 }
+
 type PaneDown struct{}
+
 func (a PaneDown) String() string { return "pane down" }
 func (a PaneDown) Apply(e *editor.Editor) error {
 	e.Down()
 	return nil
 }
+
 type PaneLeft struct{}
 
 func (a PaneLeft) String() string { return "pane left" }
@@ -115,6 +131,7 @@ func (a PaneLeft) Apply(e *editor.Editor) error {
 	e.Left()
 	return nil
 }
+
 type PaneRight struct{}
 
 func (a PaneRight) String() string { return "pane right" }
@@ -131,9 +148,37 @@ func (a CommandRun) Apply(e *editor.Editor) error {
 	if e.CW.Locked() {
 		return nil
 	}
-	_, err := e.CW.GetCommand()
+	cmd, args, err := e.CW.GetCommand()
 	if err != nil {
 		e.M.SetMode(mode.Normal)
+	}
+	switch cmd {
+	case commmand.Empty:
+		e.CW.ClearInput()
+		e.CW.ClearOutput()
+		e.CW.Hide()
+	case commmand.Quit:
+		return Exit{}.Apply(e)
+	case commmand.List:
+		bufsInfo := e.BM.ListAll()
+		for _, bufInfo := range bufsInfo {
+			e.CW.Push(bufInfo.String())
+		}
+		e.CW.Push("<ESC> to continue")
+		return nil
+		case commmand.Edit: // TODO: clean this disaster up
+		if len(args) == 0 {
+			return fmt.Errorf("cannot open unspecified file")
+		}
+		e.CW.Lock()
+		e.CW.ClearInput()
+		err := OpenBuffer{args[0]}.Apply(e)
+		if err != nil { return err }
+		return SwitchMode{mode.Normal}.Apply(e)
+	default:
+		e.CW.ClearInput()
+		e.CW.ClearOutput()
+		return fmt.Errorf("command does not exist")
 	}
 	return nil
 }
@@ -155,6 +200,7 @@ func (a CommandClearOutput) Apply(e *editor.Editor) error {
 }
 
 type CommandClearInput struct{}
+
 func (a CommandClearInput) String() string { return "clear Input" }
 func (a CommandClearInput) Apply(e *editor.Editor) error {
 	e.CW.ClearInput()
@@ -162,6 +208,19 @@ func (a CommandClearInput) Apply(e *editor.Editor) error {
 }
 
 // buffer editing
+type OpenBuffer struct{ filepath string }
+
+func (a OpenBuffer) String() string { return fmt.Sprintf("open buffer: %s", a.filepath) }
+func (a OpenBuffer) Apply(e *editor.Editor) error {
+	buf, err := buffer.ReadFileIntoBuffer(a.filepath, e.Logger)
+	if err != nil {
+		return err
+	}
+	e.BM.SetCurrent(e.BM.Add(buf))
+	e.PM.Curr.Bn = e.BM.Current
+	return nil
+}
+
 type Insert struct{ c rune }
 
 func (a Insert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }

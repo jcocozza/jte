@@ -12,6 +12,9 @@ var leader keyboard.Key = keyboard.CtrlW
 var NormalBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
+		// temp
+		'e':            {children: nil, Actions: []Action{OpenBuffer{"main.go"}}},
+		't':            {children: nil, Actions: []Action{InduceErr{"foo bar err"}}},
 		'i':            {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}}},
 		':':            {children: nil, Actions: []Action{CommandClearOutput{}, SwitchMode{m: mode.Command}}},
 		keyboard.CtrlC: {children: nil, Actions: []Action{Exit{}}},

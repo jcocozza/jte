@@ -10,6 +10,7 @@ import (
 )
 
 type Editor struct {
+	Logger *slog.Logger
 	M *mode.ModeMachine
 	BM *buffer.BufferManager
 	PM *panemanager.PaneManager
@@ -18,6 +19,7 @@ type Editor struct {
 
 func NewEditor(l *slog.Logger) *Editor {
 	return &Editor{
+		Logger: l.WithGroup("editor"),
 		M: mode.NewModeMachine(l),
 		BM: buffer.NewBufferManager(l),
 		PM: panemanager.NewPaneManager(l),

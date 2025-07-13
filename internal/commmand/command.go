@@ -3,6 +3,7 @@ package commmand
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jcocozza/jte/internal/keyboard"
 )
@@ -13,12 +14,19 @@ const (
 	Empty Command = iota + 1
 	Quit
 	List
+	Edit
 )
 
 // map command string to command
 var CommandMap = map[string]Command{
-	"q":  Quit,
-	"ls": List,
+	"q":    Quit,
+	"quit": Quit,
+
+	"ls":   List,
+	"list": List,
+
+	"e":    Edit,
+	"edit": Edit,
 }
 
 type CommandWindow struct {
@@ -38,6 +46,22 @@ func NewCommandWindow(l *slog.Logger) *CommandWindow {
 		Output: []string{},
 		p:      NewCommandParser(l),
 	}
+}
+
+func (w *CommandWindow) Push(msg string) {
+	w.Output = append(w.Output, msg)
+	w.Show()
+}
+
+func (w *CommandWindow) PushErr(err error) {
+	msg := "[ERROR] " + err.Error()
+	w.Output = []string{msg}
+	w.Show()
+}
+
+func (w *CommandWindow) ClearAndPush(contents []string) {
+	w.Output = contents
+	w.Show()
 }
 
 func (w *CommandWindow) Locked() bool {
@@ -73,9 +97,24 @@ func (w *CommandWindow) Unlock() {
 }
 
 // TODO: this is not a good way to do commands
-func (w *CommandWindow) GetCommand() (Command, error) {
-	cmd := keyboard.Collapse(w.Input)
-	command, _ := w.p.Parse(cmd)
+func (w *CommandWindow) GetCommand() (Command, []string, error) {
+	input := keyboard.Collapse(w.Input)
+	if len(input) == 0 {
+		return -1, nil, fmt.Errorf("no command")
+	}
+	inputSplit := strings.Split(input, " ")
+	cmd, args := inputSplit[0], []string{}
+	if len(inputSplit) > 1 {
+		args = inputSplit[1:]
+	}
+	command, isreal := w.p.Parse(cmd)
+	if isreal {
+		return command, args, nil
+	} else {
+		return -1, args, fmt.Errorf("invalid command")
+	}
+
+	/* // keeping this for now because i need to figure out a better system entirely
 	switch command {
 	case Empty:
 		w.ClearInput()
@@ -85,7 +124,6 @@ func (w *CommandWindow) GetCommand() (Command, error) {
 		w.Output = append(w.Output, "quitting...")
 		w.Show()
 		w.Lock()
-		// TODO we need to actually quit
 	case List:
 		w.Output = append(w.Output, fmt.Sprintf("running command: %s", cmd))
 		w.Output = append(w.Output, "foo")
@@ -95,11 +133,13 @@ func (w *CommandWindow) GetCommand() (Command, error) {
 		w.Output = append(w.Output, "<Esc> to continue.")
 		w.Show()
 		w.Lock()
+	case Edit:
 	default:
 		w.Output = append(w.Output, fmt.Sprintf("[ERROR] command %s does not exist", cmd))
 		w.ClearInput()
 		w.Show()
-		return -1, fmt.Errorf("invalid command")
+		return -1, args, fmt.Errorf("invalid command")
 	}
-	return command, nil
+	return command, args, nil
+	*/
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -65,8 +66,13 @@ func main() {
 
 		for _, a := range actions {
 			err := a.Apply(e)
-			if err != nil {
+			switch {
+			case errors.Is(err, action.ErrExit):
 				r.ExitErr(err)
+			case err != nil:
+				e.CW.PushErr(err)
+			default:
+				continue
 			}
 		}
 		r.Render(e)
