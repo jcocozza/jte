@@ -1,0 +1,2 @@
+- backspace will case panic if at end of file
+- undo tree improvements
