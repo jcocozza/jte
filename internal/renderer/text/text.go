@@ -225,6 +225,7 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	r.logger.Debug("gutter length", slog.Int("len", gutterLen))
 	r.logger.Debug("curr rect", slog.Any("rect", r.currRect))
 
+	r.logger.Debug("pre-cursor render", slog.Int("x", x), slog.Int("y", y))
 	r.renderCursor(x, y, gutterLen, e.BM.Current.Buf.Rows[y])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")

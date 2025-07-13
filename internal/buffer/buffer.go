@@ -2,12 +2,14 @@ package buffer
 
 import (
 	"log/slog"
+	"strings"
 
 	"github.com/jcocozza/jte/internal/fileutil"
 )
 
 // an in memory representation of a file
 type Buffer struct {
+	logger *slog.Logger
 	// a unique identifier
 	id int
 	// purely for display purposes
@@ -32,25 +34,51 @@ type Buffer struct {
 	// file stuff
 	FilePath string
 	FileType fileutil.FileType
+
+	CT *ChangeTracker
 }
 
 func NewBuffer(name string, filePath string, readOnly bool, rows []BufRow, l *slog.Logger) *Buffer {
 	return &Buffer{
+		logger: l.WithGroup("buffer"),
 		Name:     name,
 		FilePath: filePath,
 		Rows:     rows,
 		ReadOnly: readOnly,
 		cursor:   &Cursor{},
+		CT:       NewChangeTracker(l),
 		//gutter:   &Gutter{},
 	}
 }
 
-func NewEmptyBuffer() *Buffer {
+func NewEmptyBuffer(l *slog.Logger) *Buffer {
 	return &Buffer{
+		logger: l.WithGroup("buffer"),
 		Name:     "No Name",
 		ReadOnly: true,
 		cursor:   &Cursor{},
 		Rows:     make([]BufRow, 1),
+		CT:       NewChangeTracker(l),
+	}
+}
+
+func NewBufferFromString(name string, content string, l *slog.Logger) *Buffer {
+	lines := strings.Split(content, "\n")
+
+	var runes []BufRow
+	for _, ln := range lines {
+		if ln == "" {continue}
+		l.Debug("adding line", slog.String("line", ln))
+		runes = append(runes, []rune(ln))
+	}
+
+	return &Buffer{
+		logger: l.WithGroup("buffer"),
+		Name:     name,
+		ReadOnly: true,
+		cursor:   &Cursor{},
+		Rows:     runes,
+		CT:       NewChangeTracker(l),
 	}
 }
 

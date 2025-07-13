@@ -33,7 +33,7 @@ func NewModeMachine(l *slog.Logger) *ModeMachine {
 }
 
 func (m *ModeMachine) Current() Mode {
-	m.logger.Debug("current mode is " + modes[m.current])
+	//m.logger.Debug("current mode is " + modes[m.current])
 	return m.current
 }
 

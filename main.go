@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/jcocozza/jte/internal/action"
 	"github.com/jcocozza/jte/internal/buffer"
@@ -29,7 +30,7 @@ func main() {
 
 	var buf *buffer.Buffer
 	if len(os.Args) <= 1 {
-		buf = buffer.NewEmptyBuffer()
+		buf = buffer.NewEmptyBuffer(l)
 	} else {
 		buf, err = buffer.ReadFileIntoBuffer(os.Args[1], l)
 		if err != nil {
@@ -39,6 +40,15 @@ func main() {
 
 	e.BM.SetCurrent(e.BM.Add(buf))
 	e.PM.Root.Bn = e.BM.Current
+
+	// this catches panics
+	// and allows us to restore the terminal gracefully
+	defer func() {
+		if f := recover(); f != nil {
+			stack := debug.Stack()
+			r.ExitErr(fmt.Errorf("panic: %v\n\n%s", f, stack))
+		}
+	}()
 
 	r.Render(e)
 	// event loop

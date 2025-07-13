@@ -4,6 +4,7 @@ package buffer
 
 func (b *Buffer) X() int { return b.cursor.X }
 func (b *Buffer) Y() int { return b.cursor.Y }
+func (b *Buffer) Loc() Location { return b.cursor.Location }
 
 // when moving up or down and at the end of a line, we want to snap to end of next line if that line is shorter
 func (b *Buffer) adjustCursor() {

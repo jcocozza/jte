@@ -223,10 +223,44 @@ func (a OpenBuffer) Apply(e *editor.Editor) error {
 	return nil
 }
 
+type Commit struct{}
+
+func (a Commit) String() string { return "commit" }
+func (a Commit) Apply(e *editor.Editor) error {
+	e.BM.Current.Buf.CT.Commit()
+	return nil
+}
+
+type Undo struct{}
+
+func (a Undo) String() string { return "undo" }
+func (a Undo) Apply(e *editor.Editor) error {
+	return e.BM.Current.Buf.CT.Undo(e.BM.Current.Buf)
+}
+
+type Redo struct{}
+
+func (a Redo) String() string { return "redo" }
+func (a Redo) Apply(e *editor.Editor) error {
+	return e.BM.Current.Buf.CT.Redo(e.BM.Current.Buf)
+}
+
 type Insert struct{ c rune }
 
 func (a Insert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }
 func (a Insert) Apply(e *editor.Editor) error {
-	// TODO
+	change := &buffer.Insert{Loc: e.BM.Current.Buf.Loc(), Char: a.c}
+	change.Do(e.BM.Current.Buf)
+	e.BM.Current.Buf.CT.Add(change)
+	return nil
+}
+
+type Delete struct{}
+
+func (a Delete) String() string { return "delete" }
+func (a Delete) Apply(e *editor.Editor) error {
+	change := &buffer.Delete{Loc: e.BM.Current.Buf.Loc()}
+	change.Do(e.BM.Current.Buf)
+	e.BM.Current.Buf.CT.Add(change)
 	return nil
 }
