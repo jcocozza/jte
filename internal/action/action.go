@@ -166,14 +166,16 @@ func (a CommandRun) Apply(e *editor.Editor) error {
 		}
 		e.CW.Push("<ESC> to continue")
 		return nil
-		case commmand.Edit: // TODO: clean this disaster up
+	case commmand.Edit: // TODO: clean this disaster up
 		if len(args) == 0 {
 			return fmt.Errorf("cannot open unspecified file")
 		}
 		e.CW.Lock()
 		e.CW.ClearInput()
 		err := OpenBuffer{args[0]}.Apply(e)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		return SwitchMode{mode.Normal}.Apply(e)
 	default:
 		e.CW.ClearInput()

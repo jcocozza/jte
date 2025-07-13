@@ -39,13 +39,12 @@ var NormalBindings = &BindingNode{
 		keyboard.ARROW_DOWN:  {children: nil, Actions: []Action{CursorDown{}}},
 		keyboard.ARROW_LEFT:  {children: nil, Actions: []Action{CursorLeft{}}},
 		keyboard.ARROW_RIGHT: {children: nil, Actions: []Action{CursorRight{}}},
-		'G': {children: nil, Actions: []Action{CursorBottom{}}},
+		'G':                  {children: nil, Actions: []Action{CursorBottom{}}},
 		'g': {Actions: nil,
-				children: map[keyboard.Key]*BindingNode{
-					'g': {children: nil, Actions: []Action{CursorTop{}}},
-				},
+			children: map[keyboard.Key]*BindingNode{
+				'g': {children: nil, Actions: []Action{CursorTop{}}},
+			},
 		},
-
 
 		leader: {
 			Actions: nil,

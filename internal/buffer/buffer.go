@@ -47,10 +47,10 @@ func NewBuffer(name string, filePath string, readOnly bool, rows []BufRow, l *sl
 
 func NewEmptyBuffer() *Buffer {
 	return &Buffer{
-		Name: "No Name",
+		Name:     "No Name",
 		ReadOnly: true,
-		cursor: &Cursor{},
-		Rows: make([]BufRow, 1),
+		cursor:   &Cursor{},
+		Rows:     make([]BufRow, 1),
 	}
 }
 

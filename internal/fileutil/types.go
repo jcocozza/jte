@@ -17,6 +17,7 @@ const (
 	IDENTIFIER
 	KEYWORD
 )
+
 // colors
 const (
 	Reset      = "\x1b[0m"

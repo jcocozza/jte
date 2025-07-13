@@ -12,19 +12,19 @@ var root = &PaneNode{
 }
 
 func VSplit() *PaneNode {
-	r := &PaneNode{ Ratio: 1}
+	r := &PaneNode{Ratio: 1}
 	r.splitVertical()
 	return r
 }
 
 func HSplit() *PaneNode {
-	r := &PaneNode{ Ratio: 1}
+	r := &PaneNode{Ratio: 1}
 	r.splitHorizontal()
 	return r
 }
 
 func ComplexSplit() *PaneNode {
-	r := &PaneNode{ Ratio: 1}
+	r := &PaneNode{Ratio: 1}
 	r.splitVertical()
 	r.Second.splitHorizontal().splitVertical()
 	return r

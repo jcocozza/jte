@@ -10,7 +10,7 @@ func (b *Buffer) adjustCursor() {
 	if b.cursor.Y >= len(b.Rows) {
 		return
 	}
-	newRowLen := len(b.Rows[b.cursor.Y]) -1
+	newRowLen := len(b.Rows[b.cursor.Y]) - 1
 	if newRowLen < 0 {
 		newRowLen = 0
 	}
@@ -43,7 +43,7 @@ func (b *Buffer) Right() {
 }
 
 func (b *Buffer) Top() {
-	b.cursor.Y =  0
+	b.cursor.Y = 0
 	b.cursor.X = 0
 }
 func (b *Buffer) Bottom() {

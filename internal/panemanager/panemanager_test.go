@@ -15,14 +15,14 @@ func PM() *PaneManager {
 }
 
 func TestMovement(t *testing.T) {
-	var tests = []struct{
+	var tests = []struct {
 		name string
-		pm *PaneManager
+		pm   *PaneManager
 	}{
 		{name: "complex", pm: PM()},
 	}
 
-	for _,tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.pm.Right()
 			tt.pm.Right()
@@ -35,14 +35,14 @@ func TestMovement(t *testing.T) {
 }
 
 func TestMovementAndDelete(t *testing.T) {
-	var tests = []struct{
+	var tests = []struct {
 		name string
-		pm *PaneManager
+		pm   *PaneManager
 	}{
 		{name: "complex", pm: PM()},
 	}
 
-	for _,tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.pm.Right()
 			tt.pm.Right()

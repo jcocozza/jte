@@ -55,7 +55,7 @@ func (ap *ActionParser) parseNormal(n *BindingNode) ([]Action, bool) {
 		}
 		return repeatedActions, true
 	}
-	return nil, true// since nothing matches, we just want to flush right away
+	return nil, true // since nothing matches, we just want to flush right away
 }
 
 // in insert mode:

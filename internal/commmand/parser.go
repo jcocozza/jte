@@ -13,6 +13,7 @@ func NewCommandParser(l *slog.Logger) *CommandParser {
 		logger: l.WithGroup("command-parser"),
 	}
 }
+
 // true if the command exists
 func (cp *CommandParser) Parse(command string) (Command, bool) {
 	c, exists := CommandMap[command]

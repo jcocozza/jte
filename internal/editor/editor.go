@@ -11,19 +11,19 @@ import (
 
 type Editor struct {
 	Logger *slog.Logger
-	M *mode.ModeMachine
-	BM *buffer.BufferManager
-	PM *panemanager.PaneManager
-	CW *commmand.CommandWindow
+	M      *mode.ModeMachine
+	BM     *buffer.BufferManager
+	PM     *panemanager.PaneManager
+	CW     *commmand.CommandWindow
 }
 
 func NewEditor(l *slog.Logger) *Editor {
 	return &Editor{
 		Logger: l.WithGroup("editor"),
-		M: mode.NewModeMachine(l),
-		BM: buffer.NewBufferManager(l),
-		PM: panemanager.NewPaneManager(l),
-		CW: commmand.NewCommandWindow(l),
+		M:      mode.NewModeMachine(l),
+		BM:     buffer.NewBufferManager(l),
+		PM:     panemanager.NewPaneManager(l),
+		CW:     commmand.NewCommandWindow(l),
 	}
 }
 
@@ -51,13 +51,13 @@ func (e *Editor) Right() {
 
 // useful bits about the editor
 type EditorStatus struct {
-	Mode mode.Mode
+	Mode        mode.Mode
 	CurrentPane *panemanager.PaneNode
 }
 
 func (e *Editor) Status() *EditorStatus {
 	return &EditorStatus{
-		Mode: e.M.Current(),
+		Mode:        e.M.Current(),
 		CurrentPane: e.PM.Curr,
 	}
 }
