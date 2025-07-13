@@ -97,10 +97,7 @@ func maxGutterWidth(numRows int) int {
 
 func renderGutter(num int, maxWidth int) []byte {
 	b := []byte(strconv.Itoa(num))
-	repeat := maxWidth - len(b) - 1
-	if repeat < 1 {
-		repeat = 1
-	}
+	repeat := max(1, maxWidth-len(b)-1)
 	gutter := append(bytes.Repeat([]byte(" "), repeat), b...)
 	gutter = append(gutter, []byte(" ")...)
 	return gutter
@@ -120,14 +117,17 @@ func (r *TextBufferRenderer) render(rows int, cols int) [][]byte {
 		}
 		maxGutterWidth := maxGutterWidth(len(r.buf.Rows))
 		r.gutterShift = maxGutterWidth
+
+		// ensure that we only render _at most_ the the number of rows
+		endRow := min(cols-maxGutterWidth, len(r.buf.Rows[bufrownum]))
 		if bufrownum == r.buf.Y() {
-			paneBuf[i] = append(renderGutter(r.buf.Y(), maxGutterWidth), renderRow(r.buf.Rows[bufrownum][r.coloffset:])...)
+			paneBuf[i] = append(renderGutter(r.buf.Y(), maxGutterWidth), renderRow(r.buf.Rows[bufrownum][r.coloffset:endRow])...)
 		} else {
 			relNum := i + r.rowoffset - r.buf.Y()
 			if relNum < 0 {
 				relNum = relNum * -1
 			}
-			paneBuf[i] = append(renderGutter(relNum, maxGutterWidth), renderRow(r.buf.Rows[bufrownum][r.coloffset:])...)
+			paneBuf[i] = append(renderGutter(relNum, maxGutterWidth), renderRow(r.buf.Rows[bufrownum][r.coloffset:endRow])...)
 		}
 	}
 	return paneBuf
