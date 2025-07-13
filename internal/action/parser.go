@@ -11,8 +11,8 @@ import (
 //
 // when it has a complete set of keys, it "flushes" and returns a list of actions
 type ActionParser struct {
-	logger      *slog.Logger
-	currentKeys []keyboard.Key
+	logger         *slog.Logger
+	currentKeys    []keyboard.Key
 	repeatModifier int
 }
 
@@ -45,6 +45,7 @@ func (ap *ActionParser) parseNormal(n *BindingNode) ([]Action, bool) {
 		if err != nil {
 			return nil, false
 		}
+		//return actionNode.Actions, true
 		if ap.repeatModifier == 0 || ap.repeatModifier == 1 {
 			return actionNode.Actions, true
 		}
@@ -54,7 +55,7 @@ func (ap *ActionParser) parseNormal(n *BindingNode) ([]Action, bool) {
 		}
 		return repeatedActions, true
 	}
-	return  nil, true // since nothing matches, we just want to flush right away
+	return nil, true// since nothing matches, we just want to flush right away
 }
 
 // in insert mode:
@@ -66,7 +67,7 @@ func (ap *ActionParser) parseNormal(n *BindingNode) ([]Action, bool) {
 func (ap *ActionParser) parseInsert(n *BindingNode) ([]Action, bool) {
 	possiblyValid := n.HasPrefix(ap.currentKeys)
 	if possiblyValid {
-		actionNode, err :=  n.Lookup(ap.currentKeys)
+		actionNode, err := n.Lookup(ap.currentKeys)
 		if err != nil {
 			return nil, false
 		}
@@ -84,7 +85,7 @@ func (ap *ActionParser) parseInsert(n *BindingNode) ([]Action, bool) {
 func (ap *ActionParser) parseCommand(n *BindingNode) ([]Action, bool) {
 	possiblyValid := n.HasPrefix(ap.currentKeys)
 	if possiblyValid {
-		actionNode, err :=  n.Lookup(ap.currentKeys)
+		actionNode, err := n.Lookup(ap.currentKeys)
 		if err != nil {
 			return nil, false
 		}
@@ -96,6 +97,7 @@ func (ap *ActionParser) parseCommand(n *BindingNode) ([]Action, bool) {
 // this is run one time per event loop
 //
 // based on the mode, process the keypress accordingly
+// also return the number of times to repeat the specified action
 //
 // return true if the full set of actions is ready to go.
 func (ap *ActionParser) AcceptKey(key keyboard.Key, m mode.Mode, b *BindingNode) ([]Action, bool) {
@@ -103,6 +105,14 @@ func (ap *ActionParser) AcceptKey(key keyboard.Key, m mode.Mode, b *BindingNode)
 	var done bool
 	switch m {
 	case mode.Normal:
+		if key.IsDigit() {
+			digit := int(key - '0')
+			if ap.repeatModifier == 0 {
+				ap.repeatModifier = digit
+			} else {
+				ap.repeatModifier = (ap.repeatModifier * 10) + digit
+			}
+		}
 		ap.appendKey(key)
 		actions, done = ap.parseNormal(NormalBindings)
 	case mode.Insert:
@@ -116,4 +126,8 @@ func (ap *ActionParser) AcceptKey(key keyboard.Key, m mode.Mode, b *BindingNode)
 		ap.flush()
 	}
 	return actions, done
+}
+
+func (ap *ActionParser) ResetRepeat() {
+	ap.repeatModifier = 0
 }

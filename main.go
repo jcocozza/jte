@@ -63,6 +63,11 @@ func main() {
 		if !done {
 			continue
 		}
+		// this is an UGLY way to do this
+		// we need to find a better way to reset the modifier
+		if len(actions) > 0 {
+			ap.ResetRepeat()
+		}
 
 		for _, a := range actions {
 			err := a.Apply(e)
