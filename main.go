@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jcocozza/jte/internal/action"
@@ -22,16 +23,16 @@ func main() {
 
 	err := r.Setup()
 	if err != nil {
-		panic(err)
+		r.ExitErr(err)
 	}
 
 	if len(os.Args) <= 1 {
-		panic("invalid args")
+		r.ExitErr(fmt.Errorf("invald args"))
 	}
 
 	buf, err := buffer.ReadFileIntoBuffer(os.Args[1], l)
 	if err != nil {
-		panic(err)
+		r.ExitErr(err)
 	}
 
 	e.BM.SetCurrent(e.BM.Add(buf))
@@ -42,7 +43,7 @@ func main() {
 	for {
 		key, err := kb.GetKeypress()
 		if err != nil {
-			panic(err)
+			r.ExitErr(err)
 		}
 
 		var n *action.BindingNode
@@ -53,7 +54,7 @@ func main() {
 		case mode.Insert:
 		case mode.Normal:
 		default:
-			panic("invalid state")
+			r.ExitErr(fmt.Errorf("invalid state"))
 		}
 
 		actions, done := ap.AcceptKey(key, state, n)

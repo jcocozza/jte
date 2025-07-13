@@ -51,7 +51,10 @@ func (r *TextRenderer) Setup() error {
 }
 
 func (r *TextRenderer) cleanup() {
-	r.abuf.Append([]byte("\x1b[2J")) // clear entire screen
+	r.abuf.Append([]byte("\x1b[0m"))   // reset all attributes
+	r.abuf.Append([]byte("\x1b[2J"))   // clear screen
+	r.abuf.Append([]byte("\x1b[H"))    // move cursor to top-left
+	r.abuf.Append([]byte("\x1b[?25h")) // show cursor
 	r.abuf.Flush()
 	if r.rw == nil {
 		return
