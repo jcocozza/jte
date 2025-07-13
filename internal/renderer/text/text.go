@@ -86,19 +86,17 @@ func (r *TextRenderer) drawCursor(x int, y int) {
 	r.abuf.Append([]byte("\x1b[?25h")) // show cursor
 }
 
-func (r *TextRenderer) renderCursor(x int, y int, currRow buffer.BufRow) {
-	// unsure if i need this - i think i might later
-	// for now,  just leaving it commented out
-	//actualCol := 0
-	//for _, b := range currRow {
-	//	if b == '\t' {
-	//		actualCol += TAB_STOP - (actualCol % TAB_STOP)
-	//	} else {
-	//		actualCol++
-	//	}
-	//}
+func (r *TextRenderer) renderCursor(x int, y int, gutterLen int, currRow buffer.BufRow) {
+	shift := 0
+	for i := 0; i < x; i++ {
+		if currRow[i] == '\t' {
+			shift += TAB_STOP - (shift % TAB_STOP)
+		} else {
+			shift += runeWidth(currRow[i])
+		}
+	}
 
-	rx := x - r.currColoffset + r.currRect.X
+	rx := shift - r.currColoffset + r.currRect.X + gutterLen
 	ry := y - r.currRowoffset + r.currRect.Y
 	maxCursorRow := r.currRect.Y + r.currRect.Rows - 2
 	r.logger.Debug("render cursor",
@@ -168,7 +166,6 @@ func (r *TextRenderer) RenderPane(pn *panemanager.PaneNode, es *editor.EditorSta
 		} else {
 			active = ""
 		}
-
 		status := fmt.Appendf([]byte{}, "%s[%s] %s (%s) ln: %d/%d", active, es.Mode.String(), pn.Bn.Buf.Name, pn.Bn.Buf.FileType.String(), pn.Bn.Buf.Y(), len(pn.Bn.Buf.Rows)-1)
 		copy(screen[len(rendered)-1+rect.Y][rect.X:], status)
 		return
@@ -224,12 +221,11 @@ func (r *TextRenderer) Render(e *editor.Editor) {
 	}
 
 	x, y := e.BM.Current.Buf.X(), e.BM.Current.Buf.Y()
-	r.logger.Debug("curr rect", slog.Any("rect", r.currRect))
-
-	//r.logger.Debug("current buf offsets", slog.Int("col offset", r.coloffset), slog.Int("row offset", r.rowoffset))
 	gutterLen := maxGutterWidth(len(e.BM.Current.Buf.Rows))
 	r.logger.Debug("gutter length", slog.Int("len", gutterLen))
-	r.renderCursor(x+gutterLen, y, e.BM.Current.Buf.Rows[e.BM.Current.Buf.Y()])
+	r.logger.Debug("curr rect", slog.Any("rect", r.currRect))
+
+	r.renderCursor(x, y, gutterLen, e.BM.Current.Buf.Rows[y])
 	r.abuf.Flush()
 	r.logger.Debug("end rendering")
 }
