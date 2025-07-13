@@ -21,6 +21,8 @@ var NormalBindings = &BindingNode{
 
 		//'o': {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}, NewLineBelow{}}},
 		//'O': {children: nil, Actions: []Action{SwitchMode{m: mode.Insert}, NewLineAbove{}}},
+		'u': {children: nil, Actions: []Action{Undo{}}},
+		'r': {children: nil, Actions: []Action{Redo{}}},
 
 		'd': {Actions: nil,
 			children: map[keyboard.Key]*BindingNode{

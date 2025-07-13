@@ -177,6 +177,16 @@ func (a CommandRun) Apply(e *editor.Editor) error {
 			return err
 		}
 		return SwitchMode{mode.Normal}.Apply(e)
+	case commmand.UndoTree:
+		content := e.BM.Current.Buf.CT.Root.String()
+		buf := buffer.NewBufferFromString("undotree", content, e.Logger)
+
+		SplitVertical{}.Apply(e)
+		PaneLeft{}.Apply(e)
+
+		e.BM.SetCurrent(e.BM.Add(buf))
+		e.PM.Curr.Bn = e.BM.Current
+		return SwitchMode{mode.Normal}.Apply(e)
 	default:
 		e.CW.ClearInput()
 		e.CW.ClearOutput()

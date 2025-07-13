@@ -15,6 +15,7 @@ const (
 	Quit
 	List
 	Edit
+	UndoTree
 )
 
 // map command string to command
@@ -27,6 +28,9 @@ var CommandMap = map[string]Command{
 
 	"e":    Edit,
 	"edit": Edit,
+
+	"ut": UndoTree,
+	"undotree": UndoTree,
 }
 
 type CommandWindow struct {
