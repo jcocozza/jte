@@ -63,7 +63,7 @@ var NormalBindings = &BindingNode{
 var InsertBindings = &BindingNode{
 	Actions: nil,
 	children: map[keyboard.Key]*BindingNode{
-		keyboard.ESC:         {children: nil, Actions: []Action{SwitchMode{m: mode.Normal}, /*CursorLeft{},*/ Commit{}}},
+		keyboard.ESC:         {children: nil, Actions: []Action{SwitchMode{m: mode.Normal}, CursorLeft{}, Commit{}}},
 		keyboard.CtrlC:       {children: nil, Actions: []Action{Exit{}}},
 		keyboard.ARROW_UP:    {children: nil, Actions: []Action{CursorUp{}}},
 		keyboard.ARROW_DOWN:  {children: nil, Actions: []Action{CursorDown{}}},
