@@ -1,75 +1,15 @@
 package buffer
 
 import (
-	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jcocozza/jte/internal/fileutil"
-	//"github.com/jcocozza/jte/internal/dev"
 )
-
-// cursor location in the buffer
-//
-//	X - column
-//	Y - row
-type Cursor struct {
-	X int
-	Y int
-}
-
-// Represents a single row in the buffer
-type BufRow []rune
-
-func (b *BufRow) Insert(at int, content []rune) error {
-	if at < 0 || at > len(*b) {
-		return fmt.Errorf("invalid row value: %d", at)
-	}
-	// i think this is a trick to do a little less work when just appending to the end of the row
-	if at == len(*b) {
-		*b = append(*b, content...)
-		return nil
-	}
-	*b = append((*b)[:at], append(content, (*b)[at:]...)...)
-	return nil
-}
-
-func (b *BufRow) DeleteChar(at int) (rune, error) {
-	if at < 0 || at >= len(*b) {
-		return -1, fmt.Errorf("invalid loc to delete")
-	}
-	char := (*b)[at]
-	newChars := make([]rune, len(*b)-1)
-	copy(newChars[:at], (*b)[:at])
-	copy(newChars[at:], (*b)[at+1:])
-	*b = newChars
-	return char, nil
-}
-
-func (b *BufRow) DeleteRange(start, end int) ([]rune, error) {
-	if start < 0 || start > len(*b) {
-		return nil, fmt.Errorf("invalid start index: %d", start)
-	}
-	if end < 0 || end > len(*b) {
-		return nil, fmt.Errorf("invalid end index: %d", end)
-	}
-	if start > end {
-		return nil, fmt.Errorf("start cannot be greater than end: %d > %d", start, end)
-	}
-	content := append([]rune(nil), (*b)[start:end]...)
-	*b = append((*b)[:start], (*b)[end:]...)
-	return content, nil
-}
-
-func (b *BufRow) append(runes []rune) {
-	*b = append(*b, runes...)
-}
-
-//func (b *BufRow) Trim(to int) {
-//	*b = (*b)[:to]
-//}
 
 // an in memory representation of a file
 type Buffer struct {
+	logger *slog.Logger
 	// a unique identifier
 	id int
 	// purely for display purposes
@@ -78,9 +18,14 @@ type Buffer struct {
 	// in this case, we use another name
 	Name string
 
-	// the rows in the underlying file
-	Rows   []BufRow
+	// the actual data
+	Rows []BufRow
+
+	// cursors in the buffer
+	// main cursor
 	cursor *Cursor
+	// extra cursors
+	cursors []*Cursor
 
 	// state stuff
 	Modified bool
@@ -90,18 +35,50 @@ type Buffer struct {
 	FilePath string
 	FileType fileutil.FileType
 
-	// events
-	em *EventManager
+	CT *ChangeTracker
 }
 
 func NewBuffer(name string, filePath string, readOnly bool, rows []BufRow, l *slog.Logger) *Buffer {
 	return &Buffer{
+		logger: l.WithGroup("buffer"),
 		Name:     name,
 		FilePath: filePath,
 		Rows:     rows,
 		ReadOnly: readOnly,
 		cursor:   &Cursor{},
-		em:       NewEventManager(l),
+		CT:       NewChangeTracker(l),
+		//gutter:   &Gutter{},
+	}
+}
+
+func NewEmptyBuffer(l *slog.Logger) *Buffer {
+	return &Buffer{
+		logger: l.WithGroup("buffer"),
+		Name:     "No Name",
+		ReadOnly: true,
+		cursor:   &Cursor{},
+		Rows:     make([]BufRow, 1),
+		CT:       NewChangeTracker(l),
+	}
+}
+
+func NewBufferFromString(name string, content string, l *slog.Logger) *Buffer {
+	lines := strings.Split(content, "\n")
+
+	var runes []BufRow
+	for _, ln := range lines {
+		if ln == "" {continue}
+		l.Debug("adding line", slog.String("line", ln))
+		runes = append(runes, []rune(ln))
+	}
+
+	return &Buffer{
+		logger: l.WithGroup("buffer"),
+		Name:     name,
+		ReadOnly: true,
+		cursor:   &Cursor{},
+		Rows:     runes,
+		CT:       NewChangeTracker(l),
 	}
 }
 

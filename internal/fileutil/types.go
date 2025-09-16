@@ -64,6 +64,10 @@ func SyntaxTypeToColor(st SyntaxType) string {
 // 3. add to the Registry
 type FileType int
 
+func (f *FileType) String() string {
+	return FileTypes[*f]
+}
+
 func DetermineFileType(path string) FileType {
 	ext := filepath.Ext(path)
 	ext = ext[1:] // remove the "."

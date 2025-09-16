@@ -1,21 +1,20 @@
 package buffer
 
-// navigation in the buffer
+// navigation
 
-func (b *Buffer) X() int {
-	return b.cursor.X
-}
-
-func (b *Buffer) Y() int {
-	return b.cursor.Y
-}
+func (b *Buffer) X() int { return b.cursor.X }
+func (b *Buffer) Y() int { return b.cursor.Y }
+func (b *Buffer) Loc() Location { return b.cursor.Location }
 
 // when moving up or down and at the end of a line, we want to snap to end of next line if that line is shorter
 func (b *Buffer) adjustCursor() {
 	if b.cursor.Y >= len(b.Rows) {
 		return
 	}
-	newRowLen := len(b.Rows[b.cursor.Y])
+	newRowLen := len(b.Rows[b.cursor.Y]) - 1
+	if newRowLen < 0 {
+		newRowLen = 0
+	}
 	if b.cursor.X > newRowLen {
 		b.cursor.X = newRowLen
 	}
@@ -39,7 +38,16 @@ func (b *Buffer) Left() {
 	}
 }
 func (b *Buffer) Right() {
-	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y]) {
+	if b.cursor.Y < len(b.Rows) && b.cursor.X < len(b.Rows[b.cursor.Y])-1 {
 		b.cursor.X++
 	}
+}
+
+func (b *Buffer) Top() {
+	b.cursor.Y = 0
+	b.cursor.X = 0
+}
+func (b *Buffer) Bottom() {
+	b.cursor.Y = len(b.Rows) - 1
+	b.cursor.X = 0
 }

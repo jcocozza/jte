@@ -1,0 +1,286 @@
+package action
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/jcocozza/jte/internal/buffer"
+	"github.com/jcocozza/jte/internal/commmand"
+	"github.com/jcocozza/jte/internal/editor"
+	"github.com/jcocozza/jte/internal/keyboard"
+	"github.com/jcocozza/jte/internal/mode"
+)
+
+// An Action is something done to the editor
+type Action interface {
+	// for debugging
+	String() string
+	Apply(e *editor.Editor) error
+}
+
+var ErrExit = errors.New("exit")
+
+type Exit struct{}
+
+func (a Exit) String() string { return "exit" }
+func (a Exit) Apply(e *editor.Editor) error {
+	return ErrExit
+}
+
+// for debugging purposes
+type InduceErr struct {
+	msg string
+}
+
+func (a InduceErr) String() string               { return a.msg }
+func (a InduceErr) Apply(e *editor.Editor) error { return fmt.Errorf(a.msg) }
+
+type SwitchMode struct {
+	m mode.Mode
+}
+
+func (a SwitchMode) String() string { return fmt.Sprintf("switch mode: %d", a.m) }
+func (a SwitchMode) Apply(e *editor.Editor) error {
+	switch a.m {
+	case mode.Insert:
+	case mode.Normal:
+	case mode.Command:
+		e.CW.Unlock()
+		e.CW.Hide()
+	default:
+		panic("nothing to do there")
+	}
+	e.M.SetMode(a.m)
+	return nil
+}
+
+type CursorUp struct{}
+
+func (a CursorUp) String() string               { return "CursorUp" }
+func (a CursorUp) Apply(e *editor.Editor) error { e.BM.Current.Buf.Up(); return nil }
+
+type CursorDown struct{}
+
+func (a CursorDown) String() string               { return "CursorDown" }
+func (a CursorDown) Apply(e *editor.Editor) error { e.BM.Current.Buf.Down(); return nil }
+
+type CursorLeft struct{}
+
+func (a CursorLeft) String() string               { return "CursorLeft" }
+func (a CursorLeft) Apply(e *editor.Editor) error { e.BM.Current.Buf.Left(); return nil }
+
+type CursorRight struct{}
+
+func (a CursorRight) String() string               { return "CursorRight" }
+func (a CursorRight) Apply(e *editor.Editor) error { e.BM.Current.Buf.Right(); return nil }
+
+type CursorTop struct{}
+
+func (a CursorTop) String() string               { return "cursor top" }
+func (a CursorTop) Apply(e *editor.Editor) error { e.BM.Current.Buf.Top(); return nil }
+
+type CursorBottom struct{}
+
+func (a CursorBottom) String() string               { return "cursor bottom" }
+func (a CursorBottom) Apply(e *editor.Editor) error { e.BM.Current.Buf.Bottom(); return nil }
+
+type SplitVertical struct{}
+
+func (a SplitVertical) String() string { return "vert split" }
+func (a SplitVertical) Apply(e *editor.Editor) error {
+	e.PM.Vsplit()
+	return nil
+}
+
+type SplitHorizontal struct{}
+
+func (a SplitHorizontal) String() string { return "horizontal split" }
+func (a SplitHorizontal) Apply(e *editor.Editor) error {
+	e.PM.Hsplit()
+	return nil
+}
+
+type SplitClose struct{}
+
+func (a SplitClose) String() string { return "close split" }
+func (a SplitClose) Apply(e *editor.Editor) error {
+	e.Close()
+	return nil
+}
+
+type PaneUp struct{}
+
+func (a PaneUp) String() string { return "pane up" }
+func (a PaneUp) Apply(e *editor.Editor) error {
+	e.Up()
+	return nil
+}
+
+type PaneDown struct{}
+
+func (a PaneDown) String() string { return "pane down" }
+func (a PaneDown) Apply(e *editor.Editor) error {
+	e.Down()
+	return nil
+}
+
+type PaneLeft struct{}
+
+func (a PaneLeft) String() string { return "pane left" }
+func (a PaneLeft) Apply(e *editor.Editor) error {
+	e.Left()
+	return nil
+}
+
+type PaneRight struct{}
+
+func (a PaneRight) String() string { return "pane right" }
+func (a PaneRight) Apply(e *editor.Editor) error {
+	e.Right()
+	return nil
+}
+
+// command
+type CommandRun struct{}
+
+func (a CommandRun) String() string { return "run" }
+func (a CommandRun) Apply(e *editor.Editor) error {
+	if e.CW.Locked() {
+		return nil
+	}
+	cmd, args, err := e.CW.GetCommand()
+	if err != nil {
+		e.M.SetMode(mode.Normal)
+	}
+	switch cmd {
+	case commmand.Empty:
+		e.CW.ClearInput()
+		e.CW.ClearOutput()
+		e.CW.Hide()
+	case commmand.Quit:
+		return Exit{}.Apply(e)
+	case commmand.List:
+		bufsInfo := e.BM.ListAll()
+		for _, bufInfo := range bufsInfo {
+			e.CW.Push(bufInfo.String())
+		}
+		e.CW.Push("<ESC> to continue")
+		return nil
+	case commmand.Edit: // TODO: clean this disaster up
+		if len(args) == 0 {
+			return fmt.Errorf("cannot open unspecified file")
+		}
+		e.CW.Lock()
+		e.CW.ClearInput()
+		err := OpenBuffer{args[0]}.Apply(e)
+		if err != nil {
+			return err
+		}
+		return SwitchMode{mode.Normal}.Apply(e)
+	case commmand.UndoTree:
+		content := e.BM.Current.Buf.CT.Root.String()
+		buf := buffer.NewBufferFromString("undotree", content, e.Logger)
+
+		SplitVertical{}.Apply(e)
+		PaneLeft{}.Apply(e)
+
+		e.BM.SetCurrent(e.BM.Add(buf))
+		e.PM.Curr.Bn = e.BM.Current
+		return SwitchMode{mode.Normal}.Apply(e)
+	default:
+		e.CW.ClearInput()
+		e.CW.ClearOutput()
+		return fmt.Errorf("command does not exist")
+	}
+	return nil
+}
+
+type CommandInsert struct{ c keyboard.Key }
+
+func (a CommandInsert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }
+func (a CommandInsert) Apply(e *editor.Editor) error {
+	e.CW.AddInput(a.c)
+	return nil
+}
+
+type CommandClearOutput struct{}
+
+func (a CommandClearOutput) String() string { return "clear output" }
+func (a CommandClearOutput) Apply(e *editor.Editor) error {
+	e.CW.ClearOutput()
+	return nil
+}
+
+type CommandClearInput struct{}
+
+func (a CommandClearInput) String() string { return "clear Input" }
+func (a CommandClearInput) Apply(e *editor.Editor) error {
+	e.CW.ClearInput()
+	return nil
+}
+
+// buffer editing
+type OpenBuffer struct{ filepath string }
+
+func (a OpenBuffer) String() string { return fmt.Sprintf("open buffer: %s", a.filepath) }
+func (a OpenBuffer) Apply(e *editor.Editor) error {
+	buf, err := buffer.ReadFileIntoBuffer(a.filepath, e.Logger)
+	if err != nil {
+		return err
+	}
+	e.BM.SetCurrent(e.BM.Add(buf))
+	e.PM.Curr.Bn = e.BM.Current
+	return nil
+}
+
+type Commit struct{}
+
+func (a Commit) String() string { return "commit" }
+func (a Commit) Apply(e *editor.Editor) error {
+	e.BM.Current.Buf.CT.Commit()
+	return nil
+}
+
+type Undo struct{}
+
+func (a Undo) String() string { return "undo" }
+func (a Undo) Apply(e *editor.Editor) error {
+	return e.BM.Current.Buf.CT.Undo(e.BM.Current.Buf)
+}
+
+type Redo struct{}
+
+func (a Redo) String() string { return "redo" }
+func (a Redo) Apply(e *editor.Editor) error {
+	return e.BM.Current.Buf.CT.Redo(e.BM.Current.Buf)
+}
+
+type Insert struct{ c rune }
+
+func (a Insert) String() string { return fmt.Sprintf("insert: %s", string(a.c)) }
+func (a Insert) Apply(e *editor.Editor) error {
+	change := &buffer.Insert{Loc: e.BM.Current.Buf.Loc(), Char: a.c}
+	change.Do(e.BM.Current.Buf)
+	e.BM.Current.Buf.CT.Add(change)
+	return nil
+}
+
+type Delete struct{}
+
+func (a Delete) String() string { return "delete" }
+func (a Delete) Apply(e *editor.Editor) error {
+	change := &buffer.Delete{Loc: e.BM.Current.Buf.Loc()}
+	change.Do(e.BM.Current.Buf)
+	e.BM.Current.Buf.CT.Add(change)
+	return nil
+}
+
+type Backspace struct{}
+
+func (a Backspace) String() string { return "backspace" }
+func (a Backspace) Apply(e *editor.Editor) error {
+	change := &buffer.Delete{Loc: buffer.Location{X: e.BM.Current.Buf.X()-1, Y: e.BM.Current.Buf.Y()}}
+	change.Do(e.BM.Current.Buf)
+	e.BM.Current.Buf.CT.Add(change)
+	return nil
+}

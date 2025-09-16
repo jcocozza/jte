@@ -1,4 +1,4 @@
-package renderer
+package text
 
 import "os"
 

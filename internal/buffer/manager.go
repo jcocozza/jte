@@ -7,74 +7,6 @@ import (
 	"github.com/jcocozza/jte/internal/fileutil"
 )
 
-// A circular, doubly linked list
-type BufferNode struct {
-	id   int
-	Buf  *Buffer
-	next *BufferNode
-	prev *BufferNode
-}
-
-func (n *BufferNode) Insert(buf *Buffer) *BufferNode {
-	newBufNode := &BufferNode{
-		id:   buf.id,
-		Buf:  buf,
-		next: nil,
-		prev: nil,
-	}
-	if n == nil {
-		newBufNode.next = newBufNode
-		newBufNode.prev = newBufNode
-		return newBufNode
-	}
-	next := n.prev
-
-	newBufNode.prev = n
-	newBufNode.next = next
-	n.next = newBufNode
-	next.prev = newBufNode
-	return newBufNode
-}
-
-func (n *BufferNode) Delete(id int) *BufferNode {
-	if n == nil {
-		return nil
-	}
-	nodeToDelete := n
-	for nodeToDelete.id != id {
-		if nodeToDelete.next == n { // full circle without finding the node
-			return n
-		}
-		nodeToDelete = nodeToDelete.next
-	}
-	prev := nodeToDelete.prev
-	next := nodeToDelete.next
-	prev.next = next
-	next.prev = prev
-	if nodeToDelete == n {
-		return next
-	}
-
-	// unlink to make it clear to gc to clean up
-	nodeToDelete.next = nil
-	nodeToDelete.prev = nil
-	return n
-}
-
-func (n *BufferNode) TraverseTo(id int) *BufferNode {
-	if n == nil {
-		return nil
-	}
-	curr := n
-	for curr.id != id {
-		if curr.next == n { // full circle without finding anything
-			return nil
-		}
-		curr = n.next
-	}
-	return curr
-}
-
 // keeps track of all buffers and maintains a pointer to the current (active) buffer
 //
 // the manager has 2 ways of keeping track of buffers
@@ -133,13 +65,13 @@ func (m *BufferManager) SetCurrent(id int) {
 func (m *BufferManager) Next() {
 	msg := fmt.Sprintf("to next: %d -> %d", m.Current.id, m.Current.next.id)
 	m.logger.Debug(msg)
-	m.Current = m.Current.next
+	m.Current = m.Current.Next()
 }
 
 func (m *BufferManager) Previous() {
 	msg := fmt.Sprintf("to prev: %d -> %d", m.Current.id, m.Current.prev.id)
 	m.logger.Debug(msg)
-	m.Current = m.Current.prev
+	m.Current = m.Current.Previous()
 }
 
 func (m *BufferManager) HasPath(path string) (bool, int, error) {

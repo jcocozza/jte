@@ -4,67 +4,60 @@ import (
 	"log/slog"
 
 	"github.com/jcocozza/jte/internal/buffer"
-	"github.com/jcocozza/jte/internal/keyboard"
+	"github.com/jcocozza/jte/internal/commmand"
 	"github.com/jcocozza/jte/internal/mode"
+	"github.com/jcocozza/jte/internal/panemanager"
 )
 
 type Editor struct {
-	kb *keyboard.Keyboard
-	m  *mode.StateMachine
-	d  *Dispatcher
-	BM *buffer.BufferManager
-
-	Root   *SplitNode
-	Active *SplitNode
-
-	logger *slog.Logger
+	Logger *slog.Logger
+	M      *mode.ModeMachine
+	BM     *buffer.BufferManager
+	PM     *panemanager.PaneManager
+	CW     *commmand.CommandWindow
 }
 
 func NewEditor(l *slog.Logger) *Editor {
 	return &Editor{
-		kb:     keyboard.NewKeyboard(l),
-		m:      mode.NewStateMachine(l),
-		d:      NewDispatcher(l),
+		Logger: l.WithGroup("editor"),
+		M:      mode.NewModeMachine(l),
 		BM:     buffer.NewBufferManager(l),
-		Root:   nil,
-		Active: nil,
-
-		logger: l.WithGroup("editor"),
+		PM:     panemanager.NewPaneManager(l),
+		CW:     commmand.NewCommandWindow(l),
 	}
 }
 
-func (e *Editor) Mode() string {
-	return string(e.m.Current())
+func (e *Editor) Close() {
+	e.PM.Delete()
+	e.BM.Current = e.PM.Curr.Bn
 }
 
-func (e *Editor) HandleKeypress() error {
-	k, err := e.kb.GetKeypress()
-	if err != nil {
-		return err
+func (e *Editor) Up() {
+	e.PM.Up()
+	e.BM.Current = e.PM.Curr.Bn
+}
+func (e *Editor) Down() {
+	e.PM.Down()
+	e.BM.Current = e.PM.Curr.Bn
+}
+func (e *Editor) Left() {
+	e.PM.Left()
+	e.BM.Current = e.PM.Curr.Bn
+}
+func (e *Editor) Right() {
+	e.PM.Right()
+	e.BM.Current = e.PM.Curr.Bn
+}
+
+// useful bits about the editor
+type EditorStatus struct {
+	Mode        mode.Mode
+	CurrentPane *panemanager.PaneNode
+}
+
+func (e *Editor) Status() *EditorStatus {
+	return &EditorStatus{
+		Mode:        e.M.Current(),
+		CurrentPane: e.PM.Curr,
 	}
-	var n *BindingNode
-	state := e.m.Current()
-	switch state {
-	case mode.Command:
-		n = CommandBindings
-	case mode.Insert:
-		n = InsertBindings
-	case mode.Normal:
-		n = NormalBindings
-	default:
-		panic("invalid state")
-	}
-	actions, err := e.d.ProcessKeypress(k, state, n)
-	// no dispatch, nothing to do
-	if err != nil {
-		return nil
-	}
-	for _, action := range actions {
-		e.logger.Debug("applying action", slog.String("action", action.String()))
-		err := action.Apply(e)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

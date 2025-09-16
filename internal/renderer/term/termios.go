@@ -1,22 +1,22 @@
 package term
 
 type Term interface {
-    WindowSize() (int, int, error)
+	WindowSize() (int, int, error)
 }
 
 type RawMode struct {
-    originalState any
-    fd int
+	originalState any
+	fd            int
 }
 
 func EnableRawMode() (*RawMode, error) {
-    return enableRawMode()
+	return enableRawMode()
 }
 
 func (r *RawMode) Restore() error {
-    return restore(r)
+	return restore(r)
 }
 
 func (r *RawMode) WindowSize() (int, int, error) {
-    return getWindowSize()
+	return getWindowSize()
 }

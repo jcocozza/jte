@@ -1,0 +1,133 @@
+package action
+
+import (
+	"log/slog"
+
+	"github.com/jcocozza/jte/internal/keyboard"
+	"github.com/jcocozza/jte/internal/mode"
+)
+
+// the action parser converts groups of keystrokes into actions
+//
+// when it has a complete set of keys, it "flushes" and returns a list of actions
+type ActionParser struct {
+	logger         *slog.Logger
+	currentKeys    []keyboard.Key
+	repeatModifier int
+}
+
+func NewActionParser(l *slog.Logger) *ActionParser {
+	return &ActionParser{
+		logger:      l.WithGroup("action-parser"),
+		currentKeys: []keyboard.Key{},
+	}
+}
+
+func (ap *ActionParser) appendKey(key keyboard.Key) {
+	ap.logger.Debug("append key", slog.String("key", key.String()))
+	ap.currentKeys = append(ap.currentKeys, key)
+}
+
+func (ap *ActionParser) flush() {
+	ap.logger.Debug("flush")
+	ap.currentKeys = []keyboard.Key{}
+}
+
+// in normal mode:
+// 1. check for (possibly) valid sequence
+// 2. if valid or possibly valid, keep appending until we get a valid or invalid
+//
+// the bool will be true if we have completed parsing
+func (ap *ActionParser) parseNormal(n *BindingNode) ([]Action, bool) {
+	possiblyValid := n.HasPrefix(ap.currentKeys)
+	if possiblyValid {
+		actionNode, err := n.Lookup(ap.currentKeys)
+		if err != nil {
+			return nil, false
+		}
+		//return actionNode.Actions, true
+		if ap.repeatModifier == 0 || ap.repeatModifier == 1 {
+			return actionNode.Actions, true
+		}
+		repeatedActions := []Action{} // TODO: allocate this properly
+		for range ap.repeatModifier {
+			repeatedActions = append(repeatedActions, actionNode.Actions...)
+		}
+		return repeatedActions, true
+	}
+	return nil, true // since nothing matches, we just want to flush right away
+}
+
+// in insert mode:
+// 1. check for a valid sequence (very few)
+// 2. if valid, generate the action/changed based on that
+// 3. otherwise generate an insert action
+//
+// the bool will be true if we have completed parsing
+func (ap *ActionParser) parseInsert(n *BindingNode) ([]Action, bool) {
+	possiblyValid := n.HasPrefix(ap.currentKeys)
+	if possiblyValid {
+		actionNode, err := n.Lookup(ap.currentKeys)
+		if err != nil {
+			return nil, false
+		}
+		return actionNode.Actions, true
+	}
+	return []Action{Insert{rune(ap.currentKeys[0])}}, true
+}
+
+// in command mode:
+// 1. check for a valid sequence (e.g. <enter>, <esc>)
+// 2. if valid, generate the action based on that
+// 3. otherwise, keep adding characters to the command prompt
+//
+// the bool will be true if we have completed parsing
+func (ap *ActionParser) parseCommand(n *BindingNode) ([]Action, bool) {
+	possiblyValid := n.HasPrefix(ap.currentKeys)
+	if possiblyValid {
+		actionNode, err := n.Lookup(ap.currentKeys)
+		if err != nil {
+			return nil, false
+		}
+		return actionNode.Actions, true
+	}
+	return []Action{CommandInsert{ap.currentKeys[0]}}, true
+}
+
+// this is run one time per event loop
+//
+// based on the mode, process the keypress accordingly
+// also return the number of times to repeat the specified action
+//
+// return true if the full set of actions is ready to go.
+func (ap *ActionParser) AcceptKey(key keyboard.Key, m mode.Mode, b *BindingNode) ([]Action, bool) {
+	var actions []Action
+	var done bool
+	switch m {
+	case mode.Normal:
+		if key.IsDigit() {
+			digit := int(key - '0')
+			if ap.repeatModifier == 0 {
+				ap.repeatModifier = digit
+			} else {
+				ap.repeatModifier = (ap.repeatModifier * 10) + digit
+			}
+		}
+		ap.appendKey(key)
+		actions, done = ap.parseNormal(NormalBindings)
+	case mode.Insert:
+		ap.appendKey(key)
+		actions, done = ap.parseInsert(InsertBindings)
+	case mode.Command:
+		ap.appendKey(key)
+		actions, done = ap.parseCommand(CommandBindings)
+	}
+	if done {
+		ap.flush()
+	}
+	return actions, done
+}
+
+func (ap *ActionParser) ResetRepeat() {
+	ap.repeatModifier = 0
+}

@@ -11,7 +11,6 @@ import (
 
 var ErrInvalidKey error = errors.New("invalid key")
 
-
 type Keyboard struct {
 	raw    internal.Keyboard
 	logger *slog.Logger
@@ -19,7 +18,7 @@ type Keyboard struct {
 
 func NewKeyboard(l *slog.Logger) *Keyboard {
 	return &Keyboard{
-		raw: *internal.NewKeyboard(l),
+		raw:    *internal.NewKeyboard(l),
 		logger: l.WithGroup("keyboard"),
 	}
 }
@@ -90,10 +89,10 @@ func (k *Keyboard) handleRawInput() (Key, error) {
 		return ARROW_RIGHT, nil
 	case internal.Ctrl_TILDE:
 		return Ctrl_TILDE, nil
-	//case internal.Ctrl2:
-	//return Ctrl2 , nil
-	//case internal.Ctrl_SPACE:
-	//return Ctrl_SPACE , nil
+		//case internal.Ctrl2:
+		//return Ctrl2 , nil
+		//case internal.Ctrl_SPACE:
+		//return Ctrl_SPACE , nil
 	case internal.CtrlA:
 		return CtrlA, nil
 	case internal.CtrlB:
@@ -110,12 +109,12 @@ func (k *Keyboard) handleRawInput() (Key, error) {
 		return CtrlG, nil
 	case internal.BACKSPACE:
 		return BACKSPACE, nil
-	//case internal.CtrlH:
-	//return CtrlH , nil
+		//case internal.CtrlH:
+		//return CtrlH , nil
 	case internal.TAB:
 		return TAB, nil
-	//case internal.CtrlI:
-	//return CtrlI , nil
+		//case internal.CtrlI:
+		//return CtrlI , nil
 	case internal.CtrlJ:
 		return CtrlJ, nil
 	case internal.CtrlK:
@@ -124,8 +123,8 @@ func (k *Keyboard) handleRawInput() (Key, error) {
 		return CtrlL, nil
 	case internal.ENTER:
 		return ENTER, nil
-	//case internal.CtrlM:
-	//return CtrlM , nil
+		//case internal.CtrlM:
+		//return CtrlM , nil
 	case internal.CtrlN:
 		return CtrlN, nil
 	case internal.CtrlO:
@@ -154,26 +153,26 @@ func (k *Keyboard) handleRawInput() (Key, error) {
 		return CtrlZ, nil
 	case internal.ESC:
 		return ESC, nil
-	//case internal.Ctrl_LSQBRACKET:
-	//return Ctrl_LSQBRACKET , nil
-	//case internal.Ctrl3:
-	//return Ctrl3 , nil
+		//case internal.Ctrl_LSQBRACKET:
+		//return Ctrl_LSQBRACKET , nil
+		//case internal.Ctrl3:
+		//return Ctrl3 , nil
 	case internal.Ctrl4:
 		return Ctrl4, nil
-	//case internal.Ctrl_BACKSLASH:
-	//return Ctrl_BACKSLASH , nil
+		//case internal.Ctrl_BACKSLASH:
+		//return Ctrl_BACKSLASH , nil
 	case internal.Ctrl5:
 		return Ctrl5, nil
-	//case internal.Ctrl_RSQBRACKET:
-	//return Ctrl_RSQBRACKET , nil
+		//case internal.Ctrl_RSQBRACKET:
+		//return Ctrl_RSQBRACKET , nil
 	case internal.Ctrl6:
 		return Ctrl6, nil
 	case internal.Ctrl7:
 		return Ctrl7, nil
-	//case internal.Ctrl_SLASH:
-	//return Ctrl_SLASH , nil
-	//case internal.Ctrl_UNDERSCORE:
-	//return Ctrl_UNDERSCORE , nil
+		//case internal.Ctrl_SLASH:
+		//return Ctrl_SLASH , nil
+		//case internal.Ctrl_UNDERSCORE:
+		//return Ctrl_UNDERSCORE , nil
 	case internal.BACKSPACE_2:
 		return BACKSPACE_2, nil
 		//case internal.Ctrl8:

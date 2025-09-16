@@ -1,101 +1,79 @@
 package buffer
 
-// a change is something applied to a buffer
+import "fmt"
+
 type Change interface {
-	Apply(buf *Buffer) error
+	// for debugging
+	String() string
+	Do(b *Buffer)
+	Undo(b *Buffer)
 }
 
-type InsertAt struct {
-	cur      Cursor
-	contents [][]rune
-}
-
-func (i InsertAt) Apply(buf *Buffer) error {
-	return buf.insertAt(i.cur, i.contents)
-}
-
-// insert at the buffer's internal cursor
 type Insert struct {
-	Contents [][]rune
+	Loc  Location
+	Char rune
 }
 
-func (i Insert) Apply(buf *Buffer) error {
-	return buf.insert(i.Contents)
+func (c *Insert) String() string {
+	return fmt.Sprintf("insert: %s at (%d,%d)", string(c.Char), c.Loc.X, c.Loc.Y)
 }
 
-// insert new line at buffer's interal cursor
-type EnterNewLine struct {}
-func (i EnterNewLine) Apply(buf *Buffer) error {
-	return buf.insertRow([]rune{})
+func (c *Insert) Do(b *Buffer) {
+	b.Insert(c.Char, c.Loc)
+	//b.cursor.Location = c.Loc
 }
 
-type InsertNewLine struct { Y int }
-func (i InsertNewLine) Apply(buf *Buffer) error {
-	err := buf.insertRowAt(i.Y, []rune{})
-	if err != nil { return err }
-	if i.Y > buf.Y() {
-		buf.cursor.Y++
-	} else if i.Y == 0 {
-		return nil
-	} else {
-		buf.cursor.Y--
-	}
-	buf.cursor.X = 0
-	return nil
+func (c *Insert) Undo(b *Buffer) {
+	b.Delete(c.Loc)
 }
 
-
-type DeleteAt struct {
-	StartCur, EndCur Cursor
-	Contents         [][]rune
-}
-
-func (d DeleteAt) Apply(buf *Buffer) error {
-	contents, err := buf.deleteAt(d.StartCur, d.EndCur)
-	if err != nil {
-		return err
-	}
-	d.Contents = contents
-	return nil
-}
-
-// delete at buffer's interal cursor
 type Delete struct {
-	contents [][]rune
+	Loc  Location
+	Char *rune // nil before deletion takes place
 }
 
-func (d Delete) Apply(buf *Buffer) error {
-	contents, err := buf.delete()
-	if err != nil {
-		return err
+func (c *Delete) String() string {
+	return fmt.Sprintf("delete: at (%d,%d)", c.Loc.X, c.Loc.Y)
+}
+
+func (c *Delete) Do(b *Buffer) {
+	char := b.Delete(c.Loc)
+	c.Char = &char
+}
+
+func (c *Delete) Undo(b *Buffer) {
+	b.Insert(*c.Char, c.Loc)
+}
+
+// a set of changes that are done and undone together
+type ChangeBlock struct {
+	block []Change
+	locked bool
+}
+
+// do all changes in the block
+func (cb *ChangeBlock) Do(b *Buffer) {
+	for _, c := range cb.block {
+		c.Do(b)
 	}
-	d.contents = contents
-	return nil
 }
 
-// backspace at buffer's internal cursor
-type Backspace struct {
-	contents [][]rune
-}
-
-func (b Backspace) Apply(buf *Buffer) error {
-	content, err := buf.backspace()
-	if err != nil {
-		return err
+// undo all changes in the block
+func (cb *ChangeBlock) Undo(b *Buffer) {
+	// because block is created sequentially, we need to undo in reverse order of block
+	for i := len(cb.block) - 1; i >= 0; i-- {
+		cb.block[i].Undo(b)
+		//c.Undo(b)
 	}
-	b.contents = content
-	return nil
 }
 
+// TODO: trying to add changed after lock should raise alarm bells
+func (cb *ChangeBlock) Add(c Change) {
+	if cb.locked { return }
+	cb.block = append(cb.block, c)
+}
 
-// delete line at the cursor
-type DeleteLine struct{ contents []rune }
-
-func (d DeleteLine) Apply(buf *Buffer) error {
-	content, err := buf.deleteRow(buf.cursor.Y)
-	if err != nil {
-		return err
-	}
-	d.contents = content
-	return nil
+// when locked no new changes should be added to the block
+func (cb *ChangeBlock) Lock() {
+	cb.locked = true
 }

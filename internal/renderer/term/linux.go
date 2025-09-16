@@ -18,7 +18,6 @@ const (
 	ioctlWriteTermios = syscall.TCSETS
 )
 
-
 func enableRawMode() (*RawMode, error) {
 	// Open /dev/tty explicitly instead of using stdin
 	//fd, err := syscall.Open("/dev/tty", syscall.O_RDWR, 0)
